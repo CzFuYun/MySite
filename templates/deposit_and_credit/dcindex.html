@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+    <link href="/static/assets/plugins/chartist-js/dist/chartist.min.css" rel="stylesheet">
+    <link href="/static/assets/plugins/chartist-js/dist/chartist-init.css" rel="stylesheet">
+    <link href="/static/assets/plugins/chartist-plugin-tooltip-master/dist/chartist-plugin-tooltip.css" rel="stylesheet">
+    <link href="/static/assets/plugins/morrisjs/morris.css" rel="stylesheet">
+    <link href="/static/assets/plugins/vectormap/jquery-jvectormap-2.0.2.css" rel="stylesheet" />
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">       <!--container-fluid的作用貌似是将包裹的内容设置一个外边距，并将他们居中在页面上-->
+        <div class="row">
+            <div class="col-lg-9 col-xlg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap">
+                            <div>
+                                <h4 class="card-title">分行对公存款总览</h4>
+                                <h6 class="card-subtitle">数据日期：{{ data_date }}</h6>
+                            </div>
+                            <div class="ml-auto align-self-center">
+                                <div id="branch_overview_days_selector" class="btn-group mr-2" role="group" aria-label="First group">
+                                    <button type="button" class="btn btn-secondary" days="360" onclick="drawBranch(this)">360Days</button>
+                                    <button type="button" class="btn btn-secondary" days="180" onclick="drawBranch(this)">180Days</button>
+                                    <button type="button" class="btn btn-secondary" days="90" onclick="drawBranch(this)">90Days</button>
+                                    <button type="button" class="btn btn-secondary" days="30" onclick="drawBranch(this)">30Days</button>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="list-inline m-b-0" id="deposit_lines_legend">
+{#                            预置位置，用于放置图例#}
+                        </ul>
+                        <div>
+                            <canvas id="deposit_lines" width="1200px" height="540px">
+
+                            </canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title label label-info">部门日均</h5>
+                        <canvas id="department_deposit" height="300" width="450">
+
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title label label-info">行业日均</h5>
+                        <canvas id="industry_deposit" height="300" width="450">
+
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title label label-info">来源日均</h5>
+                        <canvas id="customer_type_deposit" height="300" width="450">
+
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title label label-info">性质日均</h5>
+                        <canvas id="deposit_type_deposit" height="300" width="450">
+
+                        </canvas>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block extra_js %}
+{#    <script src="/static/assets/plugins/chartist-js/dist/chartist.min.js"></script>#}
+{#    <script src="/static/assets/plugins/chartist-plugin-tooltip-master/dist/chartist-plugin-tooltip.min.js"></script>#}
+{#    <!--morris JavaScript -->#}
+{#    <script src="/static/assets/plugins/raphael/raphael-min.js"></script>#}
+{#    <script src="/static/assets/plugins/morrisjs/morris.min.js"></script><!--无关-->#}
+{#    <!-- Vector map JavaScript -->#}
+{#    <script src="/static/assets/plugins/vectormap/jquery-jvectormap-2.0.2.min.js"></script><!--无关-->#}
+{#    <script src="/static/assets/plugins/vectormap/jquery-jvectormap-world-mill-en.js"></script><!--无关-->#}
+{#    <script src="/static/js/dashboard2.js"></script><!--疑似自动绘图-->#}
+    <script src="/static/assets/plugins/Chart.js/Chart.min.js" type="text/javascript"></script>
+    <script src="/static/myjs/drawCharts.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var GROUP_BY = {
+            department: 'department__caption',
+            industry: 'customer__industry__caption',
+            customer_type: 'customer__customer_type__caption',
+            deposit_type: 'deposit_type__caption',
+            has_credit: 'customer__has_credit'
+        };
+        function drawBranch(element){        {#获取时间段内的存款余额及日均数据，按日期聚合，并在$('#deposit_lines')中绘制折线图#}
+            nDays = $(element).attr('days');
+            $.ajax(
+                {
+                    url: '{% url "ajaxOverViewBranch" %}',
+                    type: 'POST',
+                    async: true,
+                    data: {
+                        days: nDays
+                    },
+                    dataType: 'json',
+                    success: function(data, status, xhr){
+                        $('#branch_overview_days_selector').children().attr('class', 'btn btn-secondary');
+                        $(element).attr('class', 'btn btn-info');
+                        drawLines('deposit_lines', data, true);
+                    },
+                    error:function(xhr,status){
+                        alert(status);
+                    }
+                }
+            )
+        }
+        function drawAnnotation(group_by, strCanvasId){
+            $.ajax(
+                {
+                    url: '{% url "ajaxAnnotateDeposit" %}',
+                    type: 'POST',
+                    async: true,
+                    data: {
+                        group_by: group_by
+                    },
+                    dataType: 'json',
+                    success: function (data, status, xhr) {
+                        drawPie(strCanvasId, data, false)
+                    },
+                    error:function(xhr,status){
+                        alert(status);
+                    }
+                }
+            )
+        }
+        $(function(){
+            drawBranch($('#branch_overview_days_selector').children()[2]);
+            drawAnnotation(GROUP_BY.department, 'department_deposit');
+            drawAnnotation(GROUP_BY.industry, 'industry_deposit');
+            drawAnnotation(GROUP_BY.customer_type, 'customer_type_deposit');
+            drawAnnotation(GROUP_BY.deposit_type, 'deposit_type_deposit');
+        })
+    </script>
+
+{% endblock %}
