@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ content_title }}</title>
+    <link href="/static/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/css/colors/blue.css" id="theme" rel="stylesheet">
+
+    {% block extra_css %}
+
+    {% endblock %}
+
+</head>
+<body>
+    <div class="page-wrapper">
+        <div class="col-lg-12">
+            <input id="opener_params" type="text" value="{{ opener_params }}" style="display: none">
+            <div class="col-12">
+                {% block content %}
+
+                {% endblock %}
+            </div>
+
+        </div>
+    </div>
+    <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+    <script type="text/javascript">
+        OPERNER_PARAMS = JSON.parse($('#opener_params').attr('value'));
+    </script>
+    {% block extra_js %}
+
+    {% endblock %}
+</body>
+</html>

@@ -67,14 +67,47 @@ def ajaxAnnotateDeposit(request):
 
 @checkPermission
 def viewContribution(request):
-    return render(request, 'deposit_and_credit/contribution.html')
+    method = request.method
+    if method == 'GET':
+        return render(request, 'deposit_and_credit/contribution.html', {'department': request.user_dep})
+    elif method == 'POST':
+        opener_params = {}
+        for k, v in request.POST.items():
+            opener_params[k] = v
+        opener_params['department'] = request.department
+        opener_params['data_date'] = getAdjacentDataDate(dac_models.Contributor, opener_params.get('data_date'))
+        customer_types = []
+        if opener_params.get('gov'):
+            customer_types.append('政府平台')
+        if opener_params.get('no_gov_cp'):
+            customer_types.append('实体企业（地区）')
+        if opener_params.get('no_gov_sme'):
+            customer_types.append('实体企业（小微）')
+        return render(request, 'deposit_and_credit/contribution_table.html', {
+            'content_title': '{customer_type}  贡献度一览（数据日期：{data_date}）'.format(
+                customer_type='+'.join(customer_types),
+                data_date=opener_params['data_date']),
+            'opener_params': json.dumps(opener_params),
+        })
 
 
+def ajaxContribution(request):
+    data_date = request.POST.get('data_date', None) or strLastDataDate
+    if data_date == strLastDataDate:
+        global CONTRIBUTION_TREE
+        if not CONTRIBUTION_TREE:
+            CONTRIBUTION_TREE = json.dumps(getContributionTree(data_date))
+        return HttpResponse(CONTRIBUTION_TREE)
+    else:
+        return HttpResponse(json.dumps(getContributionTree(data_date)))
 
 
-
-
-
+def ajaxDeptOrder(request):
+    depts = rd_models.Department.objects.values_list('code').order_by('display_order')
+    ordered_depts = []
+    for i in depts:
+        ordered_depts.append(i[0])
+    return HttpResponse(json.dumps(ordered_depts))
 
 ########################################################################################################################
 dtToday = datetime.today().date()
@@ -87,6 +120,8 @@ def getAdjacentDataDate(clsModel, strDate=strToday, before=True, strField='data_
     :param before: True为向前获取，默认为True
     :return: 可以被数据库识别为日期的字符串
     '''
+    if not strDate:
+        strDate = strToday
     dicFilterCondition = {strField + ('__lte' if before else '__gte') : strDate}
     strOrderBy = ('-' if before else '') + strField     # 若向前搜索，则将得到的日期降序排列；否则升序
     return str(clsModel.objects.values(strField).filter(**dicFilterCondition).order_by(strOrderBy)[0][strField])
@@ -95,14 +130,13 @@ last_year_last_day = str(dtToday.year - 1) + '-12-31'
 CONTRIBUTION_TREE = {}
 
 def getContributionTree(data_date):
-
-    # ↓[('0', 1641), ('0000000000000148', 31), ('0000000000375597', 15), ('0000000001308901', 741), ('0000000001417720', 907), ('0000000001507517', 0), ('0000000001580919', 542), ('0000000001580920', 161335), ('0000000001580921', 0), ('0000000001580924', 72), ('0000000001580926', 1002), ('0000000001580927', 3), ('0000000001580929', 2001), ('0000000001580930', 800), ('0000000001580931', 155187), ('0000000001580932', 22332), ('0000000001580933', 16512), ('0000000001580934', 20000), ('0000000001580937', 522), ('0000000001580939', 1), '...(remaining elements truncated)...']
-    last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(data_date=last_year_last_day).values_list('customer__customer_id').annotate(Sum('divided_yd_avg'))
+    last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(data_date=last_year_last_day).values_list(
+        'customer__customer_id').annotate(Sum('divided_yd_avg'))
     last_year_yd_avg_dict = {}
     for i in last_year_yd_avg:
         last_year_yd_avg_dict[i[0]] = i[1]
-    # ↓[('0', 490, -1891), ('0000000000000148', 56, 94), ('0000000000375597', 15, 15), ('0000000001308901', 746, 748), ('0000000001417720', 2141, 3276), ('0000000001507517', 0, 0), ('0000000001580919', 549, 553),
-    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=strLastDataDate).values_list('customer__customer_id').annotate(Sum('divided_yd_avg'), Sum('divided_amount'))
+    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=strLastDataDate).values_list(
+        'customer__customer_id').annotate(Sum('divided_yd_avg'), Sum('divided_amount'))
     last_deposit_dict= {}
     for i in last_deposit:
         last_deposit_dict[i[0]] = {'yd_avg': i[1], 'amount': i[2]}
@@ -111,7 +145,7 @@ def getContributionTree(data_date):
     dep_qs = rd_models.Department.objects.all().order_by('display_order')
     for dep in dep_qs:
         contrib_tree[dep.code] = {
-            'department_caption': dep.caption,
+            '经营部门': dep.caption,
             'department_code': dep.code,
             'series_customer_data': {}
         }
@@ -123,23 +157,23 @@ def getContributionTree(data_date):
         dep_code = contrib.department.code
         temp = {
             customer_id: {
-                'name': cust.name,
+                '客户名称': cust.name,
                 'series_code': series_code,
-                'series_caption': cust.series.caption,
+                '所属系列': cust.series.caption,
                 'gov_plat_lev': cust.series.gov_plat_lev_id,
-                'department_caption': contrib.department.caption,
+                '经营部门': contrib.department.caption,
                 'department_code': dep_code,
-                'line': contrib.approve_line,
-                'defuse': contrib.defuse_expire,
-                'last_year_yd_avg_deposit': last_year_yd_avg_dict.get(customer_id, 0),
-                'deposit_yd_avg': last_deposit_dict.get(customer_id, {}).get('yd_avg', 0),
-                'deposit_amount': last_deposit_dict.get(customer_id, {}).get('amount', 0),
-                'industry': cust.industry.caption,
-                'loan': contrib.loan,
-                'loan_rate': contrib.loan_rate,
-                'loan_interest': contrib.loan_interest,
-                'lr_bab': contrib.lr_BAB,
-                'invest_banking': contrib.invest_banking,
+                '条线': contrib.approve_line,
+                '化解到期': contrib.defuse_expire,
+                '上年存款日均': int(last_year_yd_avg_dict.get(customer_id, 0)),
+                '本年存款日均': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
+                '存款余额': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
+                '行业': cust.industry.caption,
+                '贷款余额': int(contrib.loan),
+                '贷款利率': float(contrib.loan_rate),
+                'loan_interest': float(contrib.loan_interest),
+                '低风险银票': int(contrib.lr_BAB),
+                '投行项目': int(contrib.invest_banking),
             }
         }
         try:
@@ -150,7 +184,3 @@ def getContributionTree(data_date):
     return contrib_tree
 
 
-if not CONTRIBUTION_TREE:
-    print('CONTRIBUTION_TREE = getContributionTree(strLastDataDate)')
-    CONTRIBUTION_TREE = getContributionTree(strLastDataDate)
-    print(CONTRIBUTION_TREE)

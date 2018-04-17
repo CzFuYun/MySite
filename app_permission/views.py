@@ -9,7 +9,7 @@ def checkPermission(func):
     def inner(request, *args, **kwargs):
         user_id = request.session.get(settings.USER_ID, None)
         if user_id:
-            user_obj = models.UserProfile.objects.filter(**{settings.USER_ID: user_id})
+            user_obj = models.UserProfile.objects.filter(**{settings.USER_ID: user_id})[0]
             if user_obj:
                 url_name = resolve(request.path).url_name
                 permitted_url_names = request.session.get('permitted_url_names')

@@ -1,0 +1,80 @@
+{% extends 'blank.html' %}
+
+
+
+{% block content %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script type="text/javascript">
+    $(function () {
+        var filter_condict = OPERNER_PARAMS;
+        var ordered_dept = getDeptOrder();
+        buildContribTable(filter_condict, ordered_dept);
+    });
+
+    function getContributionTree(data_date){
+        var contrib_tree = {};
+        $.ajax(
+            {
+                url: '{% url "ajaxContribution" %}',
+                type: 'POST',
+                async: false,
+                data: {
+                    data_date: data_date
+                },
+                dataType: 'json',
+                success: function (data, status, xhr) {
+                    contrib_tree = data;
+                }
+            }
+        );
+            return contrib_tree;
+    }
+
+    function getDeptOrder() {
+        var ordered_dept = [];
+        $.ajax(
+            {
+                url: '{% url "ajaxDeptOrder" %}',
+                type: 'POST',
+                async: false,
+                dataType: 'json',
+                success: function (data) {
+                    ordered_dept = data;
+                }
+            }
+        );
+        return ordered_dept;
+    }
+
+    function buildDeptContribCard(filter_condict, dept_code, depart_contrib){
+        // 单个部门的贡献度卡片
+        // filter_condict: {department: "all", gov: "on", data_date: "2018-03-31"}
+        // dept_code: 'YYB'
+        // depart_contrib: contrib_tree[dept_code]
+        // return: [element div card, {SUM}]
+        
+    }
+
+    function buildContribTable(filter_condict, ordered_dept){
+        var whole_contrib_tree = getContributionTree(filter_condict['data_date']);
+        var contrib_tree = {};
+        var frag = document.createElement('fragment');
+        req_dept = filter_condict["department"];
+        if(req_dept == 'all'){
+            contrib_tree = whole_contrib_tree;
+        }else{
+            contrib_tree[req_dept] = whole_contrib_tree[req_dept];
+        }
+        for(i in ordered_dept){
+
+        }
+        console.log(contrib_tree)
+    }
+</script>
+
+
+{% endblock %}
