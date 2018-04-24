@@ -1,5 +1,5 @@
 # https://github.com/github/gitignore
-
+# git rm -r --cached . 注意有个点！清除缓存后再add commit，ignore才会生效
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
