@@ -20,8 +20,9 @@
                     <form action="{% url 'viewContribution' %}" target="_blank" method="post">
                         <input type="text" name="department" value="{{ department }}" style="display: none;">
                         <div class="form-body">
-                            <h4 class="box-title">请选择</h4><hr>
+                            <h4 class="box-title">企业类型：</h4>
                             <div class="row p-t-10">
+                                <div class="col-md-2"></div>
                                 <div class="col-md-2">
                                     <div class="form-group">
                                         <label class="control-label">政府平台</label>
@@ -32,31 +33,70 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label class="control-label">实体企业（地区）</label>
+                                        <label class="control-label">非平台</label>
                                         <div class="switch">
-                                            <label><input type="checkbox" name="no_gov_cp" checked><span class="lever switch-col-light-blue"></span></label>
+                                            <label><input type="checkbox" name="no_gov" checked><span class="lever switch-col-light-blue"></span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="form-body">
+                            <h4 class="box-title">选项：</h4>
+                            <div class="row p-t-10">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="control-label">地区</label>
+                                        <div class="switch">
+                                            <label><input type="checkbox" name="cp" checked><span class="lever switch-col-light-blue"></span></label>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group">
-                                        <label class="control-label">实体企业（小微）</label>
+                                        <label class="control-label">小微</label>
                                         <div class="switch">
-                                            <label><input type="checkbox" name="no_gov_sme" checked><span class="lever switch-col-light-blue"></span></label>
+                                            <label><input type="checkbox" name="sme" checked><span class="lever switch-col-light-blue"></span></label>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="control-label">含无贷户</label>
+                                        <div class="switch">
+                                            <label><input type="checkbox" name="include_no_credit" checked><span class="lever switch-col-light-blue"></span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="control-label">含化解</label>
+                                        <div class="switch">
+                                            <label><input type="checkbox" name="include_defuse" checked><span class="lever switch-col-light-blue"></span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row p-t-10">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
                                     <div class="form-group">
                                         <label class="control-label">数据日期</label>
                                         <input type="date" class="form-control" placeholder="yyyy/mm/dd" name="data_date">
                                     </div>
                                 </div>
                             </div>
+                            <hr>
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-success"> <i class="fa fa-check"></i>确认</button>
-{#                            <button type="button" class="btn btn-inverse">Cancel</button>#}
+                        <div class="row p-t-10">
+                            <div class="col-md-10"></div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-success"> <i class="fa fa-check"></i>确认</button>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>

@@ -9,7 +9,7 @@ def checkPermission(func):
     def inner(request, *args, **kwargs):
         user_id = request.session.get(settings.USER_ID, None)
         if user_id:
-            user_obj = models.UserProfile.objects.filter(**{settings.USER_ID: user_id})[0]
+            user_obj = models.UserProfile.objects.filter(**{settings.USER_ID: user_id})
             if user_obj:
                 url_name = resolve(request.path).url_name
                 permitted_url_names = request.session.get('permitted_url_names')
@@ -21,7 +21,7 @@ def checkPermission(func):
                         cls_extra_auth = getattr(permission_auth, url_name)      # 注意getattr()是对大小写敏感的
                     except:     # 若出错，则没有额外的验证步骤
                         return func(request, *args, **kwargs)
-                    operation = cls_extra_auth(request, user_obj)
+                    operation = cls_extra_auth(request, user_obj[0])
                     if operation.is_allowed:
                         return func(request, *args, **kwargs)
         return redirect(reverse('login'))

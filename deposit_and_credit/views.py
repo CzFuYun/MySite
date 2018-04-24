@@ -78,11 +78,11 @@ def viewContribution(request):
         opener_params['data_date'] = getAdjacentDataDate(dac_models.Contributor, opener_params.get('data_date'))
         customer_types = []
         if opener_params.get('gov'):
-            customer_types.append('政府平台')
-        if opener_params.get('no_gov_cp'):
-            customer_types.append('实体企业（地区）')
-        if opener_params.get('no_gov_sme'):
-            customer_types.append('实体企业（小微）')
+            customer_types.append('平台')
+        if opener_params.get('no_gov'):
+            customer_types.append('非平台')
+        # if opener_params.get('no_gov_sme'):
+        #     customer_types.append('实体企业（小微）')
         return render(request, 'deposit_and_credit/contribution_table.html', {
             'content_title': '{customer_type}  贡献度一览（数据日期：{data_date}）'.format(
                 customer_type='+'.join(customer_types),
@@ -91,12 +91,17 @@ def viewContribution(request):
         })
 
 
+def viewDepartmentContribution(request):
+    pass
+
+
 def ajaxContribution(request):
     data_date = request.POST.get('data_date', None) or strLastDataDate
     if data_date == strLastDataDate:
         global CONTRIBUTION_TREE
         if not CONTRIBUTION_TREE:
-            CONTRIBUTION_TREE = json.dumps(getContributionTree(data_date))
+            temp = getContributionTree(data_date)
+            CONTRIBUTION_TREE = json.dumps(temp)
         return HttpResponse(CONTRIBUTION_TREE)
     else:
         return HttpResponse(json.dumps(getContributionTree(data_date)))
@@ -129,6 +134,7 @@ strLastDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
 last_year_last_day = str(dtToday.year - 1) + '-12-31'
 CONTRIBUTION_TREE = {}
 
+
 def getContributionTree(data_date):
     last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(data_date=last_year_last_day).values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'))
@@ -150,37 +156,44 @@ def getContributionTree(data_date):
             'series_customer_data': {}
         }
     contrib_qs = dac_models.Contributor.objects.filter(data_date=data_date).prefetch_related('customer')
-    for contrib in contrib_qs:
+    contributor_num = contrib_qs.count()
+    for i in range(contributor_num):
+        contrib = contrib_qs[i]
         cust = contrib.customer
         customer_id = contrib.customer_id
         series_code = cust.series.code
         dep_code = contrib.department.code
+        gov_plat_lev = cust.series.gov_plat_lev_id
+        loan = contrib.loan
         temp = {
             customer_id: {
                 '客户名称': cust.name,
                 'series_code': series_code,
                 '所属系列': cust.series.caption,
-                'gov_plat_lev': cust.series.gov_plat_lev_id,
+                'gov_plat_lev': gov_plat_lev,
                 '经营部门': contrib.department.caption,
                 'department_code': dep_code,
-                '条线': contrib.approve_line,
+                '所属条线': contrib.approve_line,
                 '化解到期': contrib.defuse_expire,
-                '上年存款日均': int(last_year_yd_avg_dict.get(customer_id, 0)),
-                '本年存款日均': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
+                '上年日均': int(last_year_yd_avg_dict.get(customer_id, 0)),
+                '本年日均': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
                 '存款余额': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
                 '行业': cust.industry.caption,
-                '贷款余额': int(contrib.loan),
+                '贷款余额': int(loan),
                 '贷款利率': float(contrib.loan_rate),
                 'loan_interest': float(contrib.loan_interest),
-                '低风险银票': int(contrib.lr_BAB),
+                '用信净额': int(contrib.net_total),
+                '全额银票': int(contrib.lr_BAB),
                 '投行项目': int(contrib.invest_banking),
             }
         }
+        series_key = str(gov_plat_lev) + '$' + series_code
+        series_customers = contrib_tree[dep_code]['series_customer_data']
         try:
-            contrib_tree[dep_code]['series_customer_data'][series_code].append(temp)
+            series_customers[series_key].append(temp)
         except:
-            contrib_tree[dep_code]['series_customer_data'][series_code] = []
-            contrib_tree[dep_code]['series_customer_data'][series_code].append(temp)
+            series_customers[series_key] = []
+            series_customers[series_key].append(temp)
     return contrib_tree
 
 

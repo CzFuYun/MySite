@@ -1,5 +1,8 @@
 {% extends 'blank.html' %}
 
+{% block extra_css %}
+<link href="/static/assets/plugins/css-chart/css-chart.css" rel="stylesheet">
+{% endblock %}
 
 
 {% block content %}
@@ -8,12 +11,27 @@
 
 
 {% block extra_js %}
+<script src="/static/js/highcharts.js" type="text/javascript"></script>
 <script type="text/javascript">
     $(function () {
         var filter_condict = OPERNER_PARAMS;
         var ordered_dept = getDeptOrder();
         buildContribTable(filter_condict, ordered_dept);
     });
+
+    function sortDict(dict, asc){
+        var sort_key;
+        var new_dict = {};
+        if(asc == null || asc){
+            sort_key = Object.keys(dict).sort();
+        }else{
+            sort_key = Object.keys(dict).sort().reverse();
+        }
+        for(var i in sort_key){
+            new_dict[sort_key[i]] = dict[sort_key[i]];
+        }
+        return new_dict;
+    }
 
     function getContributionTree(data_date){
         var contrib_tree = {};
@@ -50,30 +68,310 @@
         return ordered_dept;
     }
 
-    function buildDeptContribCard(filter_condict, dept_code, depart_contrib){
+    function buildDeptContribCard(filter_condict, dept_code, depart_contrib, fragment_elem){
         // 单个部门的贡献度卡片
         // filter_condict: {department: "all", gov: "on", data_date: "2018-03-31"}
         // dept_code: 'YYB'
         // depart_contrib: contrib_tree[dept_code]
-        // return: [element div card, {SUM}]
-        
+        // return: {SUM}
+        var dept_has_content = false;
+        var base_rate = 0.0435;
+        var table_col = {
+            '客户名称': '25%',
+            '所属条线': '6%',
+            '用信净额': '6%',
+            '贷款利率': '6%',
+            '全额银票': '6%',
+            '投行项目': '6%',
+            '化解到期': '8%',
+            '上年日均': '6%',
+            '存款余额': '6%',
+            '本年日均': '6%',
+            '日均较年初': '6%',      // %
+            '回报率': '8%'
+        };
+        var dept_sum = {
+            '用信净额': 0,
+            '贷款利息': 0,
+            '全额银票': 0,
+            '投行项目': 0,
+            '上年日均': 0,
+            '存款余额': 0,
+            '本年日均': 0,
+            '日均较年初': 0,     // num
+            '综合回报率': 0,
+            '贷款余额': 0
+       };
+        var dept_name = depart_contrib['经营部门'];
+        var thead_html = '<thead><tr>';
+        for(var col in table_col){
+            thead_html += '<th width="' + table_col[col] + '"><div>' + (col == '客户名称' ? '' : col) + '</div></th>';
+        }
+        thead_html += '</tr></thead>';
+        var dept_title = document.createElement('h1');
+        dept_title.id = dept_code;
+        var dept_card = document.createElement('div');
+        dept_card.setAttribute('class', 'card');
+        var series_customer_data = sortDict(depart_contrib['series_customer_data'], false);
+        for(var series in series_customer_data){
+            var series_sum = {
+                '用信净额': 0,
+                '贷款利息': 0,
+                '全额银票': 0,
+                '投行项目': 0,
+                '上年日均': 0,
+                '存款余额': 0,
+                '本年日均': 0,
+                '日均较年初': 0,
+                '综合回报率': 0,
+                '贷款余额': 0
+
+            };
+            var table = document.createElement('table');
+            table.innerHTML = thead_html;
+            var series_has_content = false;        // 该系列经过筛选后是否还有客户
+            var cust_list = Object.values(series_customer_data[series]);
+            var tbody = document.createElement('tbody');
+            var series_foot = document.createElement('thead');
+            for(i in cust_list){
+                var cust_id = Object.keys(cust_list[i])[0];
+                var cust_detail_dict = Object.values(cust_list[i])[0];
+                var gov_plat_lev = cust_detail_dict['gov_plat_lev'];
+                var belong_line = cust_detail_dict['所属条线'];
+                var net_total = cust_detail_dict['用信净额'];
+                var defuse = cust_detail_dict['化解到期'];
+                if(!filter_condict['gov'] && gov_plat_lev > 2)      // 如果不要平台，而这个企业又恰好是平台
+                    continue;
+                if(!filter_condict['no_gov'] && gov_plat_lev <= 2)
+                    continue;
+                if(!filter_condict['sme'] && (belong_line == '小微' || belong_line != ''))
+                    continue;
+                if(!filter_condict['cp'] && belong_line == '地区')
+                    continue;
+                if(!filter_condict['include_no_credit'] && net_total == 0)
+                    continue;
+                if(!filter_condict['include_defuse'] && defuse)
+                    continue;
+                series_has_content = true;
+                if(!dept_has_content){
+                    dept_has_content = true;
+                    dept_title.setAttribute('class', 'text-themecolor');
+                    dept_title.setAttribute('dept_code', dept_code);
+                    dept_title.setAttribute('oncilck', 'viewDeptContribChart(this)');
+                    dept_title.innerHTML = dept_name;
+                    fragment_elem.appendChild(dept_title);
+                    fragment_elem.appendChild(dept_card);
+
+                    // 接下来应在筛选卡中添加这个部门
+                    try{
+                        var dept_selector = document.getElementById('dept_selector');
+                        var dept_button = document.createElement('a');
+                        dept_button.className = 'btn waves-effect waves-light btn-block btn-info';
+                        dept_button.setAttribute('href', '#' + dept_code);
+                        dept_button.innerText = dept_name;
+                        dept_selector.appendChild(dept_button);
+                    }finally {;}
+
+                }
+                var loan = cust_detail_dict['贷款余额'];
+                var interest = cust_detail_dict['loan_interest'];
+                var last_yd_avg = cust_detail_dict['上年日均'];
+                var yd_avg = cust_detail_dict['本年日均'];
+                var depo_amount = cust_detail_dict['存款余额'];
+                series_sum['贷款余额'] += loan;
+                series_sum['用信净额'] += net_total;
+                series_sum['贷款利息'] += interest;
+                series_sum['全额银票'] += cust_detail_dict['全额银票'];
+                series_sum['投行项目'] += cust_detail_dict['投行项目'];
+                series_sum['上年日均'] += last_yd_avg;
+                series_sum['存款余额'] += depo_amount;
+                series_sum['本年日均'] += yd_avg;
+                series_sum['日均较年初'] += (yd_avg - last_yd_avg);
+
+                dept_sum['贷款余额'] += loan;
+                dept_sum['用信净额'] += net_total;
+                dept_sum['贷款利息'] += interest;
+                dept_sum['全额银票'] += cust_detail_dict['全额银票'];
+                dept_sum['投行项目'] += cust_detail_dict['投行项目'];
+                dept_sum['上年日均'] += last_yd_avg;
+                dept_sum['存款余额'] += depo_amount;
+                dept_sum['本年日均'] += yd_avg;
+                dept_sum['日均较年初'] += (yd_avg - last_yd_avg);
+
+                var tr = document.createElement('tr');
+                for(var col in table_col){
+                    var td = document.createElement('td');
+                    var temp = cust_detail_dict[col];
+                    if(col == '客户名称'){
+                        td.innerHTML = '<a customer_id="' + cust_id +
+                            '" style="color:white" href="javascript:viewCustomerContributionHistory(this)">' + temp + '</a>';
+                    }else{
+                        if(temp)
+                            td.innerText = temp;
+                        else{
+                            if(col == '日均较年初'){
+                                setDepoCompForTd(td, last_yd_avg, yd_avg);
+                            }else if(col == '回报率' && net_total){
+                                setContribRatioForTd(td, interest, loan, base_rate, yd_avg, net_total);
+                            }
+                        }
+                    }
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+            if(!series_has_content)
+                continue;
+            var series_code = series.split('$')[1];
+            var series_name = Object.values(series_customer_data[series][0])[0]['所属系列'];
+            // ↓构建系列的汇总数据
+            var series_sum_tr = document.createElement('tr');
+            for(var col in table_col){
+                var th = document.createElement('th');
+                switch (col){
+                    case '用信净额':
+                        th.innerHTML = series_sum['用信净额'];
+                        break;
+                    case '所属条线':
+                        th.innerHTML = '';
+                        break;
+                    case '客户名称':
+                        th.innerHTML = '<span style="border-bottom:2pt double"><b>' + dept_name + '&nbsp;—&nbsp;' +
+                            series_name + '汇总</b></span>';
+                        break;
+                    case '贷款利率':
+                        th.innerHTML = Math.round((series_sum['贷款利息'] / series_sum['贷款余额']) * 1000000) / 10000;
+                        break;
+                    case '化解到期':
+                        th.innerHTML = '';
+                        break;
+                    case '日均较年初':
+                        setDepoCompForTd(th, series_sum['上年日均'], series_sum['本年日均']);
+                        {#th.innerHTML = series_sum['本年日均'] - series_sum['上年日均'];#}
+                        break;
+                    case '回报率':
+                        setContribRatioForTd(th, series_sum['贷款利息'], series_sum['贷款余额'],
+                            base_rate, series_sum['本年日均'], series_sum['用信净额']);
+                        break;
+                    default:
+                        th.innerHTML = series_sum[col] || '';
+                        break;
+                }
+                series_sum_tr.appendChild(th);
+            }
+            series_foot.appendChild(series_sum_tr);
+
+
+
+
+            var card_body = document.createElement('div');
+            card_body.setAttribute('class', 'card-body');
+            card_body.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' +
+                series_code + '">' + series_name + '</h2>';
+            table.setAttribute('class', 'table full-color-table full-dark-table table-sm table-hover table-bordered');
+            table.appendChild(tbody);
+
+            table.appendChild(series_foot);
+
+
+
+            card_body.appendChild(table);
+            dept_card.appendChild(card_body);
+        }
+        {#fragment_elem.appendChild(dept_card);#}
+        return dept_sum;
+    }
+
+
+
+    function setDepoCompForTd(td_emel, depoBefore, deptAfter){
+        var compare = depoBefore
+            ? deptAfter  / depoBefore - 1
+            : (deptAfter ? 1 : 0);
+            compare = Math.max(compare, -1);        // 最多-100%
+            compare = Math.round(compare * 10000) / 100;
+            var arrow, color;
+            if(compare <= -20){
+                arrow = '"fa fa-level-down"';
+                color = '"text-danger text-semibold"';
+            }else if(compare <= 0){
+                arrow = '"fa fa-level-down"';
+                color = '"text-warning text-semibold"';
+            }else if(compare <= 20){
+                arrow = '"fa fa-level-up"';
+                color = '"text-success text-semibold"';
+            }else{
+                arrow = '"fa fa-level-up"';
+                color = '"text-info text-semibold"';
+            }
+            td_emel.innerHTML = '<span class=' + color + '><i class=' + arrow + ' aria-hidden="true"></i>' + (deptAfter - depoBefore) + '</span>';
+    }
+
+    function setContribRatioForTd(td_emel, interest, loan, base_rate, yd_avg, net_total){
+        var rate_float_ratio = interest / loan / base_rate - 1;
+        var depo_ratio = yd_avg / net_total;
+        var combine_contrib_ratio = rate_float_ratio + depo_ratio;
+        var display_depo_ratio = Math.round(depo_ratio * 10000) / 100;
+        var display_combine_contrib_ratio = Math.round(combine_contrib_ratio * 10000) / 100;
+        var pro_bar_color;
+        if(depo_ratio < 0.15 )
+            pro_bar_color = 'progress-bar bg-danger';
+        else if(depo_ratio < 0.30)
+            pro_bar_color = 'progress-bar bg-warning';
+        else if(depo_ratio < 0.45)
+            pro_bar_color = 'progress-bar bg-success';
+        else if(depo_ratio < 0.60)
+            pro_bar_color = 'progress-bar bg-info';
+        else
+            pro_bar_color = 'progress-bar bg-primary';
+        td_emel.innerHTML = '<div class="progress progress-xs margin-vertical-10 "><div class="' +
+            pro_bar_color + '" style="width:' + display_combine_contrib_ratio +
+            '%; height:15px;"></div><div style="position:absolute"><a style="color:black">' +
+            display_depo_ratio + '%</a></div></div>'
     }
 
     function buildContribTable(filter_condict, ordered_dept){
         var whole_contrib_tree = getContributionTree(filter_condict['data_date']);
-        var contrib_tree = {};
-        var frag = document.createElement('fragment');
-        req_dept = filter_condict["department"];
+        var frag = document.createDocumentFragment();
+        var contrib_tree = {},
+            depts_sum = {},
+            branch_sum = {};
+        var req_dept = filter_condict['department'];
         if(req_dept == 'all'){
             contrib_tree = whole_contrib_tree;
+            var dept_selector = document.createElement('div');
+            dept_selector.id = 'dept_selector';
+            dept_selector.className = 'row button-group';
+            $('#right_sidebar_body').append(dept_selector);
         }else{
             contrib_tree[req_dept] = whole_contrib_tree[req_dept];
         }
         for(i in ordered_dept){
-
+            var dept_code = ordered_dept[i];
+            var dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[i]], frag);
+            depts_sum[dept_code] = dept_sum;
+            for(var ds in dept_sum){
+                if(!branch_sum[ds])
+                    branch_sum[ds] = 0;
+                branch_sum[ds] += dept_sum[ds];
+            }
         }
-        console.log(contrib_tree)
+        document.getElementsByClassName('col-lg-12')[0].appendChild(frag);
+        console.log(contrib_tree);
+        console.log(branch_sum);
     }
+
+    function viewDeptContribChart(elem){
+        dept_code = elem.getAttribute('dept_code');
+        window.open('#');
+    }
+
+    function viewCustomerContributionHistory(elem){
+
+
+
+    }
+
 </script>
 
 
