@@ -280,7 +280,7 @@ class CreditLedger(models.Model):
         (2, '总行'),
     )
     data_date = models.DateField(auto_now_add=True, verbose_name='数据日期')
-    department = models.ForeignKey('Department', to_field='code', default='NONE', verbose_name='营销部门')
+    department = models.ForeignKey('Department', to_field='code', default='NONE', on_delete=models.PROTECT, verbose_name='营销部门')
     staff = models.ForeignKey('Staff', default=1, on_delete=models.DO_NOTHING, verbose_name='客户经理')
     customer = models.ForeignKey('AccountedCompany', on_delete=models.DO_NOTHING, verbose_name='客户名称')
     economic_prop = models.ForeignKey('EconomicProperty', default=1, on_delete=models.DO_NOTHING, verbose_name='经济性质')
