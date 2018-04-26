@@ -1,5 +1,5 @@
 # https://github.com/github/gitignore
-# git rm -r --cached . 注意有个点！清除缓存后再add commit，ignore才会生效
+# git rm -r --cached . 娉ㄦ剰鏈変釜鐐癸紒娓呴櫎缂撳瓨鍚庡啀add commit锛宨gnore鎵嶄細鐢熸晥
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -57,7 +57,7 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
+#db.sqlite3
 
 # Flask stuff:
 instance/
