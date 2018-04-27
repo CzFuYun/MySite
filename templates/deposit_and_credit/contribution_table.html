@@ -24,9 +24,126 @@
         '上年日均': '6%',
         '存款余额': '6%',
         '本年日均': '6%',
-        '日均较年初': '6%',      // %
+        '日均较年初': '6%',
         '回报率': '8%'
     };
+    var TABLE_STRUCTURE = {
+        cust_name:          {col_width: '25%',description: '客户名称', sum_calculate: null, td_content:
+                '<a customer_id="{cust_id}" style="color:white" href="javascript:viewCustomerContributionHistory(this)">{cust_name}</a>'},
+        approve_line:       {col_width: '6%', description: '所属条线', sum_calculate: null},
+        net_total:          {col_width: '6%', description: '用信净额', sum_calculate: '+'},
+        interest:           {col_width: null, description: '贷款利息', sum_calculate: '+'},
+        loan:               {col_width: null, description: '贷款金额', sum_calculate: '+'},
+        loan_rate:          {col_width: '6%', description: '贷款利率', sum_calculate: 'interest/loan'},
+        lr_bab:             {col_width: '6%', description: '全额银票', sum_calculate: '+'},
+        invest_baking:      {col_width: '6%', description: '投行项目', sum_calculate: '+'},
+        defuse_expire:      {col_width: '8%', description: '化解到期', sum_calculate: null},
+        last_yd_avg:        {col_width: '6%', description: '上年日均', sum_calculate: null},
+        deposit_amount:     {col_width: '6%', description: '存款余额', sum_calculate: '+'},
+        yd_avg:             {col_width: '6%', description: '本年日均', sum_calculate: '+'},
+        compare_yd_avg:     {col_width: '6%', description: '日均较年初', sum_calculate: setDepoCompForTd, params: [] },
+        contrib_ratio:      {col_width: '8%', description: '回报率', sum_calculate: ''}
+
+    };
+
+    function formatString(string, obj){
+        var r = /\{(\w+)\}/g;
+        var m = r.exec(string);
+        var s = string;
+        while (m){
+            s = s.replace(m[0], obj[m[1]]);
+            m = r.exec(string);
+        }
+        return s;
+    }
+
+    function buildSeriesCard(seriesData, dept_div, filter_condict){
+        // seriesData:{2$金峰:[0000000008727622:{k1:v1,k2:v2,...}, 0000000010982506:{k1:v1,k2:v2,...}]}
+        var series_has_content = false;
+        var series_customer_list = Object.values(seriesData)[0];
+        var series_code, series_name, series_card, series_table, series_tbody;
+        var series_sum = {};
+        for(var cust in series_customer_list){
+            var cust_detail = new Object();
+            var cust_temp_info = Object.values(cust)[0];
+            cust_detail.cust_id = Object.keys(cust)[0];
+            for(var key in cust_temp_info){
+                cust_detail[key] = cust_temp_info[key];
+            }
+            {#cust_detail.gov_plat_lev = cust_temp_info['gov_plat_lev'];#}
+            {#cust_detail.approve_line = cust_temp_info['approve_line'];#}
+            {#cust_detail.net_total = cust_temp_info['net_total'];#}
+            {#cust_detail.defuse_expire = cust_temp_info['defuse_expire'];#}
+            if(!filter_condict['gov'] && cust_detail.gov_plat_lev > 2)      // 如果不要平台，而这个企业又恰好是平台
+                continue;
+            if(!filter_condict['no_gov'] && cust_detail.gov_plat_lev <= 2)
+                continue;
+            if(!filter_condict['sme'] && (cust_detail.approve_line == '小微' || cust_detail.approve_line != ''))
+                continue;
+            if(!filter_condict['cp'] && cust_detail.approve_line == '地区')
+                continue;
+            if(!filter_condict['include_no_credit'] && cust_detail.net_total == 0)
+                continue;
+            if(!filter_condict['include_defuse'] && cust_detail.defuse_expire)
+                continue;
+            if(!series_has_content){
+                series_has_content = true;
+                series_code = Object.keys(seriesData)[0].split('$')[1];
+                series_name = series_customer_list[0]['series_caption'];
+                series_card = document.createElement('div');
+                series_card.className = 'card-body';
+                series_card.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' + series_code + '">' + series_name + '</h2>';
+                series_table = document.createElement('table');
+                series_table.className = 'table full-color-table full-dark-table table-sm table-hover table-bordered';
+                var series_thead = '<thead><tr>';
+                for(var col in TABLE_STRUCTURE){
+                    series_sum = TABLE_STRUCTURE[col].sum_calculate ? 0 : '';
+                    var col_width = TABLE_STRUCTURE[col].col_width;
+                    if(col_width)
+                        series_thead += '<th width="' + col_width + '"><div>' + TABLE_STRUCTURE[col].description + '</div></th>';
+                }
+                series_thead += '</tr></thead>';
+                series_table.innerHTML = series_thead;
+                series_tbody = document.createElement('tbody');
+                series_table.appendChild(series_tbody);
+            }
+            {#cust_detail.cust_name = cust_temp_info['cust_name'];#}
+
+
+
+
+            var customer_detail_tr = document.createElement('tr');
+            for(var col in TABLE_STRUCTURE){
+                if(TABLE_STRUCTURE[col].col_width){
+                    var td = document.createElement('td');
+                    var td_content = TABLE_STRUCTURE[col].td_content;
+                    var td_content_type = typeof td_content;
+                    switch (td_content_type){
+                        case 'string':
+                            td.innerHTML = formatString(td_content, cust_detail);
+                            break;
+                        case 'function':
+
+                    }
+
+                    customer_detail_tr.appendChild(td)
+                }
+                else{
+
+                }
+                if(TABLE_STRUCTURE[col].sum_calculate){
+
+                }
+
+            }
+
+
+
+        }
+   }
+
+
+
     var BASE_RATE = 0.0435;
     $(function () {
         var filter_condict = OPERNER_PARAMS;
@@ -83,6 +200,9 @@
         return ordered_dept;
     }
 
+
+
+
     function buildDeptContribCard(filter_condict, dept_code, depart_contrib, fragment_elem){
         // 单个部门的贡献度卡片
         // filter_condict: {department: "all", gov: "on", data_date: "2018-03-31"}
@@ -98,7 +218,7 @@
             '上年日均': 0,
             '存款余额': 0,
             '本年日均': 0,
-            '日均较年初': 0,     // num
+            '日均较年初': 0,
             '回报率': 0,
             '贷款余额': 0
        };
@@ -395,7 +515,7 @@
                 continue;
             branch_sum_ul.appendChild(li);
         }
-        {#console.log(contrib_tree);#}
+        console.log(contrib_tree);
         {#console.log(branch_sum);#}
     }
 

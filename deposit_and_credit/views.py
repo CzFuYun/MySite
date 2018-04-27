@@ -167,24 +167,24 @@ def getContributionTree(data_date):
         loan = contrib.loan
         temp = {
             customer_id: {
-                '客户名称': cust.name,
+                'cust_name': cust.name,
                 'series_code': series_code,
-                '所属系列': cust.series.caption,
+                'series_caption': cust.series.caption,
                 'gov_plat_lev': gov_plat_lev,
-                '经营部门': contrib.department.caption,
+                'department_caption': contrib.department.caption,
                 'department_code': dep_code,
-                '所属条线': contrib.approve_line,
-                '化解到期': contrib.defuse_expire,
-                '上年日均': int(last_year_yd_avg_dict.get(customer_id, 0)),
-                '本年日均': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
-                '存款余额': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
-                '行业': cust.industry.caption,
-                '贷款余额': int(loan),
-                '贷款利率': float(contrib.loan_rate),
+                'approve_line': contrib.approve_line,
+                'defuse_expire': contrib.defuse_expire,
+                'last_yd_avg': int(last_year_yd_avg_dict.get(customer_id, 0)),
+                'yd_avg': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
+                'deposit_amount': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
+                'industry': cust.industry.caption,
+                'loan': int(loan),
+                'loan_rate': float(contrib.loan_rate),
                 'loan_interest': float(contrib.loan_interest),
-                '用信净额': int(contrib.net_total),
-                '全额银票': int(contrib.lr_BAB),
-                '投行项目': int(contrib.invest_banking),
+                'net_total': int(contrib.net_total),
+                'lr_BAB': int(contrib.lr_BAB),
+                'invest_banking': int(contrib.invest_banking),
             }
         }
         series_key = str(gov_plat_lev) + '$' + series_code
