@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7f6bf124-c520-450d-93ad-4a76ae290650" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/MySite.iml" afterPath="$PROJECT_DIR$/.idea/MySite.iml" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/0a1d6b61-2752-4c41-bc81-1aa2bd46a68a.xml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c17e9a6d-eae2-4f5c-92e3-21123fabc31c.xml" afterPath="" />
-      <change beforePath="$PROJECT_DIR$/db.sqlite3" afterPath="$PROJECT_DIR$/db.sqlite3" />
-      <change beforePath="$PROJECT_DIR$/venv/pip-selfcheck.json" afterPath="$PROJECT_DIR$/venv/pip-selfcheck.json" />
-    </list>
+    <list default="true" id="7f6bf124-c520-450d-93ad-4a76ae290650" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -62,9 +56,8 @@
       <file leaf-file-name="blank.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/blank.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="966">
-              <caret line="46" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="920">
+              <caret line="46" selection-start-line="46" selection-end-line="46" />
             </state>
           </provider>
         </entry>
@@ -72,9 +65,8 @@
       <file leaf-file-name="settings.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/MySite/settings.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1932">
-              <caret line="92" column="0" lean-forward="false" selection-start-line="92" selection-start-column="0" selection-end-line="97" selection-end-column="1" />
-              <folding />
+            <state relative-caret-position="1840">
+              <caret line="92" selection-start-line="92" selection-end-line="97" selection-end-column="1" />
             </state>
           </provider>
         </entry>
@@ -82,9 +74,8 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/root_db/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="5922">
-              <caret line="282" column="0" lean-forward="false" selection-start-line="282" selection-start-column="0" selection-end-line="282" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="5640">
+              <caret line="282" selection-start-line="282" selection-end-line="282" />
             </state>
           </provider>
         </entry>
@@ -92,19 +83,26 @@
       <file leaf-file-name="models.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/deposit_and_credit/models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="525">
-              <caret line="27" column="53" lean-forward="false" selection-start-line="27" selection-start-column="53" selection-end-line="27" selection-end-column="53" />
-              <folding />
+            <state relative-caret-position="500">
+              <caret line="27" column="53" selection-start-line="27" selection-start-column="53" selection-end-line="27" selection-end-column="53" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="requirements.txt" pinned="false" current-in-tab="true">
+      <file leaf-file-name="requirements.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/requirements.txt">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="231">
-              <caret line="56" column="23" lean-forward="false" selection-start-line="56" selection-start-column="23" selection-end-line="56" selection-end-column="23" />
-              <folding />
+              <caret line="56" column="23" selection-start-line="56" selection-start-column="23" selection-end-line="56" selection-end-column="23" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="460">
+              <caret line="59" column="1" selection-start-line="59" selection-start-column="1" selection-end-line="59" selection-end-column="1" />
             </state>
           </provider>
         </entry>
@@ -112,9 +110,8 @@
       <file leaf-file-name="contribution_table.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/templates/deposit_and_credit/contribution_table.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="8652">
-              <caret line="412" column="8" lean-forward="false" selection-start-line="412" selection-start-column="8" selection-end-line="412" selection-end-column="8" />
-              <folding />
+            <state relative-caret-position="8240">
+              <caret line="412" column="8" selection-start-line="412" selection-start-column="8" selection-end-line="412" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -210,12 +207,12 @@
         <option value="$PROJECT_DIR$/templates/base.html" />
         <option value="$PROJECT_DIR$/MySite/settings.py" />
         <option value="$PROJECT_DIR$/deposit_and_credit/views.py" />
-        <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/requirements.txt" />
         <option value="$PROJECT_DIR$/templates/blank.html" />
         <option value="$PROJECT_DIR$/templates/deposit_and_credit/contribution_table.html" />
         <option value="$PROJECT_DIR$/root_db/models.py" />
         <option value="$PROJECT_DIR$/deposit_and_credit/models.py" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -253,23 +250,14 @@
     <option name="width" value="1378" />
     <option name="height" value="733" />
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1">
-      <flattenPackages />
-      <showMembers />
-      <showModules />
-      <showLibraryContents />
-      <hideEmptyPackages />
-      <abbreviatePackageNames />
-      <autoscrollToSource />
-      <autoscrollFromSource />
-      <sortByType />
-      <manualOrder />
+    <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -285,13 +273,31 @@
             <path>
               <item name="MySite" type="b2602c69:ProjectViewProjectNode" />
               <item name="MySite" type="462c0819:PsiDirectoryNode" />
+              <item name="static" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="MySite" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MySite" type="462c0819:PsiDirectoryNode" />
+              <item name="static" type="462c0819:PsiDirectoryNode" />
+              <item name="js" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="MySite" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MySite" type="462c0819:PsiDirectoryNode" />
+              <item name="static" type="462c0819:PsiDirectoryNode" />
+              <item name="js" type="462c0819:PsiDirectoryNode" />
+              <item name="highcharts" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="MySite" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MySite" type="462c0819:PsiDirectoryNode" />
               <item name="templates" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -476,28 +482,32 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1616" height="876" extended-state="7" />
+    <frame x="0" y="-4" width="1920" height="1021" extended-state="6" />
     <layout>
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32960895" sideWeight="0.5025707" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32960895" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32960895" sideWeight="0.4974293" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32960895" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Docker" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="SciView" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Event Log" order="7" sideWeight="0.5025707" side_tool="true" weight="0.32960895" />
+      <window_info anchor="bottom" id="Database Changes" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32960895" />
+      <window_info anchor="bottom" id="Python Console" order="7" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4974293" weight="0.32960895" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.32960895" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.25320512" />
+      <window_info anchor="right" id="R Packages" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="right" id="R Graphics" />
+      <window_info anchor="right" id="Database" order="3" weight="0.32959402" />
+      <window_info anchor="right" id="SciView" order="3" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Database Console" weight="0.3298611" />
+      <window_info anchor="bottom" id="Find" order="1" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -528,7 +538,6 @@
       </default-breakpoints>
       <option name="time" value="193" />
     </breakpoint-manager>
-    <watches-manager />
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
@@ -634,7 +643,6 @@ for contrib in contrib_qs:print(contrib)</expression-string>
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/static/myjs/drawCharts.js" />
     <entry file="file://D:/ProgramData/Anaconda3/Lib/site-packages/django/db/models/sql/query.py" />
     <entry file="file://D:/ProgramData/Anaconda3/Lib/site-packages/django/conf/__init__.py" />
     <entry file="file://$PROJECT_DIR$/MySite/test.py" />
@@ -647,7 +655,7 @@ for contrib in contrib_qs:print(contrib)</expression-string>
     <entry file="file://$PROJECT_DIR$/MySite/urls.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="399">
-          <caret line="21" column="16" lean-forward="false" selection-start-line="21" selection-start-column="10" selection-end-line="21" selection-end-column="16" />
+          <caret line="21" column="16" selection-start-line="21" selection-start-column="10" selection-end-line="21" selection-end-column="16" />
         </state>
       </provider>
     </entry>
@@ -675,7 +683,7 @@ for contrib in contrib_qs:print(contrib)</expression-string>
     <entry file="file://$PROJECT_DIR$/templates/deposit_and_credit/dcindex.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2940">
-          <caret line="140" column="37" lean-forward="false" selection-start-line="140" selection-start-column="20" selection-end-line="140" selection-end-column="37" />
+          <caret line="140" column="37" selection-start-line="140" selection-start-column="20" selection-end-line="140" selection-end-column="37" />
         </state>
       </provider>
     </entry>
@@ -684,7 +692,7 @@ for contrib in contrib_qs:print(contrib)</expression-string>
     <entry file="file://$PROJECT_DIR$/templates/deposit_and_credit/contribution.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1596">
-          <caret line="76" column="94" lean-forward="false" selection-start-line="76" selection-start-column="80" selection-end-line="76" selection-end-column="94" />
+          <caret line="76" column="94" selection-start-line="76" selection-start-column="80" selection-end-line="76" selection-end-column="94" />
         </state>
       </provider>
     </entry>
@@ -694,54 +702,61 @@ for contrib in contrib_qs:print(contrib)</expression-string>
     <entry file="file://D:/ProgramData/Anaconda3/Lib/site-packages/django/core/handlers/exception.py" />
     <entry file="file://D:/ProgramData/Anaconda3/Lib/site-packages/django/core/handlers/base.py" />
     <entry file="file://$PROJECT_DIR$/templates/base.html" />
-    <entry file="file://$PROJECT_DIR$/.gitignore" />
     <entry file="file://$PROJECT_DIR$/app_permission/views.py" />
     <entry file="file://$PROJECT_DIR$/deposit_and_credit/views.py" />
     <entry file="file://$PROJECT_DIR$/templates/deposit_and_credit/contribution_table.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8652">
-          <caret line="412" column="8" lean-forward="false" selection-start-line="412" selection-start-column="8" selection-end-line="412" selection-end-column="8" />
-          <folding />
+        <state relative-caret-position="8240">
+          <caret line="412" column="8" selection-start-line="412" selection-start-column="8" selection-end-line="412" selection-end-column="8" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/templates/blank.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="966">
-          <caret line="46" column="0" lean-forward="false" selection-start-line="46" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="920">
+          <caret line="46" selection-start-line="46" selection-end-line="46" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/MySite/settings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1932">
-          <caret line="92" column="0" lean-forward="false" selection-start-line="92" selection-start-column="0" selection-end-line="97" selection-end-column="1" />
-          <folding />
+        <state relative-caret-position="1840">
+          <caret line="92" selection-start-line="92" selection-end-line="97" selection-end-column="1" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/root_db/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5922">
-          <caret line="282" column="0" lean-forward="false" selection-start-line="282" selection-start-column="0" selection-end-line="282" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="5640">
+          <caret line="282" selection-start-line="282" selection-end-line="282" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/deposit_and_credit/models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="525">
-          <caret line="27" column="53" lean-forward="false" selection-start-line="27" selection-start-column="53" selection-end-line="27" selection-end-column="53" />
-          <folding />
+        <state relative-caret-position="500">
+          <caret line="27" column="53" selection-start-line="27" selection-start-column="53" selection-end-line="27" selection-end-column="53" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/requirements.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="231">
-          <caret line="56" column="23" lean-forward="false" selection-start-line="56" selection-start-column="23" selection-end-line="56" selection-end-column="23" />
-          <folding />
+          <caret line="56" column="23" selection-start-line="56" selection-start-column="23" selection-end-line="56" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="das://cf51068f-0b6e-4cf1-87fa-1ae86cb05554/schema/main/table/root_db_series">
+      <provider selected="true" editor-type-id="com.intellij.database.editor.DatabaseTableFileEditorProvider">
+        <state>
+          <filtering enabled="true" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="460">
+          <caret line="59" column="1" selection-start-line="59" selection-start-column="1" selection-end-line="59" selection-end-column="1" />
         </state>
       </provider>
     </entry>
