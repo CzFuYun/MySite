@@ -31,21 +31,21 @@
         cust_name:          {col_width: '25%',description: '客户名称', sum_formula: null, value_formula: '<a customer_id="{cust_id}" style="color:white" href="javascript:viewCustomerContributionHistory(this)">{cust_name}</a>'},
         approve_line:       {col_width: '6%', description: '所属条线', sum_formula: null},
         net_total:          {col_width: '6%', description: '用信净额', sum_formula: '+'},
-        interest:           {col_width: null, description: '贷款利息', sum_formula: '+'},
+        interest:           {col_width: null, description: '贷款利息', sum_formula: '+', value_formula: '<loan>*<loan_rate>'},
         loan:               {col_width: null, description: '贷款金额', sum_formula: '+'},
-        loan_rate:          {col_width: '6%', description: '贷款利率', sum_formula: 'like_value_formula', value_formula: '{interest}/{loan}'},
+        loan_rate:          {col_width: '6%', description: '贷款利率', sum_formula: '<interest>/<loan>'},
         lr_bab:             {col_width: '6%', description: '全额银票', sum_formula: '+'},
         invest_baking:      {col_width: '6%', description: '投行项目', sum_formula: '+'},
         defuse_expire:      {col_width: '8%', description: '化解到期', sum_formula: null},
         last_yd_avg:        {col_width: '6%', description: '上年日均', sum_formula: null},
         deposit_amount:     {col_width: '6%', description: '存款余额', sum_formula: '+'},
         yd_avg:             {col_width: '6%', description: '本年日均', sum_formula: '+'},
-        compare_yd_avg:     {col_width: '6%', description: '日均较年初', sum_formula: 'like_value_formula', value_formula: [setDepoCompForTd, '{last_yd_avg}', '{yd_avg}']},
-        contrib_ratio:      {col_width: '8%', description: '回报率', sum_formula: 'like_value_formula', value_formula: [setContribRatioForTd, '{interest}', '{loan}', BASE_RATE, '{yd_avg}', '{net_total}']}
+        compare_yd_avg:     {col_width: '6%', description: '日均较年初', sum_formula: 'like_value_formula', value_formula: [setDepoCompForTd, '<last_yd_avg>', '<yd_avg>']},
+        contrib_ratio:      {col_width: '8%', description: '回报率', sum_formula: 'like_value_formula', value_formula: [setContribRatioForTd, '<interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>']}
     };
 
     function formatString(string, obj){
-        let r = /\{(\w+)\}/g;
+        let r = /\<(\w+)\>/g;
         let m = r.exec(string);
         let s = string;
         while (m){
@@ -56,20 +56,26 @@
     }
 
     function calculate(formulaString, obj){
-        let s = formatString(formulaString, obj);
-        let ret;
         try{
-            ret = eval(s);
-        }catch (e) {
-            ret = s;
+            return eval(formulaString);
+        }catch{
+            let s = formatString(formulaString, obj);
+            let ret;
+            try{
+                ret = eval(s);
+            }catch (e) {
+                ret = s;
+            }
+            return ret;
         }
-        return ret;
     }
 
-    function batchCalculate(formulaArray, obj){
+    function batchCalculate(formulaStrings, obj){
+        // Convert formular array To value array
+        // formulaStrings   ['<last_yd_avg>', '<yd_avg>']
         let ret = [];
-        for(let i=0; i<formulaArray.length; i++){
-            ret.append(calculate(formulaArray[i], obj))
+        for(let i=0; i<formulaStrings.length; i++){
+            ret.append(calculate(formulaStrings[i], obj))
         }
         return ret;
     }
@@ -121,41 +127,54 @@
                 series_tbody = document.createElement('tbody');
                 series_table.appendChild(series_tbody);
             }
-
-
-
-
             let customer_detail_tr = document.createElement('tr');
+            let tvalue;
             for(let col in TABLE_STRUCTURE){
-                if(TABLE_STRUCTURE[col].col_width){
-                    let td = document.createElement('td'),
-                        td_content = TABLE_STRUCTURE[col].value_formula,
-                        td_content_type = typeof td_content;
-                    switch (td_content_type){
+                if(TABLE_STRUCTURE[col].hasOwnProperty('value_formula')){       // 若这个单元格显示内容有特殊的算法
+                    let td_operation = TABLE_STRUCTURE[col].value_formula,
+                        td_operation_type = typeof td_operation;
+                    switch (td_operation_type){
                         case 'string':
-                            td.innerHTML = calculate(td_content, cust_detail);
+                            tvalue = calculate(td_operation, cust_detail);
                             break;
                         case 'object':      // Array也是object。。。
-                            let func = td_content.splice(0, 1)[0];      // splice:从数组的第x位开始，删除y个元素，并返回被删除的元素Array
-
-
+                            let func = td_operation.splice(0, 1)[0];      // splice:将原数组，从第x位开始，删除y个元素，并返回被删除的元素Array
+                            tvalue = func.apply(this, batchCalculate(td_operation, cust_detail));       //
                             break;
                     }
-
-                    customer_detail_tr.appendChild(td)
+                }else{      // 若这个单元格显示内容没有特殊的算法
+                    tvalue = cust_detail[col];
                 }
-                else{
-
+                if(TABLE_STRUCTURE[col].col_width){
+                    let td = document.createElement('td');
+                    td.innerHTML = tvalue;
+                    customer_detail_tr.appendChild(td);
+                }else{      // 若为辅助列（即列宽为null）
+                    cust_detail[col] = tvalue;
                 }
-                if(TABLE_STRUCTURE[col].sum_formula){
-
+                // ↓将上述计算结果计入本系列的汇总数
+                let series_sum_operation = TABLE_STRUCTURE[col].sum_formula;
+                switch (series_sum_operation){
+                    case '+':
+                        series_sum[col] += value;
+                        break;
+                    case 'like_value_formula':
+                        series_sum_operation = TABLE_STRUCTURE[col].value_formula;
+                        series_sum_operation_type = typeof series_sum_operation;
+                        switch (series_sum_operation_type){
+                            case 'string':
+                                series_sum[col] = calculate(series_sum_operation, series_sum);
+                                break;
+                            {#case 'object':#}
+                            {#    let func = series_sum_operation.splice(0, 1)[0];#}
+                            {#    series_sum[col] = func.apply(this, batchCalculate(series_sum_operation, series_sum));#}
+                            {#    break;#}
+                        }
+                        break;
                 }
-
             }
-
-
-
         }
+        return series_sum;
    }
 
 
@@ -226,22 +245,11 @@
         // depart_contrib: contrib_tree[dept_code]
         // return: {SUM}
         var dept_has_content = false;
-        var dept_sum = {
-            '用信净额': 0,
-            '贷款利息': 0,
-            '全额银票': 0,
-            '投行项目': 0,
-            '上年日均': 0,
-            '存款余额': 0,
-            '本年日均': 0,
-            '日均较年初': 0,
-            '回报率': 0,
-            '贷款余额': 0
-       };
-        var dept_name = depart_contrib['经营部门'];
+        var dept_sum = {};
+        var dept_name = depart_contrib['department_caption'];
         var thead_html = '<thead><tr>';
-        for(var col in TABLE_COLS){
-            thead_html += '<th width="' + TABLE_COLS[col] + '"><div>' + (col == '客户名称' ? '' : col) + '</div></th>';
+        for(var col in TABLE_STRUCTURE){
+            thead_html += '<th width="' + TABLE_STRUCTURE[col] + '"><div>' + (col == 'cust_name' ? '' : col) + '</div></th>';
         }
         thead_html += '</tr></thead>';
         var dept_title = document.createElement('h1');
@@ -251,196 +259,84 @@
         var dept_card = document.createElement('div');
         dept_card.setAttribute('class', 'card');
         var series_customer_data = sortDict(depart_contrib['series_customer_data'], false);
-        for(var series in series_customer_data){
-            var series_sum = {
-                '用信净额': 0,
-                '贷款利息': 0,
-                '全额银票': 0,
-                '投行项目': 0,
-                '上年日均': 0,
-                '存款余额': 0,
-                '本年日均': 0,
-                '日均较年初': 0,
-                '回报率': 0,
-                '贷款余额': 0
-
-            };
-            var table = document.createElement('table');
-            table.innerHTML = thead_html;
-            var series_has_content = false;        // 该系列经过筛选后是否还有客户
-            var cust_list = Object.values(series_customer_data[series]);
-            var tbody = document.createElement('tbody');
-            var series_foot = document.createElement('thead');
-            for(i in cust_list){
-                var cust_id = Object.keys(cust_list[i])[0];
-                var cust_detail_dict = Object.values(cust_list[i])[0];
-                var gov_plat_lev = cust_detail_dict['gov_plat_lev'];
-                var belong_line = cust_detail_dict['所属条线'];
-                var net_total = cust_detail_dict['用信净额'];
-                var defuse = cust_detail_dict['化解到期'];
-                if(!filter_condict['gov'] && gov_plat_lev > 2)      // 如果不要平台，而这个企业又恰好是平台
-                    continue;
-                if(!filter_condict['no_gov'] && gov_plat_lev <= 2)
-                    continue;
-                if(!filter_condict['sme'] && (belong_line == '小微' || belong_line != ''))
-                    continue;
-                if(!filter_condict['cp'] && belong_line == '地区')
-                    continue;
-                if(!filter_condict['include_no_credit'] && net_total == 0)
-                    continue;
-                if(!filter_condict['include_defuse'] && defuse)
-                    continue;
-                series_has_content = true;
-                if(!dept_has_content){
-                    dept_has_content = true;
-                    dept_title.setAttribute('class', 'text-themecolor');
-                    dept_title.setAttribute('dept_code', dept_code);
-                    dept_title.setAttribute('oncilck', 'viewDeptContribChart(this)');
-                    dept_title.innerHTML = dept_name;
-                    fragment_elem.appendChild(dept_title);
-                    fragment_elem.appendChild(dept_sum_table);
-                    var dept_sum_thead = '<thead><tr>';
-                    for(var col in dept_sum){
-                        if(col == '贷款利息'){
-                            dept_sum_thead += '<th>' + '贷款利率' + '</th>';
-                            continue;
-                        }
-                        else if(col == '贷款余额')
-                            continue;
-                        dept_sum_thead += '<th>' + col + '</th>';
-                    }
-                    dept_sum_thead += '</tr></thead>';
-                    dept_sum_table.innerHTML = dept_sum_thead;
-                    fragment_elem.appendChild(dept_card);
-                    // 接下来应在筛选卡中添加这个部门
-                    try{
-                        var dept_selector = document.getElementById('dept_selector');
-                        var dept_button = document.createElement('a');
-                        dept_button.className = 'btn btn-rounded btn-block btn-outline-info';
-                        dept_button.setAttribute('href', '#' + dept_code);
-                        dept_button.innerText = dept_name;
-                        dept_selector.appendChild(dept_button);
-                    }finally {;}
-                }
-                var loan = cust_detail_dict['贷款余额'];
-                var interest = cust_detail_dict['loan_interest'];
-                var last_yd_avg = cust_detail_dict['上年日均'];
-                var yd_avg = cust_detail_dict['本年日均'];
-                var depo_amount = cust_detail_dict['存款余额'];
-                series_sum['贷款余额'] += loan;
-                series_sum['用信净额'] += net_total;
-                series_sum['贷款利息'] += interest;
-                series_sum['全额银票'] += cust_detail_dict['全额银票'];
-                series_sum['投行项目'] += cust_detail_dict['投行项目'];
-                series_sum['上年日均'] += last_yd_avg;
-                series_sum['存款余额'] += depo_amount;
-                series_sum['本年日均'] += yd_avg;
-                series_sum['日均较年初'] += (yd_avg - last_yd_avg);
-                dept_sum['贷款余额'] += loan;
-                dept_sum['用信净额'] += net_total;
-                dept_sum['贷款利息'] += interest;
-                dept_sum['全额银票'] += cust_detail_dict['全额银票'];
-                dept_sum['投行项目'] += cust_detail_dict['投行项目'];
-                dept_sum['上年日均'] += last_yd_avg;
-                dept_sum['存款余额'] += depo_amount;
-                dept_sum['本年日均'] += yd_avg;
-                dept_sum['日均较年初'] += (yd_avg - last_yd_avg);
-                var tr = document.createElement('tr');
-                for(var col in TABLE_COLS){
-                    var td = document.createElement('td');
-                    var temp = cust_detail_dict[col];
-                    if(col == '客户名称'){
-                        td.innerHTML = '<a customer_id="' + cust_id +
-                            '" style="color:white" href="javascript:viewCustomerContributionHistory(this)">' + temp + '</a>';
-                    }else{
-                        if(temp)
-                            td.innerText = temp;
-                        else{
-                            if(col == '日均较年初'){
-                                setDepoCompForTd(td, last_yd_avg, yd_avg);
-                            }else if(col == '回报率' && net_total){
-                                setContribRatioForTd(td, interest, loan, BASE_RATE, yd_avg, net_total);
-                            }
-                        }
-                    }
-                    tr.appendChild(td);
-                }
-                tbody.appendChild(tr);
-            }
-            if(!series_has_content)
+        for(let series in series_customer_data){
+            var series_sum;
+            series_sum = buildSeriesCard({series: series_customer_data[series]}, dept_card, filter_condict);
+            if(!series_sum)
                 continue;
-            var series_code = series.split('$')[1];
-            var series_name = Object.values(series_customer_data[series][0])[0]['所属系列'];
-            // ↓构建系列的汇总数据
-            var series_sum_tr = document.createElement('tr');
-            for(var col in TABLE_COLS){
-                var th = document.createElement('th');
-                switch (col){
-                    case '用信净额':
-                        th.innerHTML = series_sum['用信净额'];
-                        break;
-                    case '所属条线':
-                        th.innerHTML = '';
-                        break;
-                    case '客户名称':
-                        th.innerHTML = '<span style="border-bottom:2pt double"><b>' + dept_name + '&nbsp;—&nbsp;' +
-                            series_name + '汇总</b></span>';
-                        break;
-                    case '贷款利率':
-                        th.innerHTML = Math.round((series_sum['贷款利息'] / series_sum['贷款余额']) * 1000000) / 10000;
-                        break;
-                    case '化解到期':
-                        th.innerHTML = '';
-                        break;
-                    case '日均较年初':
-                        setDepoCompForTd(th, series_sum['上年日均'], series_sum['本年日均']);
-                        break;
-                    case '回报率':
-                        setContribRatioForTd(th, series_sum['贷款利息'], series_sum['贷款余额'],
-                            BASE_RATE, series_sum['本年日均'], series_sum['用信净额']);
-                        break;
-                    default:
-                        th.innerHTML = series_sum[col] || '';
-                        break;
-                }
-                series_sum_tr.appendChild(th);
-            }
-            series_foot.appendChild(series_sum_tr);
-            var card_body = document.createElement('div');
-            card_body.setAttribute('class', 'card-body');
-            card_body.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' +
-                series_code + '">' + series_name + '</h2>';
-            table.setAttribute('class', 'table full-color-table full-dark-table table-sm table-hover table-bordered');
-            table.appendChild(tbody);
-            table.appendChild(series_foot);
-            card_body.appendChild(table);
-            dept_card.appendChild(card_body);
-        }
-        var dept_sum_tbody = document.createElement('tbody');
-        var dept_sum_tbody_tr = document.createElement('tr');
-        dept_sum_tbody.appendChild(dept_sum_tbody_tr);
-        for(var col in dept_sum){
-            if(col == '贷款余额')
-                continue;
-            var td = document.createElement('td');
-            dept_sum_tbody_tr.appendChild(td);
-            if(col == '回报率'){
-                td.innerText = Math.round((dept_sum['本年日均'] / dept_sum['用信净额']) * 10000) / 100 + '%';
-                continue;
-            }else if(col == '贷款利息'){
-                td.innerText = Math.round((dept_sum['贷款利息'] / dept_sum['贷款余额']) * 10000) / 100 + '%';
-                continue;
-            }
-            td.innerText = dept_sum[col];
-        }
-        dept_sum_table.appendChild(dept_sum_tbody);
+            console.log(series_sum);
+        {#    var series_code = series.split('$')[1];#}
+        {#    var series_name = Object.values(series_customer_data[series][0])[0]['所属系列'];#}
+        {#    // ↓构建系列的汇总数据#}
+        {#    var series_sum_tr = document.createElement('tr');#}
+        {#    for(var col in TABLE_STRUCTURE){#}
+        {#        var th = document.createElement('th');#}
+        {#        switch (col){#}
+        {#            case '用信净额':#}
+        {#                th.innerHTML = series_sum['用信净额'];#}
+        {#                break;#}
+        {#            case '所属条线':#}
+        {#                th.innerHTML = '';#}
+        {#                break;#}
+        {#            case '客户名称':#}
+        {#                th.innerHTML = '<span style="border-bottom:2pt double"><b>' + dept_name + '&nbsp;—&nbsp;' +#}
+        {#                    series_name + '汇总</b></span>';#}
+        {#                break;#}
+        {#            case '贷款利率':#}
+        {#                th.innerHTML = Math.round((series_sum['贷款利息'] / series_sum['贷款余额']) * 1000000) / 10000;#}
+        {#                break;#}
+        {#            case '化解到期':#}
+        {#                th.innerHTML = '';#}
+        {#                break;#}
+        {#            case '日均较年初':#}
+        {#                setDepoCompForTd(th, series_sum['上年日均'], series_sum['本年日均']);#}
+        {#                break;#}
+        {#            case '回报率':#}
+        {#                setContribRatioForTd(th, series_sum['贷款利息'], series_sum['贷款余额'],#}
+        {#                    BASE_RATE, series_sum['本年日均'], series_sum['用信净额']);#}
+        {#                break;#}
+        {#            default:#}
+        {#                th.innerHTML = series_sum[col] || '';#}
+        {#                break;#}
+        {#        }#}
+        {#        series_sum_tr.appendChild(th);#}
+        {#    }#}
+        {#    series_foot.appendChild(series_sum_tr);#}
+        {#    var card_body = document.createElement('div');#}
+        {#    card_body.setAttribute('class', 'card-body');#}
+        {#    card_body.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' +#}
+        {#        series_code + '">' + series_name + '</h2>';#}
+        {#    table.setAttribute('class', 'table full-color-table full-dark-table table-sm table-hover table-bordered');#}
+        {#    table.appendChild(tbody);#}
+        {#    table.appendChild(series_foot);#}
+        {#    card_body.appendChild(table);#}
+        {#    dept_card.appendChild(card_body);#}
+        {#}#}
+        {#var dept_sum_tbody = document.createElement('tbody');#}
+        {#var dept_sum_tbody_tr = document.createElement('tr');#}
+        {#dept_sum_tbody.appendChild(dept_sum_tbody_tr);#}
+        {#for(var col in dept_sum){#}
+        {#    if(col == '贷款余额')#}
+        {#        continue;#}
+        {#    var td = document.createElement('td');#}
+        {#    dept_sum_tbody_tr.appendChild(td);#}
+        {#    if(col == '回报率'){#}
+        {#        td.innerText = Math.round((dept_sum['本年日均'] / dept_sum['用信净额']) * 10000) / 100 + '%';#}
+        {#        continue;#}
+        {#    }else if(col == '贷款利息'){#}
+        {#        td.innerText = Math.round((dept_sum['贷款利息'] / dept_sum['贷款余额']) * 10000) / 100 + '%';#}
+        {#        continue;#}
+        {#    }#}
+        {#    td.innerText = dept_sum[col];#}
+        {#}#}
+        {#dept_sum_table.appendChild(dept_sum_tbody);#}
         {#console.log(dept_sum);#}
-        return dept_sum;
+        {#return dept_sum;#}
     }
 
 
 
-    function setDepoCompForTd(td_emel, depoBefore, deptAfter){
+    function setDepoCompForTd(depoBefore, deptAfter){
         var compare = depoBefore
             ? deptAfter  / depoBefore - 1
             : (deptAfter ? 1 : 0);
@@ -460,10 +356,10 @@
                 arrow = '"fa fa-level-up"';
                 color = '"text-info text-semibold"';
             }
-            td_emel.innerHTML = '<span class=' + color + '><i class=' + arrow + ' aria-hidden="true"></i>' + (deptAfter - depoBefore) + '</span>';
+            return '<span class=' + color + '><i class=' + arrow + ' aria-hidden="true"></i>' + (deptAfter - depoBefore) + '</span>';
     }
 
-    function setContribRatioForTd(td_emel, interest, loan, base_rate, yd_avg, net_total){
+    function setContribRatioForTd(interest, loan, base_rate, yd_avg, net_total){
         var rate_float_ratio = interest / loan / base_rate - 1;
         var depo_ratio = yd_avg / net_total;
         var combine_contrib_ratio = rate_float_ratio + depo_ratio;
@@ -480,7 +376,7 @@
             pro_bar_color = 'progress-bar bg-info';
         else
             pro_bar_color = 'progress-bar bg-primary';
-        td_emel.innerHTML = '<div class="progress progress-xs margin-vertical-10 "><div class="' +
+        return '<div class="progress progress-xs margin-vertical-10 "><div class="' +
             pro_bar_color + '" style="width:' + display_combine_contrib_ratio +
             '%; height:20px;"></div><div style="position:absolute"><h5 style="color:black">' +
             display_depo_ratio + '%</h5></div></div>'
