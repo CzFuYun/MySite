@@ -151,7 +151,7 @@ def getContributionTree(data_date):
     dep_qs = rd_models.Department.objects.all().order_by('display_order')
     for dep in dep_qs:
         contrib_tree[dep.code] = {
-            '经营部门': dep.caption,
+            'department_caption': dep.caption,
             'department_code': dep.code,
             'series_customer_data': {}
         }

@@ -21,23 +21,22 @@
         keep_originally_value:4 // 汇总规则：保持原值（仅针对在同一系列企业下的“静态”字段，例如系列名称、部门名称）
     };
     TABLE_STRUCTURE = {
-        department_caption:tableCol('经营部门',0,TS_RULE.originally_value,TS_RULE.keep_originally_value),
-        series_caption:tableCol('系列',0,TS_RULE.originally_value,TS_RULE.keep_originally_value),
-
-        cust_name:tableCol('客户名称','25%','<a customer_id="<cust_id>" style="color:white" href="javascript:viewCustomerContributionHistory(this)"><cust_name></a>', '<department_caption>—<series_caption>汇总'),
-        approve_line:tableCol('所属条线','6%',TS_RULE.originally_value,TS_RULE.no_need_sum),
-        net_total:tableCol('用信净额','6%',TS_RULE.originally_value,TS_RULE.col_accumulation),
-        loan:tableCol('贷款金额',0,TS_RULE.originally_value,TS_RULE.col_accumulation),
-        loan_interest:tableCol('贷款利息',0,TS_RULE.originally_value,TS_RULE.col_accumulation),
-        loan_rate:tableCol('贷款利率','6%','Math.round(10000*<loan_interest>/<loan>)/100','Math.round(10000*<loan_interest>/<loan>)/100'),
-        lr_BAB:tableCol('全额银票','6%',TS_RULE.originally_value,TS_RULE.col_accumulation),
-        invest_banking:tableCol('投行项目','6%',TS_RULE.originally_value,TS_RULE.col_accumulation),
-        defuse_expire:tableCol('化解到期','8%',TS_RULE.originally_value,TS_RULE.no_need_sum),
-        last_yd_avg:tableCol('上年日均','6%',TS_RULE.originally_value,TS_RULE.col_accumulation),
-        deposit_amount:tableCol('存款余额','6%',TS_RULE.originally_value,TS_RULE.col_accumulation),
-        yd_avg:tableCol('本年日均','6%',TS_RULE.originally_value,TS_RULE.col_accumulation),
-        compare_yd_avg:tableCol('日均较年初','6%',[setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'],[setDepoCompForTd, '<last_yd_avg>', '<yd_avg>']),
-        contrib_ratio:tableCol('回报率','8%',[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>'],[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>'])
+        department_caption: tableCol('经营部门'   , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
+        series_caption:     tableCol('系列'       , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
+        cust_name:          tableCol('客户名称'   , '25%' , '<a customer_id="<cust_id>" style="color:white" href="javascript:viewCustomerContributionHistory(this)"><cust_name></a>', '<department_caption>—<series_caption>汇总'),
+        approve_line:       tableCol('所属条线'   , '6%'  , TS_RULE.originally_value,TS_RULE.no_need_sum),
+        net_total:          tableCol('用信净额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        loan:               tableCol('贷款金额'   , 0     , TS_RULE.originally_value,TS_RULE.col_accumulation),
+        loan_interest:      tableCol('贷款利息'   , 0     , TS_RULE.originally_value,TS_RULE.col_accumulation),
+        loan_rate:          tableCol('贷款利率'   , '6%'  , 'Math.round(10000*<loan_interest>/<loan>)/100','Math.round(10000*<loan_interest>/<loan>)/100', true),
+        lr_BAB:             tableCol('全额银票'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        invest_banking:     tableCol('投行项目'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        defuse_expire:      tableCol('化解到期'   , '8%'  , TS_RULE.originally_value,TS_RULE.no_need_sum),
+        last_yd_avg:        tableCol('上年日均'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        deposit_amount:     tableCol('存款余额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        yd_avg:             tableCol('本年日均'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        compare_yd_avg:     tableCol('日均较年初' , '6%'  , [setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'],[setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'], true),
+        contrib_ratio:      tableCol('回报率'     , '8%'  , [setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>'],[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>'], true)
     };
 
     $(function () {
@@ -46,12 +45,13 @@
         buildContribTable(filter_condict, ordered_dept);
     });
 
-    function tableCol(description, col_width, solid_value, value_for_sum_td){
+    function tableCol(description, col_width, solid_value, value_for_sum_td, shown_in_dept_sum){
         return {
             description: description,
             col_width: col_width,
             solid_value: solid_value,
-            value_for_sum_td: value_for_sum_td
+            value_for_sum_td: value_for_sum_td,
+            shown_in_dept_sum: shown_in_dept_sum
         }
     }
 
@@ -200,7 +200,7 @@
             series_tbody.appendChild(customer_detail_tr);
         }
         // ↓构建系列汇总行
-        let series_sum_thead = document.createElement('thead');
+        let series_tfoot = document.createElement('thead');
         let series_sum_tr = document.createElement('tr');
         for(let col in TABLE_STRUCTURE){
             if(!TABLE_STRUCTURE[col].col_width)
@@ -223,11 +223,10 @@
             }
             series_sum_tr.appendChild(th)
         }
-        series_sum_thead.appendChild(series_sum_tr);
-        series_table.appendChild(series_sum_thead);
+        series_tfoot.appendChild(series_sum_tr);
+        series_table.appendChild(series_tfoot);
         series_card.appendChild(series_table);
         dept_div.appendChild(series_card);
-        {#console.log(series_sum);#}
         return series_sum;
    }
 
@@ -286,75 +285,74 @@
         // dept_code: 'YYB'
         // depart_contrib: contrib_tree[dept_code]
         // return: {SUM}
-        let dept_has_content = false;
-        var dept_sum = {};
-        var dept_name = depart_contrib['department_caption'];
-        var thead_html = '<thead><tr>';
-        for(var col in TABLE_STRUCTURE){
-            thead_html += '<th width="' + TABLE_STRUCTURE[col] + '"><div>' + (col == 'cust_name' ? '' : col) + '</div></th>';
-        }
-        thead_html += '</tr></thead>';
-        var dept_title = document.createElement('h1');
-        dept_title.id = dept_code;
-        var dept_sum_table = document.createElement('table');
-        dept_sum_table.className = 'tablesaw table-striped table tablesaw-columntoggle';
-        var dept_card = document.createElement('div');
+        let dept_has_content = false,
+            dept_sum = {};
+        let dept_card = document.createElement('div');
         dept_card.setAttribute('class', 'card');
-        var series_customer_data = sortDict(depart_contrib['series_customer_data'], false);
+        let series_customer_data = sortDict(depart_contrib['series_customer_data'], false);
         for(let series in series_customer_data){
             let series_sum = buildSeriesCard(series.split('$')[1], series_customer_data[series], dept_card, filter_condict);
-            if(series_sum)
+            console.log(series_sum);
+            if(series_sum){
+                for(let s in series_sum){
+                    let sum_operation = TABLE_STRUCTURE[s].value_for_sum_td;
+                    if(sum_operation === TS_RULE.no_need_sum || sum_operation === TS_RULE.keep_originally_value)
+                        continue;
+                    else if(sum_operation === TS_RULE.col_accumulation){
+                        if(!dept_has_content)
+                            dept_sum[s] = 0;
+                        dept_sum[s] += series_sum[s];
+                    }else{
+                        let sum_operation_type = typeof sum_operation;
+                        if(sum_operation_type === 'string'){
+                            dept_sum[s] = calculate(sum_operation, series_sum)
+                        }else if(sum_operation_type === 'object'){
+                            {#let func = TABLE_STRUCTURE[s].value_for_sum_td[0],#}
+                            {#    func_params = TABLE_STRUCTURE[s].value_for_sum_td.slice(1, sum_operation.length);#}
+                            {#dept_sum[s] = func.apply(func, batchCalculate(func_params, series_sum));#}
+                        }
+                    }
+                }
                 dept_has_content = true;
+            }
         }
-        if(dept_has_content)
+        console.log(dept_sum);
+        if(dept_has_content){
+            let dept_name = depart_contrib['department_caption'],
+                dept_title = document.createElement('h1');
+            dept_title.id = dept_code;
+            dept_title.className = 'text-themecolor';
+            dept_title.setAttribute('dept_code', dept_code);
+            dept_title.setAttribute('oncilck', 'viewDeptContribChart(this)');
+            dept_title.innerText = dept_name;
+            fragment_elem.appendChild(dept_title);
+            let dept_sum_table = document.createElement('table'),
+                dept_sum_thead = document.createElement('thead'),
+                dept_sum_tbody = document.createElement('tbody');
+            dept_sum_table.className = 'tablesaw table-striped table tablesaw-columntoggle';
+            dept_sum_table.appendChild(dept_sum_thead);
+            dept_sum_table.appendChild(dept_sum_tbody);
+            for(let col in TABLE_STRUCTURE){
+                if(TABLE_STRUCTURE[col].shown_in_dept_sum){
+                    let th = document.createElement('th');
+                    th.innerText = TABLE_STRUCTURE[col].description;
+                    dept_sum_thead.appendChild(th);
+                    let dept_sum_operation = TABLE_STRUCTURE[col].value_for_sum_td;
+
+                }
+            }
+
+
+            fragment_elem.appendChild(dept_sum_table);
+
+
             fragment_elem.appendChild(dept_card);
+            return dept_sum;
+
+        }
+
             /*
             var series_name = Object.values(series_customer_data[series][0])[0]['所属系列'];
-            // ↓构建系列的汇总数据
-            var series_sum_tr = document.createElement('tr');
-            for(var col in TABLE_STRUCTURE){
-                var th = document.createElement('th');
-                switch (col){
-                    case '用信净额':
-                        th.innerHTML = series_sum['用信净额'];
-                        break;
-                    case '所属条线':
-                        th.innerHTML = '';
-                        break;
-                    case '客户名称':
-                        th.innerHTML = '<span style="border-bottom:2pt double"><b>' + dept_name + '&nbsp;—&nbsp;' +
-                            series_name + '汇总</b></span>';
-                        break;
-                    case '贷款利率':
-                        th.innerHTML = Math.round((series_sum['贷款利息'] / series_sum['贷款余额']) * 1000000) / 10000;
-                        break;
-                    case '化解到期':
-                        th.innerHTML = '';
-                        break;
-                    case '日均较年初':
-                        setDepoCompForTd(th, series_sum['上年日均'], series_sum['本年日均']);
-                        break;
-                    case '回报率':
-                        setContribRatioForTd(th, series_sum['贷款利息'], series_sum['贷款余额'],
-                            BASE_RATE, series_sum['本年日均'], series_sum['用信净额']);
-                        break;
-                    default:
-                        th.innerHTML = series_sum[col] || '';
-                        break;
-                }
-                series_sum_tr.appendChild(th);
-            }
-            series_foot.appendChild(series_sum_tr);
-            var card_body = document.createElement('div');
-            card_body.setAttribute('class', 'card-body');
-            card_body.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' +
-                series_code + '">' + series_name + '</h2>';
-            table.setAttribute('class', 'table full-color-table full-dark-table table-sm table-hover table-bordered');
-            table.appendChild(tbody);
-            table.appendChild(series_foot);
-            card_body.appendChild(table);
-            dept_card.appendChild(card_body);
-        }
         var dept_sum_tbody = document.createElement('tbody');
         var dept_sum_tbody_tr = document.createElement('tr');
         dept_sum_tbody.appendChild(dept_sum_tbody_tr);
