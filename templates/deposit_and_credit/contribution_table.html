@@ -15,10 +15,10 @@
 <script type="text/javascript">
     BASE_RATE = 0.0435;
     TS_RULE = {
-        originally_value: 2,    // 非汇总行值： 显示原值
-        col_accumulation: 1,    // 汇总规则：本列累加
-        no_need_sum: 3,         // 汇总规则：不汇总
-        keep_originally_value:4 // 汇总规则：保持原值（仅针对在同一系列企业下的“静态”字段，例如系列名称、部门名称）
+        originally_value: 2,        // 非汇总行值： 显示原值
+        col_accumulation: 1,        // 汇总规则：本列累加
+        no_need_sum: 3,             // 汇总规则：不汇总
+        keep_originally_value: 4    // 汇总规则：保持原值（仅针对在同一系列企业下的“静态”字段，例如系列名称、部门名称）
     };
     TABLE_STRUCTURE = {
         department_caption: tableCol('经营部门'   , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
@@ -105,12 +105,11 @@
             for(let key in cust_temp_info){
                 cust_detail[key] = cust_temp_info[key];
             }
-            {#console.log(cust_detail);#}
             if(!filter_condict['gov'] && cust_detail.gov_plat_lev > 2)      // 如果不要平台，而这个企业又恰好是平台
                 continue;
             if(!filter_condict['no_gov'] && cust_detail.gov_plat_lev <= 2)
                 continue;
-            if(!filter_condict['sme'] && (cust_detail.approve_line === '小微' || cust_detail.approve_line !== ''))
+            if(!filter_condict['sme'] && (cust_detail.approve_line === '小微'))
                 continue;
             if(!filter_condict['cp'] && cust_detail.approve_line === '地区')
                 continue;
@@ -118,8 +117,8 @@
                 continue;
             if(!filter_condict['include_defuse'] && cust_detail.defuse_expire)
                 continue;
+            {#console.log(cust_detail);#}
             if(!series_has_content){
-                series_has_content = true;
                 series_name = Object.values(series_customer_list[0])[0]['series_caption'];
                 series_card = document.createElement('div');
                 series_card.className = 'card-body';
@@ -137,6 +136,7 @@
                 series_table.innerHTML = series_thead;
                 series_tbody = document.createElement('tbody');
                 series_table.appendChild(series_tbody);
+                series_has_content = true;
             }
             let customer_detail_tr = document.createElement('tr');
             let tvalue;
@@ -165,7 +165,7 @@
                     let td = document.createElement('td');
                     td.innerHTML = tvalue;
                     customer_detail_tr.appendChild(td);
-                }else{      // 若为辅助列（即列宽为null）
+                }else{      // 若为辅助列（即列宽为0）
                     cust_detail[col] = tvalue;
                 }
                 // ↓将上述计算结果计入本系列的汇总数
@@ -200,6 +200,8 @@
             series_tbody.appendChild(customer_detail_tr);
         }
         // ↓构建系列汇总行
+        if(!series_has_content)
+            return null;
         let series_tfoot = document.createElement('thead');
         let series_sum_tr = document.createElement('tr');
         for(let col in TABLE_STRUCTURE){
@@ -292,14 +294,16 @@
         let series_customer_data = sortDict(depart_contrib['series_customer_data'], false);
         for(let series in series_customer_data){
             let series_sum = buildSeriesCard(series.split('$')[1], series_customer_data[series], dept_card, filter_condict);
-            console.log(series_sum);
+            {#console.log(series_sum);#}
             if(series_sum){
                 for(let s in series_sum){
                     let sum_operation = TABLE_STRUCTURE[s].value_for_sum_td;
                     if(sum_operation === TS_RULE.no_need_sum || sum_operation === TS_RULE.keep_originally_value)
                         continue;
                     else if(sum_operation === TS_RULE.col_accumulation){
-                        if(!dept_has_content)
+                        {#if(!dept_has_content)#}
+                        {#    dept_sum[s] = 0;#}
+                        if(dept_sum[s] === undefined)
                             dept_sum[s] = 0;
                         dept_sum[s] += series_sum[s];
                     }else{
@@ -337,42 +341,25 @@
                     let th = document.createElement('th');
                     th.innerText = TABLE_STRUCTURE[col].description;
                     dept_sum_thead.appendChild(th);
-                    let dept_sum_operation = TABLE_STRUCTURE[col].value_for_sum_td;
 
+                    let dept_sum_operation = TABLE_STRUCTURE[col].value_for_sum_td;
+                    let td = document.createElement('td');
+                    if(dept_sum_operation === TS_RULE.col_accumulation)
+                        td.innerText = dept_sum[col];
+                    else if(typeof dept_sum_operation === 'string')
+                        td.innerText = calculate(dept_sum_operation, dept_sum);
+                    else if(typeof dept_sum_operation === 'object'){
+                        let func = dept_sum_operation[0],
+                            func_params = dept_sum_operation.slice(1, dept_sum_operation.length);
+                        td.innerHTML = func.apply(func, batchCalculate(func_params, dept_sum));
+                    }
+                    dept_sum_tbody.appendChild(td);
                 }
             }
-
-
             fragment_elem.appendChild(dept_sum_table);
-
-
             fragment_elem.appendChild(dept_card);
-            return dept_sum;
-
         }
-
-            /*
-            var series_name = Object.values(series_customer_data[series][0])[0]['所属系列'];
-        var dept_sum_tbody = document.createElement('tbody');
-        var dept_sum_tbody_tr = document.createElement('tr');
-        dept_sum_tbody.appendChild(dept_sum_tbody_tr);
-        for(var col in dept_sum){
-            if(col == '贷款余额')
-                continue;
-            var td = document.createElement('td');
-            dept_sum_tbody_tr.appendChild(td);
-            if(col == '回报率'){
-                td.innerText = Math.round((dept_sum['本年日均'] / dept_sum['用信净额']) * 10000) / 100 + '%';
-                continue;
-            }else if(col == '贷款利息'){
-                td.innerText = Math.round((dept_sum['贷款利息'] / dept_sum['贷款余额']) * 10000) / 100 + '%';
-                continue;
-            }
-            td.innerText = dept_sum[col];
-        }
-        dept_sum_table.appendChild(dept_sum_tbody);
-        console.log(dept_sum);
-        return dept_sum;*/
+        return dept_sum;
     }
 
 
@@ -442,9 +429,9 @@
         }else{
             contrib_tree[req_dept] = whole_contrib_tree[req_dept];
         }
-        for(i in ordered_dept){
-            let dept_code = ordered_dept[i],
-                dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[i]], frag);
+        for(let od in ordered_dept){
+            let dept_code = ordered_dept[od],
+                dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[od]], frag);
             depts_sum[dept_code] = dept_sum;
             for(let ds in dept_sum){
                 if(!branch_sum[ds])
@@ -470,7 +457,7 @@
                 continue;
             branch_sum_ul.appendChild(li);
         }*/
-        console.log(contrib_tree);
+        {#console.log(contrib_tree);#}
         {#console.log(branch_sum);#}
     }
 
