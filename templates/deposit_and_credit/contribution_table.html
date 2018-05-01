@@ -56,7 +56,7 @@
     }
 
     function formatString(string, obj){
-        let r = /\<(\w+)\>/g;
+        let r = /<(\w+)>/g;
         let m = r.exec(string);
         let s = string;
         while (m){
@@ -320,7 +320,6 @@
                 dept_has_content = true;
             }
         }
-        console.log(dept_sum);
         if(dept_has_content){
             let dept_name = depart_contrib['department_caption'],
                 dept_title = document.createElement('h1');
@@ -341,7 +340,6 @@
                     let th = document.createElement('th');
                     th.innerText = TABLE_STRUCTURE[col].description;
                     dept_sum_thead.appendChild(th);
-
                     let dept_sum_operation = TABLE_STRUCTURE[col].value_for_sum_td;
                     let td = document.createElement('td');
                     if(dept_sum_operation === TS_RULE.col_accumulation)
@@ -359,10 +357,8 @@
             fragment_elem.appendChild(dept_sum_table);
             fragment_elem.appendChild(dept_card);
         }
-        return dept_sum;
+        return dept_has_content ? dept_sum : null;
     }
-
-
 
     function setDepoCompForTd(depoBefore, deptAfter){
         let compare = depoBefore
@@ -415,13 +411,14 @@
     function buildContribTable(filter_condict, ordered_dept){
         let whole_contrib_tree = getContributionTree(filter_condict['data_date']),
             frag = document.createDocumentFragment(),
+            dept_selector,
             contrib_tree = {},
             depts_sum = {},
             branch_sum = {},
             req_dept = filter_condict['department'];
         if(req_dept === 'all'){
             contrib_tree = whole_contrib_tree;
-            let dept_selector = document.createElement('div');
+            dept_selector = document.createElement('div');
             dept_selector.id = 'dept_selector';
             dept_selector.className = 'card-body';
             dept_selector.innerHTML = '<h4>经营部门：</h4>';
@@ -429,23 +426,74 @@
         }else{
             contrib_tree[req_dept] = whole_contrib_tree[req_dept];
         }
+        let branch_sum_div = document.createElement('div');
+        branch_sum_div.className = 'card-body';
+        branch_sum_div.innerHTML = '<h4>本口径全行汇总数：</h4>';
+        let branch_sum_ul = document.createElement('ul');
+        branch_sum_div.appendChild(branch_sum_ul);
+        document.getElementById('right_sidebar_body').appendChild(branch_sum_div);
         for(let od in ordered_dept){
             let dept_code = ordered_dept[od],
                 dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[od]], frag);
+            if(!dept_sum)
+                continue;
+            {#console.log(dept_sum);#}
+            {# 添加部门选择器中的标签 #}
+            let dept_button = document.createElement('a');
+            dept_button.className = 'btn btn-rounded btn-block btn-outline-info';
+            dept_button.setAttribute('href', '#' + dept_code);
+            dept_button.innerText = dept_sum.cust_name.split('—')[0];
+            dept_selector.appendChild(dept_button);
+            {# end添加部门选择器中的标签 #}
             depts_sum[dept_code] = dept_sum;
-            for(let ds in dept_sum){
-                if(!branch_sum[ds])
-                    branch_sum[ds] = 0;
-                branch_sum[ds] += dept_sum[ds];
+            for(let col in dept_sum){
+                let sum_operation = TABLE_STRUCTURE[col].value_for_sum_td;
+                if(sum_operation === TS_RULE.no_need_sum)
+                    continue;
+                if(sum_operation === TS_RULE.col_accumulation){
+                    if(!branch_sum[col])
+                        branch_sum[col] = 0;
+                    branch_sum[col] += dept_sum[col];
+                }else{
+                    {#let sum_operation_type = typeof sum_operation;#}
+                    {#switch (sum_operation_type){#}
+                    {#    case 'string':#}
+                    {#        branch_sum[col] = calculate(sum_operation, branch_sum);#}
+                    {#        break;#}
+                    //}
+                }
             }
         }
         document.getElementById('main_content').appendChild(frag);
-        let branch_sum_div = document.createElement('div');
-        branch_sum_div.className = 'card-body';
-        branch_sum_div.innerHTML = '<h4>本口径全行汇总：</h4>';
-        let branch_sum_ul = document.createElement('ul');
-        branch_sum_div.appendChild(branch_sum_ul);
-        $('#right_sidebar_body').append(branch_sum_div);
+        {# 生成分行汇总数 #}
+        for(let col in TABLE_STRUCTURE){
+            if(col === 'cust_name')
+                continue;
+            let sum_operation = TABLE_STRUCTURE[col].value_for_sum_td,
+                li = document.createElement('li');
+            li.innerText = TABLE_STRUCTURE[col].description + '：';
+            if(sum_operation === TS_RULE.col_accumulation && branch_sum[col] && TABLE_STRUCTURE[col].shown_in_dept_sum){
+                li.innerText += branch_sum[col];
+                branch_sum_ul.appendChild(li);
+            }else{
+                let sum_operation_type = typeof sum_operation;
+                switch (sum_operation_type){
+                    case 'string':
+                        li.innerText += calculate(sum_operation, branch_sum);
+                        branch_sum_ul.appendChild(li);
+                        break;
+                    case 'object':
+                        let func = sum_operation[0];
+                        let func_params = sum_operation.slice(1, sum_operation.length);
+                        li.innerHTML = func.apply(func, batchCalculate(func_params, branch_sum));
+                        branch_sum_ul.appendChild(li);
+                        break;
+                }
+            }
+        }
+        {# end生成分行汇总数 #}
+
+
         /*for(let col in TABLE_COLS){
             let li = document.createElement('li');
             li.innerText = col +'：' + branch_sum[col];
@@ -458,7 +506,7 @@
             branch_sum_ul.appendChild(li);
         }*/
         {#console.log(contrib_tree);#}
-        {#console.log(branch_sum);#}
+        console.log(branch_sum);
     }
 
     function viewDeptContribChart(elem){
