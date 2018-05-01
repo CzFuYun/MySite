@@ -198,4 +198,5 @@ def getContributionTree(data_date):
 
 @checkPermission
 def viewCustomerContributionHistory(request):
-    pass
+    customer_id = request.GET.get('customer')
+    return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'customer_id': customer_id})})
