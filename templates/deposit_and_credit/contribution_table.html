@@ -55,6 +55,14 @@
         }
     }
 
+    function getValues(dict){
+        let values = [];
+        for(let key in dict){
+            values.push(dict[key]);
+        }
+        return values;
+    }
+
     function formatString(string, obj){
         let r = /<(\w+)>/g;
         let m = r.exec(string);
@@ -100,7 +108,7 @@
         for(let i=0; i<series_customer_list.length; i++){
             let cust = series_customer_list[i];
             let cust_detail = {},
-                cust_temp_info = Object.values(cust)[0];
+                cust_temp_info = getValues(cust)[0];
             cust_detail.cust_id = Object.keys(cust)[0];
             for(let key in cust_temp_info){
                 cust_detail[key] = cust_temp_info[key];
@@ -119,7 +127,7 @@
                 continue;
             {#console.log(cust_detail);#}
             if(!series_has_content){
-                series_name = Object.values(series_customer_list[0])[0]['series_caption'];
+                series_name = getValues(series_customer_list[0])[0]['series_caption'];
                 series_card = document.createElement('div');
                 series_card.className = 'card-body';
                 series_card.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' + series_code + '">' + series_name + '</h2>';
@@ -402,10 +410,10 @@
             pro_bar_color = 'progress-bar bg-info';
         else
             pro_bar_color = 'progress-bar bg-primary';
-        return '<div class="progress progress-xs margin-vertical-10 "><div class="' +
+        return '<div class="progress progress-xs margin-vertical-10 "><div style="position:absolute"><h5 style="color:black">' +
+            display_depo_ratio + '%</h5></div><div class="' +
             pro_bar_color + '" style="width:' + display_combine_contrib_ratio +
-            '%; height:20px;"></div><div style="position:absolute"><h5 style="color:black">' +
-            display_depo_ratio + '%</h5></div></div>'
+            '%; height:20px;"></div></div>'
     }
 
     function buildContribTable(filter_condict, ordered_dept){
@@ -485,26 +493,12 @@
                     case 'object':
                         let func = sum_operation[0];
                         let func_params = sum_operation.slice(1, sum_operation.length);
-                        li.innerHTML = func.apply(func, batchCalculate(func_params, branch_sum));
+                        li.innerHTML += func.apply(func, batchCalculate(func_params, branch_sum));
                         branch_sum_ul.appendChild(li);
                         break;
                 }
             }
         }
-        {# end生成分行汇总数 #}
-
-
-        /*for(let col in TABLE_COLS){
-            let li = document.createElement('li');
-            li.innerText = col +'：' + branch_sum[col];
-            if(col == '回报率')
-                li.innerText = col +'：' +  Math.round((branch_sum['本年日均'] / branch_sum['用信净额']) * 10000) / 100 + '%';
-            else if(col == '贷款利率')
-                li.innerText = col +'：' +  Math.round((branch_sum['贷款利息'] / branch_sum['贷款余额']) * 10000) / 100 + '%';
-            else if(!branch_sum[col])
-                continue;
-            branch_sum_ul.appendChild(li);
-        }*/
         {#console.log(contrib_tree);#}
         console.log(branch_sum);
     }
