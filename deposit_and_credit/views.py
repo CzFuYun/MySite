@@ -196,4 +196,6 @@ def getContributionTree(data_date):
             series_customers[series_key].append(temp)
     return contrib_tree
 
-
+@checkPermission
+def viewCustomerContributionHistory(request):
+    pass

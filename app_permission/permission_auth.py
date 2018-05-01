@@ -49,5 +49,10 @@ class viewContribution(ExtraAuth):
             self.request.department = 'all'
         return True
 
-
+class viewCustomerContributionHistory(ExtraAuth):
+    def _get(self):
+        user_dep = self.user_obj.user_id.sub_department.superior_id
+        customer_id = self.request.GET.get('customer')
+        
+        pass
 

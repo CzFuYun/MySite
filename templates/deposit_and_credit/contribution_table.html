@@ -23,7 +23,7 @@
     TABLE_STRUCTURE = {
         department_caption: tableCol('经营部门'   , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
         series_caption:     tableCol('系列'       , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
-        cust_name:          tableCol('客户名称'   , '25%' , '<a customer_id="<cust_id>" style="color:white" href="javascript:viewCustomerContributionHistory(this)"><cust_name></a>', '<department_caption>—<series_caption>汇总'),
+        cust_name:          tableCol('客户名称'   , '25%' , '<a style="color:white" href="/customercontributionhistory.view?customer=<cust_id>"><cust_name></a>', '<department_caption>—<series_caption>汇总'),
         approve_line:       tableCol('所属条线'   , '6%'  , TS_RULE.originally_value,TS_RULE.no_need_sum),
         net_total:          tableCol('用信净额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
         loan:               tableCol('贷款金额'   , 0     , TS_RULE.originally_value,TS_RULE.col_accumulation),
@@ -53,6 +53,20 @@
             value_for_sum_td: value_for_sum_td,
             shown_in_dept_sum: shown_in_dept_sum
         }
+    }
+
+    function sortDict(dict, asc){
+        let sort_key,
+            new_dict = {};
+        if(asc == null || asc){
+            sort_key = Object.keys(dict).sort();
+        }else{
+            sort_key = Object.keys(dict).sort().reverse();
+        }
+        for(let i in sort_key){
+            new_dict[sort_key[i]] = dict[sort_key[i]];
+        }
+        return new_dict;
     }
 
     function getValues(dict){
@@ -239,20 +253,6 @@
         dept_div.appendChild(series_card);
         return series_sum;
    }
-
-    function sortDict(dict, asc){
-        let sort_key,
-            new_dict = {};
-        if(asc == null || asc){
-            sort_key = Object.keys(dict).sort();
-        }else{
-            sort_key = Object.keys(dict).sort().reverse();
-        }
-        for(let i in sort_key){
-            new_dict[sort_key[i]] = dict[sort_key[i]];
-        }
-        return new_dict;
-    }
 
     function getContributionTree(data_date){
         let contrib_tree = {};
@@ -509,9 +509,12 @@
     }
 
     function viewCustomerContributionHistory(elem){
-
-
-
+        console.log(elem);
+        let customer_id = elem.getAttribute('customer_id'),
+            newWindow = window.open();
+        newWindow.document.onload = function(){
+            alert();
+        }
     }
 
 </script>
