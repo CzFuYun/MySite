@@ -33,7 +33,7 @@ class ExpirePrompt(models.Model):
 
 
 class Contributor(models.Model):
-    customer = models.OneToOneField('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
+    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
     department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='经营部门')
     approve_line = models.CharField(max_length=8, default='', verbose_name='审批条线')
     loan_rate = models.DecimalField(max_digits=8, decimal_places=4, default=0, verbose_name='加权利率（%）')
@@ -56,4 +56,6 @@ class Contributor(models.Model):
         verbose_name_plural = '回报客户清单'
 
 
-
+class ContributionTrees(models.Model):
+    data_date = models.DateField(primary_key=True, auto_now_add=False, verbose_name='数据日期')
+    contribution_tree = models.TextField(verbose_name='贡献度结构树')
