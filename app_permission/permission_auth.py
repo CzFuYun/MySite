@@ -1,7 +1,7 @@
 import re
 from django.urls import resolve
 from app_permission import settings, models
-
+from root_db import models as rb_models
 # ↓static ##############################################################################################################
 class ExtraAuth:
     '''
@@ -51,8 +51,13 @@ class viewContribution(ExtraAuth):
 
 class viewCustomerContributionHistory(ExtraAuth):
     def _get(self):
+        user_sdep = self.user_obj.user_id.sub_department.sd_code
+        if user_sdep in settings.BRANCH_VIEWERS:
+            return True
         user_dep = self.user_obj.user_id.sub_department.superior_id
         customer_id = self.request.GET.get('customer')
-
-        pass
-
+        allowed_dept_qs = rb_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('department').distinct()
+        for i in  allowed_dept_qs:
+            if user_dep in i[0]:
+                return True
+        return False
