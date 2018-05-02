@@ -1,5 +1,5 @@
-# https://github.com/github/gitignore
-# git rm -r --cached . ×¢ÒâÓĞ¸öµã£¡Çå³ı»º´æºóÔÙadd commit£¬ignore²Å»áÉúĞ§
+ï»¿# https://github.com/github/gitignore
+# git rm -r --cached . æ³¨æ„æœ‰ä¸ªç‚¹ï¼æ¸…é™¤ç¼“å­˜åå†add commitï¼Œignoreæ‰ä¼šç”Ÿæ•ˆ
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -57,7 +57,7 @@ coverage.xml
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
+#db.sqlite3
 
 # Flask stuff:
 instance/
@@ -105,3 +105,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+.idea/
