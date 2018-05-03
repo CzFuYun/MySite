@@ -97,13 +97,13 @@ def viewDepartmentContribution(request):
 
 def ajaxContribution(request):
     data_date = request.POST.get('data_date', None) or strLastDataDate
-    tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
-    if tree:
-        return HttpResponse(tree)
-    else:
-        tree = json.dumps(getContributionTree(data_date))
+    try:
+        tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
+    except:
+        temp = getContributionTree(data_date)
+        tree = json.dumps(temp)
         dac_models.ContributionTrees(data_date=data_date, contribution_tree=tree).save()
-        return HttpResponse(tree)
+    return HttpResponse(tree)
 
 
 def ajaxDeptOrder(request):
@@ -199,5 +199,8 @@ def getContributionTree(data_date):
 
 @checkPermission
 def viewCustomerContributionHistory(request):
-    customer_id = request.GET.get('customer')
-    return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'customer_id': customer_id})})
+    # return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'customer_id': customer_id})})
+    if request.method == 'GET':
+        return render(request, 'deposit_and_credit/customer_contribution_history.html')
+    elif request.method == 'POST':
+        pass
