@@ -97,14 +97,13 @@ def viewDepartmentContribution(request):
 
 def ajaxContribution(request):
     data_date = request.POST.get('data_date', None) or strLastDataDate
-    if data_date == strLastDataDate:
-        global CONTRIBUTION_TREE
-        if not CONTRIBUTION_TREE:
-            temp = getContributionTree(data_date)
-            CONTRIBUTION_TREE = json.dumps(temp)
-        return HttpResponse(CONTRIBUTION_TREE)
+    tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values('contribution_tree')
+    if tree:
+        return HttpResponse(json.dumps(tree))
     else:
-        return HttpResponse(json.dumps(getContributionTree(data_date)))
+        tree = json.dumps(getContributionTree(data_date))
+        dac_models.ContributionTrees(data_date=data_date, contribution_tree=tree).save()
+        return HttpResponse(tree)
 
 
 def ajaxDeptOrder(request):
@@ -130,6 +129,8 @@ def getAdjacentDataDate(clsModel, strDate=strToday, before=True, strField='data_
     dicFilterCondition = {strField + ('__lte' if before else '__gte') : strDate}
     strOrderBy = ('-' if before else '') + strField     # 若向前搜索，则将得到的日期降序排列；否则升序
     return str(clsModel.objects.values(strField).filter(**dicFilterCondition).order_by(strOrderBy)[0][strField])
+
+
 strLastDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
 last_year_last_day = str(dtToday.year - 1) + '-12-31'
 CONTRIBUTION_TREE = {}
@@ -141,7 +142,7 @@ def getContributionTree(data_date):
     last_year_yd_avg_dict = {}
     for i in last_year_yd_avg:
         last_year_yd_avg_dict[i[0]] = i[1]
-    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=strLastDataDate).values_list(
+    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=data_date).values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'), Sum('divided_amount'))
     last_deposit_dict= {}
     for i in last_deposit:
@@ -174,7 +175,7 @@ def getContributionTree(data_date):
                 'department_caption': contrib.department.caption,
                 'department_code': dep_code,
                 'approve_line': contrib.approve_line,
-                'defuse_expire': contrib.defuse_expire,
+                'defuse_expire': str(contrib.defuse_expire or ''),
                 'last_yd_avg': int(last_year_yd_avg_dict.get(customer_id, 0)),
                 'yd_avg': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
                 'deposit_amount': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
