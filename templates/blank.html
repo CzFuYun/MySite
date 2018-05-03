@@ -47,7 +47,11 @@
 
 
     <script type="text/javascript">
-        OPENER_PARAMS = JSON.parse($('#opener_params').attr('value'));
+        try{
+            OPENER_PARAMS = JSON.parse($('#opener_params').attr('value'));
+        }finally {
+            ;
+        }
     </script>
     {% block extra_js %}
 

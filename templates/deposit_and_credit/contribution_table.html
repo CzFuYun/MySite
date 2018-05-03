@@ -510,11 +510,8 @@
     }
 
     function viewCustomerContributionHistory(elem){
-        let customer_id = elem.getAttribute('customer_id');
-        alert(customer_id);
-        console.log(elem);
         let newWindow = window.open('{% url "viewCustomerContributionHistory" %}');
-        newWindow.CUSTOMER_ID = customer_id;
+        newWindow.CUSTOMER_ID = elem.getAttribute('customer_id');
     }
 
 </script>
