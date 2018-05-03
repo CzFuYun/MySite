@@ -97,9 +97,9 @@ def viewDepartmentContribution(request):
 
 def ajaxContribution(request):
     data_date = request.POST.get('data_date', None) or strLastDataDate
-    tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values('contribution_tree')
+    tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
     if tree:
-        return HttpResponse(json.dumps(tree))
+        return HttpResponse(tree)
     else:
         tree = json.dumps(getContributionTree(data_date))
         dac_models.ContributionTrees(data_date=data_date, contribution_tree=tree).save()
