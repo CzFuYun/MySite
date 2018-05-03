@@ -36,7 +36,7 @@
         deposit_amount:     tableCol('存款余额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
         yd_avg:             tableCol('本年日均'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
         compare_yd_avg:     tableCol('日均较年初' , '6%'  , [setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'],[setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'], true),
-        contrib_ratio:      tableCol('回报率'     , '8%'  , [setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>'],[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>'], true)
+        contrib_ratio:      tableCol('回报率'     , '8%'  , [setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>+<invest_banking>'],[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>+<invest_banking>'], true)
     };
 
     $(function () {
@@ -499,13 +499,6 @@
                 }
             }
         }
-<<<<<<< HEAD
-        console.log(contrib_tree);
-        {#console.log(branch_sum);#}
-=======
-        {#console.log(contrib_tree);#}
-        console.log(branch_sum);
->>>>>>> ee8cfcf6ff427b03fcc3f9192bef063673d6eff1
     }
 
     function viewDeptContribChart(elem){
