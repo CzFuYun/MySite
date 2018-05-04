@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render, HttpResponse
 from root_db import models as rd_models
-from deposit_and_credit import models as dac_models
+from deposit_and_credit import models as dac_models, models_operation
 from django.db.models import Q, Sum
 from django.utils.timezone import datetime, timedelta
 from app_permission.views import checkPermission
@@ -12,7 +12,7 @@ from app_permission.views import checkPermission
 @checkPermission
 def viewOverViewBranch(request):
     if request.method == 'GET':
-        strDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
+        strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
         return render(request, 'deposit_and_credit/dcindex.html', {'data_date': strDataDate})
 
 
@@ -22,7 +22,7 @@ def ajaxOverViewBranch(request, *args):
             nDays = int(request.POST.get('days'))
         except:
             nDays = 30
-        strStart = str(dtToday - timedelta(days=nDays))
+        strStart = str(models_operation.ImportantDate().today - timedelta(days=nDays))
         qsDepositAmountEveryDay = rd_models.DividedCompanyAccount.objects.filter(
             data_date__gte=strStart).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
         qsBasicDepositAmountEveryDay = rd_models.DividedCompanyAccount.objects.filter(
@@ -47,7 +47,7 @@ def ajaxAnnotateDeposit(request):
     :return:
     '''
     if request.method == 'POST':
-        strDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
+        strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
         strGroupBy = request.POST.get('group_by')
         dicChartElement = {'label': [], 'value': []}
         qs = None
@@ -75,7 +75,7 @@ def viewContribution(request):
         for k, v in request.POST.items():
             opener_params[k] = v
         opener_params['department'] = request.department
-        opener_params['data_date'] = getAdjacentDataDate(dac_models.Contributor, opener_params.get('data_date'))
+        opener_params['data_date'] = models_operation.getNeighbourDate(dac_models.Contributor, date_str=opener_params.get('data_date'))
         customer_types = []
         if opener_params.get('gov'):
             customer_types.append('平台')
@@ -96,7 +96,7 @@ def viewDepartmentContribution(request):
 
 
 def ajaxContribution(request):
-    data_date = request.POST.get('data_date', None) or strLastDataDate
+    data_date = request.POST.get('data_date', None) or models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
     try:
         tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
     except:
@@ -114,30 +114,12 @@ def ajaxDeptOrder(request):
     return HttpResponse(json.dumps(ordered_depts))
 
 ########################################################################################################################
-dtToday = datetime.today().date()
-strToday = str(dtToday)
-def getAdjacentDataDate(clsModel, strDate=strToday, before=True, strField='data_date'):
-    '''
-    获取给定日期的最近数据日期
-    :param clsModel: 一个model类
-    :param strDate: 一个可以被数据库识别为日期的字符串
-    :param before: True为向前获取，默认为True
-    :return: 可以被数据库识别为日期的字符串
-    '''
-    if not strDate:
-        strDate = strToday
-    dicFilterCondition = {strField + ('__lte' if before else '__gte') : strDate}
-    strOrderBy = ('-' if before else '') + strField     # 若向前搜索，则将得到的日期降序排列；否则升序
-    return str(clsModel.objects.values(strField).filter(**dicFilterCondition).order_by(strOrderBy)[0][strField])
-
-
-strLastDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
-last_year_last_day = str(dtToday.year - 1) + '-12-31'
-CONTRIBUTION_TREE = {}
 
 
 def getContributionTree(data_date):
-    last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(data_date=last_year_last_day).values_list(
+    last_year_str = str(models_operation.ImportantDate().last_year_num)
+    last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(
+        data_date=last_year_str + '-12-31').values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'))
     last_year_yd_avg_dict = {}
     for i in last_year_yd_avg:
@@ -197,6 +179,7 @@ def getContributionTree(data_date):
             series_customers[series_key].append(temp)
     return contrib_tree
 
+
 @checkPermission
 def viewCustomerContributionHistory(request):
     if request.method == 'GET':
@@ -238,5 +221,8 @@ def viewSeriesContributionHistory(request):
         series_code = request.POST.get('series_code')
         series_caption = request.POST.get('series_caption')
         series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
-        for c_id in series_company_id_qs:
-            cust_id = c_id[0]
+        for i in series_company_id_qs:
+            customer_id = i[0]
+            customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
+
+
