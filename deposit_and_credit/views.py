@@ -97,14 +97,13 @@ def viewDepartmentContribution(request):
 
 def ajaxContribution(request):
     data_date = request.POST.get('data_date', None) or strLastDataDate
-    if data_date == strLastDataDate:
-        global CONTRIBUTION_TREE
-        if not CONTRIBUTION_TREE:
-            temp = getContributionTree(data_date)
-            CONTRIBUTION_TREE = json.dumps(temp)
-        return HttpResponse(CONTRIBUTION_TREE)
-    else:
-        return HttpResponse(json.dumps(getContributionTree(data_date)))
+    try:
+        tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
+    except:
+        temp = getContributionTree(data_date)
+        tree = json.dumps(temp)
+        dac_models.ContributionTrees(data_date=data_date, contribution_tree=tree).save()
+    return HttpResponse(tree)
 
 
 def ajaxDeptOrder(request):
@@ -130,6 +129,8 @@ def getAdjacentDataDate(clsModel, strDate=strToday, before=True, strField='data_
     dicFilterCondition = {strField + ('__lte' if before else '__gte') : strDate}
     strOrderBy = ('-' if before else '') + strField     # 若向前搜索，则将得到的日期降序排列；否则升序
     return str(clsModel.objects.values(strField).filter(**dicFilterCondition).order_by(strOrderBy)[0][strField])
+
+
 strLastDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
 last_year_last_day = str(dtToday.year - 1) + '-12-31'
 CONTRIBUTION_TREE = {}
@@ -141,7 +142,7 @@ def getContributionTree(data_date):
     last_year_yd_avg_dict = {}
     for i in last_year_yd_avg:
         last_year_yd_avg_dict[i[0]] = i[1]
-    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=strLastDataDate).values_list(
+    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=data_date).values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'), Sum('divided_amount'))
     last_deposit_dict= {}
     for i in last_deposit:
@@ -174,7 +175,7 @@ def getContributionTree(data_date):
                 'department_caption': contrib.department.caption,
                 'department_code': dep_code,
                 'approve_line': contrib.approve_line,
-                'defuse_expire': contrib.defuse_expire,
+                'defuse_expire': str(contrib.defuse_expire or ''),
                 'last_yd_avg': int(last_year_yd_avg_dict.get(customer_id, 0)),
                 'yd_avg': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
                 'deposit_amount': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
@@ -198,5 +199,32 @@ def getContributionTree(data_date):
 
 @checkPermission
 def viewCustomerContributionHistory(request):
-    customer_id = request.GET.get('customer')
-    return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'customer_id': customer_id})})
+    if request.method == 'GET':
+        return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
+    elif request.method == 'POST':
+        customer_id = request.POST.get('customer_id')
+        ret = 'date'
+        deposit_types = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('deposit_type__caption').distinct()
+        deposit_types_list = []
+        for i in deposit_types:
+            deposit_types_list.append(i[0])
+            ret += (',' + i[0])
+        ret += '\n'
+        deposit_typed_amounts = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date','deposit_type__caption').annotate(Sum('divided_amount')).order_by('data_date')
+        deposit_typed_amount_dict = {}
+        for i in deposit_typed_amounts:
+            data_date = str(i[0])
+            deposit_type = i[1]
+            deposit_amount = i[2]
+            if not deposit_typed_amount_dict.get(data_date, None):
+                deposit_typed_amount_dict[data_date] = {}
+                for j in deposit_types_list:
+                    deposit_typed_amount_dict[data_date][j] = 0
+            deposit_typed_amount_dict[data_date][deposit_type] += deposit_amount
+        for k in deposit_typed_amount_dict:
+            ret += k
+            for i in deposit_types_list:
+                this_type_amount = deposit_typed_amount_dict[k][i]
+                ret += (',' + str(this_type_amount))
+            ret += '\n'
+        return HttpResponse(json.dumps(ret))

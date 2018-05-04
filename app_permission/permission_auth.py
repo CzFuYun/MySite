@@ -50,7 +50,8 @@ class viewContribution(ExtraAuth):
         return True
 
 class viewCustomerContributionHistory(ExtraAuth):
-    def _get(self):
+
+    def _post(self):
         user_sdep = self.user_obj.user_id.sub_department.sd_code
         if user_sdep in settings.BRANCH_VIEWERS:
             return True
@@ -62,3 +63,5 @@ class viewCustomerContributionHistory(ExtraAuth):
                 return True
         return False
 
+    def _get(self):
+        return True
