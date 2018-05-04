@@ -144,7 +144,7 @@
                 series_name = getValues(series_customer_list[0])[0]['series_caption'];
                 series_card = document.createElement('div');
                 series_card.className = 'card-body';
-                series_card.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' + series_code + '">' + series_name + '</h2>';
+                series_card.innerHTML = '<h2 style="cursor:pointer" onclick="viewSeriesContribution(this)" series_code="' + series_code + '">' + series_name + '</h2>';
                 series_table = document.createElement('table');
                 series_table.className = 'table full-color-table full-dark-table table-sm table-hover table-bordered';
                 let series_thead = '<thead><tr>';
@@ -504,14 +504,21 @@
         console.log(branch_sum);
     }
 
-    function viewDeptContribChart(elem){
-        dept_code = elem.getAttribute('dept_code');
+    function viewDeptContribution(elem){
+        let dept_code = elem.getAttribute('dept_code');
         window.open('#');
+    }
+
+    function viewSeriesContribution(elem){
+        let newWindow = window.open('{% url "viewSeriesContributionHistory" %}');
+        newWindow.SERIES_CODE = elem.getAttribute('series_code');
+        newWindow.SERIES_CAPTION = elem.innerText;
     }
 
     function viewCustomerContributionHistory(elem){
         let newWindow = window.open('{% url "viewCustomerContributionHistory" %}');
         newWindow.CUSTOMER_ID = elem.getAttribute('customer_id');
+        newWindow.CUSTOMER_NAME = elem.innerText;
     }
 
 </script>

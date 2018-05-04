@@ -12,34 +12,36 @@
 <script type="text/javascript" src="/static/js/highcharts/highcharts.js"></script>
 <script type="text/javascript" src="/static/js/highcharts/data.js"></script>
 <script type="text/javascript">
+    {# CUSTOMER_ID的来龙去脉：父页面中a标签被点击后触发onclick事件，事件进行了以下操作#}
+    {# 1、获取a标签包含的客户号 #}
+    {# 2、启动路由规则"viewCustomerContributionHistory"，并指定在newWindow中显示路由结果（也就是这个页面） #}
+    {# 3、在第二步进行的同时，父页面给newWindow（本页面）开辟了全局变量CUSTOMER_ID并赋值 #}
     $(function(){
-        {# CUSTOMER_ID的来龙去脉：父页面中a标签被点击后触发onclick事件，事件进行了以下操作#}
-        {# 1、获取a标签包含的客户号 #}
-        {# 2、启动路由规则"viewCustomerContributionHistory"，并指定在newWindow中显示路由结果（也就是这个页面） #}
-        {# 3、在第二步进行的同时，父页面给newWindow（本页面）开辟了全局变量CUSTOMER_ID并赋值 #}
-        console.log(CUSTOMER_ID);
+        {#document.head.getElementsByTagName('title')[0].innerText = CUSTOMER_NAME + '存款余额历史';#}
+        drawCustomerDepositHistory('container', {customer_id: CUSTOMER_ID});
+    });
+
+    function drawCustomerDepositHistory(divId, postDataDict){
         let chart;
         $.post(
             {
                 url: '{% url "viewCustomerContributionHistory" %}',
                 {#async: false,#}
-                data: {
-                    customer_id: CUSTOMER_ID
-                },
+                data: postDataDict,
                 dataType: 'json',
                 success: function(data, textStatus, $XHR){
-                    chart = Highcharts.chart('container', {
+                    chart = Highcharts.chart(divId, {
                         data: {
                             csv: data
                         },
                         title: {
-                            text: '存款余额走势'
+                            text: CUSTOMER_NAME + '存款余额走势'
                         },
                         subtitle: {
                             text: ''
                         },
                         xAxis: {
-                            tickInterval: 30 * 24 * 3600 * 1000, // 坐标轴刻度间隔为一个月
+                            tickInterval: 7 * 24 * 3600 * 1000, // 坐标轴刻度间隔为7天
                             tickWidth: 0,
                             gridLineWidth: 1,
                             labels: {
@@ -121,9 +123,7 @@
                 error: function(){alert('error')}
             }
         );
-
-
-    })
+    }
 </script>
 
 {% endblock %}

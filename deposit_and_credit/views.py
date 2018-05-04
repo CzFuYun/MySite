@@ -203,9 +203,9 @@ def viewCustomerContributionHistory(request):
         return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         customer_id = request.POST.get('customer_id')
-        ret = 'date'
-        deposit_types = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('deposit_type__caption').distinct()
+        deposit_types = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('deposit_type__caption').distinct().order_by('deposit_type')
         deposit_types_list = []
+        ret = 'date'
         for i in deposit_types:
             deposit_types_list.append(i[0])
             ret += (',' + i[0])
@@ -228,3 +228,15 @@ def viewCustomerContributionHistory(request):
                 ret += (',' + str(this_type_amount))
             ret += '\n'
         return HttpResponse(json.dumps(ret))
+
+
+@checkPermission
+def viewSeriesContributionHistory(request):
+    if request.method == 'GET':
+        return render(request, 'deposit_and_credit/series_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
+    elif request.method == 'POST':
+        series_code = request.POST.get('series_code')
+        series_caption = request.POST.get('series_caption')
+        series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
+        for c_id in series_company_id_qs:
+            cust_id = c_id[0]

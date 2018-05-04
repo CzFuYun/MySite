@@ -9,5 +9,6 @@ urlpatterns = [
     url(r'contribution\.ajax', views.ajaxContribution, name='ajaxContribution'),
     url(r'deptorder\.ajax', views.ajaxDeptOrder, name='ajaxDeptOrder'),
     url(r'dept_contrib\.view', views.viewDepartmentContribution, name='viewDepartmentContribution'),
-    url(r'customercontributionhistory\.view', views.viewCustomerContributionHistory, name='viewCustomerContributionHistory')
+    url(r'customercontributionhistory\.view', views.viewCustomerContributionHistory, name='viewCustomerContributionHistory'),
+    url(r'seriescontributionhistory\.view', views.viewSeriesContributionHistory, name='viewSeriesContributionHistory'),
 ]
