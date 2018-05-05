@@ -20,7 +20,6 @@ class ImportantDate():
         return getNeighbourDate(model_class, -1, self.today_str, field)
 
 
-
 def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date'):
     '''
 
@@ -60,3 +59,5 @@ def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date
 
 def getCustomerDepositAmount(customer_id_list, group_by_dict, date_range):
     pass
+
+
