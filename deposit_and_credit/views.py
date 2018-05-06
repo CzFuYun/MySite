@@ -124,31 +124,8 @@ def viewCustomerContributionHistory(request):
         return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         customer_id = request.POST.get('customer_id')
-        deposit_types = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('deposit_type__caption').distinct().order_by('deposit_type')
-        deposit_types_list = []
-        ret = 'date'
-        for i in deposit_types:
-            deposit_types_list.append(i[0])
-            ret += (',' + i[0])
-        ret += '\n'
-        deposit_typed_amounts = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date','deposit_type__caption').annotate(Sum('divided_amount')).order_by('data_date')
-        deposit_typed_amount_dict = {}
-        for i in deposit_typed_amounts:
-            data_date = str(i[0])
-            deposit_type = i[1]
-            deposit_amount = i[2]
-            if not deposit_typed_amount_dict.get(data_date, None):
-                deposit_typed_amount_dict[data_date] = {}
-                for j in deposit_types_list:
-                    deposit_typed_amount_dict[data_date][j] = 0
-            deposit_typed_amount_dict[data_date][deposit_type] += deposit_amount
-        for k in deposit_typed_amount_dict:
-            ret += k
-            for i in deposit_types_list:
-                this_type_amount = deposit_typed_amount_dict[k][i]
-                ret += (',' + str(this_type_amount))
-            ret += '\n'
-        return HttpResponse(json.dumps(ret))
+        date_group_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], 'deposit_type__caption')
+        return HttpResponse(json.dumps(date_group_amounts))
 
 
 @checkPermission

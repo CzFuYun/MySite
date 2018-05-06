@@ -121,7 +121,7 @@ def getContributionTree(data_date):
     return contrib_tree
 
 
-def getCustomerDepositAmountsForHighChartsLine(customer_id_list, group_by=None, start_date=None, end_date=None):
+def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, group_by=None, start_date=None, end_date=None):
     '''
 
     :param customer_id_list:
@@ -133,20 +133,20 @@ def getCustomerDepositAmountsForHighChartsLine(customer_id_list, group_by=None, 
     if not end_date:
         end_date = ImportantDate().last_data_date_str(rd_models.DividedCompanyAccount)
     if not start_date:
-        start_date = str(ImportantDate().today - timedelta(days=365))
-    if len(customer_id_list) == 1:      # 若只查一个客户，将存款按参数指定的方式进行分类
-        groups = []
-        if group_by:
-            group_qs = rd_models.DividedCompanyAccount.objects.filter(customer_id__in=customer_id_list)\
-                .values_list(group_by).distinct().order_by(group_by)
-            for i in group_qs:
-                groups.append(i[0])
-
-
-        else:
-            pass
-    else:       # 若查询多个客户，将存款按客户进行分类
-        group_by = 'customer__name'
-        pass
-
-
+        start_date = str(ImportantDate().today - timedelta(days=730))
+    deposit_qs = rd_models.DividedCompanyAccount.objects.filter(customer_id__in=customer_id_list, data_date__gte=start_date, data_date__lte=end_date)
+    if group_by:
+        deposit_qs = deposit_qs.values_list('data_date', group_by)
+    else:
+        deposit_qs = deposit_qs.values_list('data_date')
+    deposit_qs = deposit_qs.annotate(Sum('divided_amount')).order_by('data_date')
+    date_group_amounts = []
+    for i in deposit_qs:        # deposit_qs:[(datetime.date(2017, 11, 10), '对公定期存款', 10274), (datetime.date(2017, 11, 10), '对公活期存款', 335), (datetime.date(2017, 11, 10), '对公通知存款', 27553),
+        temp = []
+        for j in i:     # i:(datetime.date(2017, 11, 10), '对公定期存款', 10274)
+            if type(j) == int or type(j) == str:
+                temp.append(j)
+            else:
+                temp.append(str(j))
+        date_group_amounts.append(temp)
+    return date_group_amounts

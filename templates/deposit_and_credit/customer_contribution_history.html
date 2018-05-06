@@ -3,7 +3,7 @@
 
 {% block content %}
     <div id="container" style="min-width:400px;height:400px"></div>
-    <div class="message"></div>
+{#    <div class="message"></div>#}
 {% endblock %}
 
 
@@ -30,9 +30,11 @@
                 data: postDataDict,
                 dataType: 'json',
                 success: function(data, textStatus, $XHR){
+                    let dataForChart = convertDailyDepositAmountsToCsv(data);
+                    {#console.log(data);#}
                     chart = Highcharts.chart(divId, {
                         data: {
-                            csv: data
+                            csv: dataForChart
                         },
                         title: {
                             text: window.CUSTOMER_NAME + '存款余额走势'
@@ -123,6 +125,45 @@
                 error: function(){alert('error')}
             }
         );
+    }
+
+    function convertDailyDepositAmountsToCsv(data){
+        // data: [["2017-11-10", "对公活期存款", 335] , ["2017-11-10", "对公通知存款", 27553], ["2017-11-20", "对公定期存款", 10274], ...]
+        // mid_status: {label1: {date1: xxxx.xx, date2: xxxx.xx}, label2: {date1: xxxx.xx, date2: xxxx.xx}}
+        // return: stringCsv
+        let dict = {},
+            date_list = [],
+            label_list = [],
+            csv = 'Date';
+        for(let i=0; i<data.length; i++){
+            let date = data[i][0],
+                label = data[i][1],
+                deposit = data[i][2];
+            if(!dict[label]){
+                csv += (',' + label);
+                label_list.push(label);
+                dict[label] = {};
+            }
+            dict[label][date] = deposit;
+            if($.inArray(date, date_list) < 0)
+                date_list.push(date);
+        }
+        csv += '\n';
+        for(let i=0; i<date_list.length; i++){
+            csv += date_list[i];
+            for(let j=0; j<label_list.length; j++){
+                temp = dict[label_list[j]][date_list[i]];
+                csv += ',';
+                if(temp)
+                    csv += temp;
+                else
+                    csv += 0;
+            }
+            csv += '\n';
+        }
+        {#console.log(date_list);#}
+        {#console.log(dict) ;#}
+        return csv;
     }
 </script>
 
