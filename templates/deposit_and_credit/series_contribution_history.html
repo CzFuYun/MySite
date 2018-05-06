@@ -11,9 +11,18 @@
     $(function(){
 
     });
-    function drawLine(){
-        $.post()
+    function drawLine(divId, postDataDict){
+        $.post(
+            {
+                url: '{% url "viewSeriesContributionHistory" %}',
+                data: postDataDict,
+                dataType: 'json',
+                success: function(){
 
+                },
+                error: function(){alert('error')}
+            }
+        );
     }
 </script>
 {% endblock %}

@@ -17,8 +17,8 @@
     {# 2、启动路由规则"viewCustomerContributionHistory"，并指定在newWindow中显示路由结果（也就是这个页面） #}
     {# 3、在第二步进行的同时，父页面给newWindow（本页面）开辟了全局变量CUSTOMER_ID并赋值 #}
     $(function(){
-        {#document.head.getElementsByTagName('title')[0].innerText = CUSTOMER_NAME + '存款余额历史';#}
-        drawCustomerDepositHistory('container', {customer_id: CUSTOMER_ID});
+        document.head.getElementsByTagName('title')[0].innerText = window.CUSTOMER_NAME;
+        drawCustomerDepositHistory('container', {customer_id: window.CUSTOMER_ID});
     });
 
     function drawCustomerDepositHistory(divId, postDataDict){
@@ -35,7 +35,7 @@
                             csv: data
                         },
                         title: {
-                            text: CUSTOMER_NAME + '存款余额走势'
+                            text: window.CUSTOMER_NAME + '存款余额走势'
                         },
                         subtitle: {
                             text: ''
@@ -100,7 +100,7 @@
                         },
                         plotOptions: {
                             series: {
-                                cursor: 'pointer',
+                                //cursor: 'pointer',
                                 point: {
                                     events: {
                                         // 数据点点击事件
