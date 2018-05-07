@@ -58,6 +58,7 @@ class AccountedCompany(models.Model):
     has_credit = models.BooleanField(default=False, verbose_name='是否有贷户')
     sum_settle = models.IntegerField(default=0, verbose_name='累计结算量')
     inter_settle = models.IntegerField(default=0, verbose_name='国际结算量')
+
     def __str__(self):
         return self.name
 
