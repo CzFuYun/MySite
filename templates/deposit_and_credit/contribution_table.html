@@ -13,6 +13,7 @@
 {% block extra_js %}
 <script src="/static/js/highcharts.js" type="text/javascript"></script>
 <script type="text/javascript">
+    CONTRIB_TREE = {};
     BASE_RATE = 0.0435;
     TS_RULE = {
         originally_value: 2,        // 非汇总行值： 显示原值
@@ -144,7 +145,7 @@
                 series_name = getValues(series_customer_list[0])[0]['series_caption'];
                 series_card = document.createElement('div');
                 series_card.className = 'card-body';
-                series_card.innerHTML = '<h2 onclick="viewSeriesContribution(this)" series_code="' + series_code + '">' + series_name + '</h2>';
+                series_card.innerHTML = '<h2 style="cursor:pointer" onclick="viewSeriesContribution(this)" series_code="' + series_code + '">' + series_name + '</h2>';
                 series_table = document.createElement('table');
                 series_table.className = 'table full-color-table full-dark-table table-sm table-hover table-bordered';
                 let series_thead = '<thead><tr>';
@@ -270,8 +271,9 @@
                 }
             }
         );
-        console.log(contrib_tree);
-            return contrib_tree;
+        {#console.log(contrib_tree);#}
+        CONTRIB_TREE = contrib_tree;
+        return contrib_tree;
     }
 
     function getDeptOrder() {
@@ -502,14 +504,30 @@
         }
     }
 
-    function viewDeptContribChart(elem){
-        dept_code = elem.getAttribute('dept_code');
+    function viewDeptContribution(elem){
+        let dept_code = elem.getAttribute('dept_code');
         window.open('#');
+    }
+
+    function viewSeriesContribution(elem){
+        let customer_trs = elem.nextSibling.getElementsByTagName('tbody')[0].getElementsByTagName('tr'),
+            customer_ids = [];
+        for(let i=0;i<customer_trs.length;i++){
+            let customer_td = customer_trs[i].children[0];
+            customer_ids.push(customer_td.getElementsByTagName('a')[0].getAttribute('customer_id'));
+        }
+        let dept_series = elem.nextSibling.getElementsByTagName('thead')[1].children[0].children[0].innerText.replace('汇总', '');
+        let newWindow = window.open('{% url "viewSeriesContributionHistory" %}');
+        newWindow.CUSTOMER_IDS = customer_ids;
+        newWindow.SERIES_CODE = elem.getAttribute('series_code');
+        newWindow.SERIES_CAPTION = elem.innerText;
+        newWindow.DEPT_SERIES = dept_series;
     }
 
     function viewCustomerContributionHistory(elem){
         let newWindow = window.open('{% url "viewCustomerContributionHistory" %}');
         newWindow.CUSTOMER_ID = elem.getAttribute('customer_id');
+        newWindow.CUSTOMER_NAME = elem.innerText;
     }
 
 </script>

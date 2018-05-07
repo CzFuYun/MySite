@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render, HttpResponse
 from root_db import models as rd_models
-from deposit_and_credit import models as dac_models
+from deposit_and_credit import models as dac_models, models_operation
 from django.db.models import Q, Sum
 from django.utils.timezone import datetime, timedelta
 from app_permission.views import checkPermission
@@ -12,7 +12,7 @@ from app_permission.views import checkPermission
 @checkPermission
 def viewOverViewBranch(request):
     if request.method == 'GET':
-        strDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
+        strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
         return render(request, 'deposit_and_credit/dcindex.html', {'data_date': strDataDate})
 
 
@@ -22,7 +22,7 @@ def ajaxOverViewBranch(request, *args):
             nDays = int(request.POST.get('days'))
         except:
             nDays = 30
-        strStart = str(dtToday - timedelta(days=nDays))
+        strStart = str(models_operation.ImportantDate().today - timedelta(days=nDays))
         qsDepositAmountEveryDay = rd_models.DividedCompanyAccount.objects.filter(
             data_date__gte=strStart).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
         qsBasicDepositAmountEveryDay = rd_models.DividedCompanyAccount.objects.filter(
@@ -47,7 +47,7 @@ def ajaxAnnotateDeposit(request):
     :return:
     '''
     if request.method == 'POST':
-        strDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
+        strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
         strGroupBy = request.POST.get('group_by')
         dicChartElement = {'label': [], 'value': []}
         qs = None
@@ -75,7 +75,7 @@ def viewContribution(request):
         for k, v in request.POST.items():
             opener_params[k] = v
         opener_params['department'] = request.department
-        opener_params['data_date'] = getAdjacentDataDate(dac_models.Contributor, opener_params.get('data_date'))
+        opener_params['data_date'] = models_operation.getNeighbourDate(dac_models.Contributor, date_str=opener_params.get('data_date'))
         customer_types = []
         if opener_params.get('gov'):
             customer_types.append('平台')
@@ -96,11 +96,11 @@ def viewDepartmentContribution(request):
 
 
 def ajaxContribution(request):
-    data_date = request.POST.get('data_date', None) or strLastDataDate
+    data_date = request.POST.get('data_date', None) or models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
     try:
         tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
     except:
-        temp = getContributionTree(data_date)
+        temp = models_operation.getContributionTree(data_date)
         tree = json.dumps(temp)
         dac_models.ContributionTrees(data_date=data_date, contribution_tree=tree).save()
     return HttpResponse(tree)
@@ -114,88 +114,9 @@ def ajaxDeptOrder(request):
     return HttpResponse(json.dumps(ordered_depts))
 
 ########################################################################################################################
-dtToday = datetime.today().date()
-strToday = str(dtToday)
-def getAdjacentDataDate(clsModel, strDate=strToday, before=True, strField='data_date'):
-    '''
-    获取给定日期的最近数据日期
-    :param clsModel: 一个model类
-    :param strDate: 一个可以被数据库识别为日期的字符串
-    :param before: True为向前获取，默认为True
-    :return: 可以被数据库识别为日期的字符串
-    '''
-    if not strDate:
-        strDate = strToday
-    dicFilterCondition = {strField + ('__lte' if before else '__gte') : strDate}
-    strOrderBy = ('-' if before else '') + strField     # 若向前搜索，则将得到的日期降序排列；否则升序
-    return str(clsModel.objects.values(strField).filter(**dicFilterCondition).order_by(strOrderBy)[0][strField])
 
 
-strLastDataDate = getAdjacentDataDate(rd_models.DividedCompanyAccount)
-last_year_last_day = str(dtToday.year - 1) + '-12-31'
-CONTRIBUTION_TREE = {}
 
-
-def getContributionTree(data_date):
-    last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(data_date=last_year_last_day).values_list(
-        'customer__customer_id').annotate(Sum('divided_yd_avg'))
-    last_year_yd_avg_dict = {}
-    for i in last_year_yd_avg:
-        last_year_yd_avg_dict[i[0]] = i[1]
-    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=data_date).values_list(
-        'customer__customer_id').annotate(Sum('divided_yd_avg'), Sum('divided_amount'))
-    last_deposit_dict= {}
-    for i in last_deposit:
-        last_deposit_dict[i[0]] = {'yd_avg': i[1], 'amount': i[2]}
-
-    contrib_tree = {}
-    dep_qs = rd_models.Department.objects.all().order_by('display_order')
-    for dep in dep_qs:
-        contrib_tree[dep.code] = {
-            'department_caption': dep.caption,
-            'department_code': dep.code,
-            'series_customer_data': {}
-        }
-    contrib_qs = dac_models.Contributor.objects.filter(data_date=data_date).prefetch_related('customer')
-    contributor_num = contrib_qs.count()
-    for i in range(contributor_num):
-        contrib = contrib_qs[i]
-        cust = contrib.customer
-        customer_id = contrib.customer_id
-        series_code = cust.series.code
-        dep_code = contrib.department.code
-        gov_plat_lev = cust.series.gov_plat_lev_id
-        loan = contrib.loan
-        temp = {
-            customer_id: {
-                'cust_name': cust.name,
-                'series_code': series_code,
-                'series_caption': cust.series.caption,
-                'gov_plat_lev': gov_plat_lev,
-                'department_caption': contrib.department.caption,
-                'department_code': dep_code,
-                'approve_line': contrib.approve_line,
-                'defuse_expire': str(contrib.defuse_expire or ''),
-                'last_yd_avg': int(last_year_yd_avg_dict.get(customer_id, 0)),
-                'yd_avg': int(last_deposit_dict.get(customer_id, {}).get('yd_avg', 0)),
-                'deposit_amount': int(last_deposit_dict.get(customer_id, {}).get('amount', 0)),
-                'industry': cust.industry.caption,
-                'loan': int(loan),
-                'loan_rate': float(contrib.loan_rate),
-                'loan_interest': float(contrib.loan_interest),
-                'net_total': int(contrib.net_total),
-                'lr_BAB': int(contrib.lr_BAB),
-                'invest_banking': int(contrib.invest_banking),
-            }
-        }
-        series_key = str(gov_plat_lev) + '$' + series_code
-        series_customers = contrib_tree[dep_code]['series_customer_data']
-        try:
-            series_customers[series_key].append(temp)
-        except:
-            series_customers[series_key] = []
-            series_customers[series_key].append(temp)
-    return contrib_tree
 
 @checkPermission
 def viewCustomerContributionHistory(request):
@@ -203,28 +124,20 @@ def viewCustomerContributionHistory(request):
         return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         customer_id = request.POST.get('customer_id')
-        ret = 'date'
-        deposit_types = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('deposit_type__caption').distinct()
-        deposit_types_list = []
-        for i in deposit_types:
-            deposit_types_list.append(i[0])
-            ret += (',' + i[0])
-        ret += '\n'
-        deposit_typed_amounts = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date','deposit_type__caption').annotate(Sum('divided_amount')).order_by('data_date')
-        deposit_typed_amount_dict = {}
-        for i in deposit_typed_amounts:
-            data_date = str(i[0])
-            deposit_type = i[1]
-            deposit_amount = i[2]
-            if not deposit_typed_amount_dict.get(data_date, None):
-                deposit_typed_amount_dict[data_date] = {}
-                for j in deposit_types_list:
-                    deposit_typed_amount_dict[data_date][j] = 0
-            deposit_typed_amount_dict[data_date][deposit_type] += deposit_amount
-        for k in deposit_typed_amount_dict:
-            ret += k
-            for i in deposit_types_list:
-                this_type_amount = deposit_typed_amount_dict[k][i]
-                ret += (',' + str(this_type_amount))
-            ret += '\n'
-        return HttpResponse(json.dumps(ret))
+        date_group_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], 'deposit_type__caption')
+        return HttpResponse(json.dumps(date_group_amounts))
+
+
+@checkPermission
+def viewSeriesContributionHistory(request):
+    if request.method == 'GET':
+        return render(request, 'deposit_and_credit/series_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
+    elif request.method == 'POST':
+        series_code = request.POST.get('series_code')
+        series_caption = request.POST.get('series_caption')
+        series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
+        for i in series_company_id_qs:
+            customer_id = i[0]
+            customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
+
+

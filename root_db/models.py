@@ -7,34 +7,10 @@ class Staff(models.Model):
         (2, '支行负责人'),
         (3, '分行'),
     )
-    gender_choices = (
-        (1, '未填'),
-        (2, '女'),
-        (3, '男'),
-    )
-    political_status_choices = (
-        (1, '未填'),
-        (2, '其他'),
-        (3, '吃瓜群众'),
-        (4, '少先队员'),
-        (5, '共青团员'),
-        (6, '入党积极分子'),
-        (7, '预备党员'),
-        (8, '党员'),
-        (9, '资深党员'),
-    )
     staff_id = models.CharField(max_length=8, primary_key=True, verbose_name='工号')
     name = models.CharField(blank=True, null=True, max_length=16, verbose_name='姓名')
     staff_level = models.SmallIntegerField(blank=True, null=True, verbose_name='行员等级')
-    position = models.SmallIntegerField(choices=position_choices, default=1, verbose_name='职务')
-    gender = models.SmallIntegerField(choices=gender_choices, default=1, verbose_name='性别')
-    birthday = models.DateField(blank=True, null=True, verbose_name='出生年月')
-    political_status = models.SmallIntegerField(choices=political_status_choices, default=1, verbose_name='政治面貌')
-    begin_work = models.DateField(blank=True, null=True, verbose_name='参加工作')
     sub_department = models.ForeignKey(to='SubDepartment', to_field='sd_code', on_delete=models.DO_NOTHING, verbose_name='部门（细分）')     # 细分部门，例如溧阳大客户部应记作LY_2
-    mail_address = models.CharField(blank=True, null=True, max_length=16, verbose_name='OA邮箱')
-    telephone = models.CharField(blank=True, null=True, max_length=16, verbose_name='固定电话')
-    cellphone = models.CharField(blank=True, null=True, max_length=32, unique=True, verbose_name='移动电话')
 
     def __str__(self):
         return '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
@@ -340,5 +316,26 @@ class CreditLedger(models.Model):
 
     class Meta:
         verbose_name_plural = '授信台账'
+
+
+#######################################################################################################################
+class AccountedPerson(models.Model):
+    customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
+    name = models.CharField(max_length=128, verbose_name='账户名称')
+    origin = models.ForeignKey('AccountedCompany', to_field='customer_id', null=True, blank=True, on_delete=models.PROTECT, verbose_name='派生自')
+
+
+#######################################################################################################################
+class DividedPersonalAccount(models.Model):
+    customer = models.ForeignKey('AccountedPerson', on_delete=models.PROTECT, verbose_name='客户')
+    beneficiary = models.ForeignKey('Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='员工')
+    rate_type = models.ForeignKey(to='RateType', on_delete=models.DO_NOTHING, default=1, verbose_name='存款口径')
+    data_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='数据日期')
+    divided_amount = models.IntegerField(default=0, verbose_name='分配余额（万元）')
+    divided_md_avg = models.IntegerField(default=0, verbose_name='本月分配日均（万元）')
+    divided_sd_avg = models.IntegerField(default=0, verbose_name='本季分配日均（万元）')
+    divided_yd_avg = models.IntegerField(default=0, verbose_name='本年分配日均（万元）')
+
+
 
 
