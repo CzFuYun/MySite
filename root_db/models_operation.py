@@ -17,7 +17,12 @@ def createOrUpdateStaff(staff_id, name, sub_department_caption):
             print('Create Staff 【%s-%s】  Failed,department 【%s】 Not Exists.' % (staff_id, name, sub_department_caption))
             print('*' * 50)
         else:
-            sub_department_obj.staff_set.create(staff_id=staff_id, name=name)
+            if sub_department_obj.staff_set.create(staff_id=staff_id, name=name):
+                print('New Added Staff【%s-%s】' % (staff_id, name))
+            else:
+                print('*' * 50)
+                print('Failed to Add Staff 【%s-%s】' % (staff_id, name))
+                print('*' * 50)
     else:       # 若存在该员工
         if not NEED_UPDATE_STAFF_INFORMATION:
             return
@@ -65,21 +70,21 @@ def serialize(string_as_Key, serialization_rule_dict):
         return serialization_rule_dict['undefined']
 
 
-def createOrUpdateCompanyCustomer(
+def createOrUpdateCompany(
         customer_id,    name,   need_update_this_company,
-        district_sr,            customer_type_sr,           scale_sr,           industry_sr,            series_sr,              type_of_3311_sr,
-        district='undefined',   customer_type='undefined',  scale='undefined',  industry='undefined',   series='undefined',     type_of_3311='undefined',
+        district_sr,            customer_type_sr,           scale_sr,           industry_sr,            series_sr,          type_of_3311_sr,
+        district='undefined',   customer_type='undefined',  scale='undefined',  industry='undefined',   series='undefined', type_of_3311='undefined',
         has_base_acc=False,     has_credit=False, sum_settle=0, inter_settle=0):
     '''
-
+    创建或更新客户，在A-存款
     :param customer_id:
     :param name:
-    :param district_sr = getSimpleSerializationRule(models.District)
-    :param customer_type_sr = getSimpleSerializationRule(models.CustomerType)
-    :param scale_sr = getSimpleSerializationRule(models.Scale)
-    :param industry_sr = getSimpleSerializationRule(models.Industry)
-    :param series_sr = getSimpleSerializationRule(models.Series)
-    :param type_of_3311_sr = getSimpleSerializationRule(models.TypeOf3311)
+    :param district_sr = models_operation.getSimpleSerializationRule(models.District)
+    :param customer_type_sr = models_operation.getSimpleSerializationRule(models.CustomerType)
+    :param scale_sr = models_operation.getSimpleSerializationRule(models.Scale)
+    :param industry_sr = models_operation.getSimpleSerializationRule(models.Industry, 'code')
+    :param series_sr = models_operation.getSimpleSerializationRule(models.Series, 'code')
+    :param type_of_3311_sr = models_operation.getSimpleSerializationRule(models.TypeOf3311)
     :param district:
     :param customer_type:
     :param scale:
@@ -93,8 +98,8 @@ def createOrUpdateCompanyCustomer(
     :return:
     '''
     customer_obj = models.AccountedCompany.objects.filter(customer_id=customer_id)
-    customer_exits = True if customer_obj.count() else False
-    if not customer_exits or need_update_this_company or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
+    is_customer_exits = True if customer_obj.count() else False
+    if not is_customer_exits or need_update_this_company or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
         customer_info_dict = {
             'customer_id': customer_id,
             'name': name,
@@ -109,9 +114,17 @@ def createOrUpdateCompanyCustomer(
             'series_id': series_sr[series],
             'type_of_3311_id': type_of_3311_sr[type_of_3311],
         }
-        if not customer_exits:
-            models.AccountedCompany.objects.create(**customer_info_dict)
-            print('【New Added Company】' + name + customer_id)
+        if not is_customer_exits:
+            while True:
+                ret = models.AccountedCompany.objects.create(**customer_info_dict)
+                if ret:
+                    break
+            print('New Added Company【' + name + '】【' + customer_id + '】')
         else:
-            models.AccountedCompany.objects.update(**customer_info_dict)
-            print('【Update Company】' + name + customer_id)
+            while True:
+                ret = models.AccountedCompany.objects.update(**customer_info_dict)
+                if ret:
+                    break
+            print('Update Company【' + name + '】【' + customer_id + '】')
+    else:
+        print('【' + name + '】【' + customer_id + '】' + 'already Exits')
