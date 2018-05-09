@@ -1,5 +1,6 @@
 from django.shortcuts import render, reverse
 from app_permission import views, settings
+from root_db import models_operation
 
 
 def login(request):
@@ -12,4 +13,8 @@ def home(request):
 
 
 def test(request):
-    return render(request, 'test.html')
+    file_name = '/home/fuyun/下载/A-存款.xlsm'
+    table_name = '@AccountedCompany'
+    table_head_row = 3
+    last_row = 6991
+    models_operation.updateOrCreateCompany(file_name, table_name, table_head_row, last_row)

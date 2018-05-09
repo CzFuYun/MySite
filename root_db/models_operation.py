@@ -1,7 +1,8 @@
+import xlrd
 from root_db import  models
 
 NEED_UPDATE_STAFF_INFORMATION = False
-NEED_UPDATE_ALL_COMPANIES_INFORMATION = False
+NEED_UPDATE_ALL_COMPANIES_INFORMATION = True
 
 
 ########################################################################################################################
@@ -72,57 +73,32 @@ def getSimpleSerializationRule(model_class_used_to_serialize, primary_key_field=
 # def getComplexSerializationRule(model_class_used_to_serialize, primary_key_field='id', caption_field='caption', fk_field=''):
 
 
-def createOrUpdateCompany(
-        customer_id,    name,   need_update_this_company,
-        district_sr,            customer_type_sr,           scale_sr,           industry_sr,            type_of_3311_sr,
-        district='undefined',   customer_type='undefined',  scale='undefined',  industry='undefined',   type_of_3311='undefined',
-        has_base_acc=False,     has_credit=False, sum_settle=0, inter_settle=0):
+def createOrUpdateCompany(customer_id, customer_info_dict, all_serialization_rule_dict):
     '''
     创建或更新客户，在A-存款
     :param customer_id:
     :param name:
+    :param customer_info_dict: name, has_base_acc, has_credit, sum_settle, inter_settle, district, customer_type, scale, industry, type_of_3311,
     :param district_sr = models_operation.getSimpleSerializationRule(models.District)
     :param customer_type_sr = models_operation.getSimpleSerializationRule(models.CustomerType)
     :param scale_sr = models_operation.getSimpleSerializationRule(models.Scale)
     :param industry_sr = models_operation.getSimpleSerializationRule(models.Industry, 'code')
     :param series_sr = models_operation.getSimpleSerializationRule(models.Series, 'code')
     :param type_of_3311_sr = models_operation.getSimpleSerializationRule(models.TypeOf3311)
-    :param district:
-    :param customer_type:
-    :param scale:
-    :param industry:
-    :param series:
-    :param type_of_3311:
-    :param has_base_acc:
-    :param has_credit:
-    :param sum_settle:
-    :param inter_settle:
     :return:
     '''
     customer_obj = models.AccountedCompany.objects.filter(customer_id=customer_id)
     is_customer_exits = customer_obj.exists()
-    if not is_customer_exits or need_update_this_company or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
-        customer_info_dict = {
-            'name': name,
-            'has_base_acc': has_base_acc,
-            'has_credit': has_credit,
-            'sum_settle': sum_settle,
-            'inter_settle': inter_settle,
-            'district_id': district_sr[district],
-            'customer_type_id': customer_type_sr[customer_type],
-            'scale_id': scale_sr[scale],
-            'industry_id': industry_sr[industry],
-            'type_of_3311_id': type_of_3311_sr[type_of_3311],
-        }
+    if not is_customer_exits or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
         if not is_customer_exits:
             customer_info_dict['customer_id'] = customer_id
             models.AccountedCompany.objects.create(**customer_info_dict)
-            print('New Added Company【' + name + '】【' + customer_id + '】')
+            print('New Added Company【' + customer_info_dict['name'] + '】【' + customer_id + '】')
         else:
             customer_obj.update(**customer_info_dict)
-            print('Update Company【' + name + '】【' + customer_id + '】')
+            print('Update Company【' + customer_info_dict['name'] + '】【' + customer_id + '】')
     else:
-        print('【' + name + '】【' + customer_id + '】' + 'already Exits')
+        print('【' + customer_info_dict['name'] + '】【' + customer_id + '】' + 'already Exits')
 
 
 def insertDividedCompanyAccount(
@@ -157,8 +133,63 @@ def insertDividedCompanyAccount(
     :return:
     '''
     pass
-    pass
 
 
-def translateToSQL(txt_name):
-    pass
+def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0):
+    '''
+
+    :param file_name:
+    :param table_name:
+    :param table_head_row:
+    :return:
+    '''
+    work_book = xlrd.open_workbook(file_name)
+    work_sheet = work_book.sheet_by_name(table_name)
+    table_head_data = work_sheet.row_values(table_head_row - 1)
+    ret_list = []
+    db_fields = []
+    for col in table_head_data:
+        if len(str(col)):
+            db_fields.append(col)
+    total_rows = work_sheet.nrows
+    if last_row == 0:
+        last_row = total_rows
+    for row_num in range(table_head_row + 1, last_row - 1):
+        row_data = work_sheet.row_values(row_num)
+        row_data_dict = {}
+        i = 0
+        for cell in row_data:
+            if len(str(cell)):
+                row_data_dict[db_fields[i]] = cell
+                i += 1
+        ret_list.append(row_data_dict)
+
+    return ret_list
+
+
+def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_row=1, last_row=0):
+    global NEED_UPDATE_ALL_COMPANIES_INFORMATION
+    all_sr_dict = {}
+    all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
+    all_sr_dict['customer_type_id'] = getSimpleSerializationRule(models.CustomerType)
+    all_sr_dict['scale_id'] = getSimpleSerializationRule(models.Scale)
+    all_sr_dict['industry_code'] = getSimpleSerializationRule(models.Industry, 'code')
+    all_sr_dict['type_of_3311_id'] = getSimpleSerializationRule(models.TypeOf3311)
+    data_source_list = getXlDataForOrmOperation(file_name, table_name, table_head_row, last_row)
+    for data_dict in data_source_list:
+        customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
+        if customer_obj.exists() and not NEED_UPDATE_ALL_COMPANIES_INFORMATION:
+            continue
+        for field in data_dict:
+            field_sr = all_sr_dict.get(field)
+            if field_sr:        # 若该字段有序列化规则
+                value_before_serialize = data_dict[field]
+                data_dict[field] = field_sr[value_before_serialize]
+        if not customer_obj.exists():
+            models.AccountedCompany.objects.create(**data_dict)
+            print('Add Customer:' + data_dict['name'])
+        elif NEED_UPDATE_ALL_COMPANIES_INFORMATION:
+            customer_obj.update(**data_dict)
+            print('Update Customer:' + data_dict['name'])
+        else:
+            print(data_dict['name'] + 'Already exists')
