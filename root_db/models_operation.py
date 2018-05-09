@@ -47,27 +47,29 @@ def createOrUpdateStaff(staff_id, name, sub_department_caption):
                     print('Update Staff【%s-%s】 Failed,department 【%s】 Not Exists.' % (staff_id, name, sub_department_caption))
                     print('*' * 50)
 ########################################################################################################################
-def getSimpleSerializationRule(model_class_used_to_serialize, primary_key_field='id', caption_field='caption'):
+def getSimpleSerializationRule(model_class_used_to_serialize, primary_key_field='id', caption_field='caption', fk_field=''):
     '''
-    返回序列化规则的字典，用于提取公司累客户类型、行业、规模，及员工部门名称与编码间的映射关系
+    返回简单序列化规则的字典，用于提取公司累客户类型、行业、规模，及员工部门名称与编码间的映射关系
     :param model_class_used_to_serialize: LIKE models.CustomerType
     :param primary_key: 'id','code'...
     :param caption_field:
+    :param fk_field:该序列化规则的外键约束字段，例如，sub_department有个上级部门的外键约束'superior_id'
     :return:
     '''
-    serialization = model_class_used_to_serialize.objects.values_list(primary_key_field, caption_field)
+    filter_fields = [caption_field, primary_key_field]
+    if(fk_field):
+        filter_fields.append(fk_field)
+    serialization = model_class_used_to_serialize.objects.values_list(*filter_fields)
     serialization_rule_dict = {}
     for i in serialization:
-        serialization_rule_dict[i[1]] = i[0]
+        if fk_field:
+            serialization_rule_dict[i[0]] = [i[1], i[2]]
+        else:
+            serialization_rule_dict[i[0]] = i[1]
     return serialization_rule_dict
 
 
-def serialize(string_as_Key, serialization_rule_dict):
-    ret = serialization_rule_dict.get(string_as_Key, None)
-    if ret:
-        return ret
-    else:
-        return serialization_rule_dict['undefined']
+# def getComplexSerializationRule(model_class_used_to_serialize, primary_key_field='id', caption_field='caption', fk_field=''):
 
 
 def createOrUpdateCompany(
@@ -98,7 +100,7 @@ def createOrUpdateCompany(
     :return:
     '''
     customer_obj = models.AccountedCompany.objects.filter(customer_id=customer_id)
-    is_customer_exits = True if customer_obj.count() else False
+    is_customer_exits = customer_obj.exists()
     if not is_customer_exits or need_update_this_company or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
         customer_info_dict = {
             'name': name,
@@ -114,19 +116,49 @@ def createOrUpdateCompany(
         }
         if not is_customer_exits:
             customer_info_dict['customer_id'] = customer_id
-            # customer_info_dict['series_id'] = 'NONE'
-            print('not is_customer_exits')
-            print(str(customer_info_dict))
-            while True:
-                ret = models.AccountedCompany.objects.create(**customer_info_dict)
-                if ret:
-                    break
+            models.AccountedCompany.objects.create(**customer_info_dict)
             print('New Added Company【' + name + '】【' + customer_id + '】')
         else:
-            while True:
-                ret = customer_obj.update(**customer_info_dict)
-                if ret:
-                    break
+            customer_obj.update(**customer_info_dict)
             print('Update Company【' + name + '】【' + customer_id + '】')
     else:
         print('【' + name + '】【' + customer_id + '】' + 'already Exits')
+
+
+def insertDividedCompanyAccount(
+        customer_id, account_id, staff_id, sub_department, deposit_type, rate_type, rate, transfer_price, rate_spread,
+        base_rate, floating_ratio, acc_open_date, start_date, exp_date, acc_status, data_date, divided_amount, divided_md_avg,
+        divided_sd_avg, divided_yd_avg, sub_department_sr, deposit_type_sr, rate_type_sr):
+    '''
+
+    :param customer_id:
+    :param account_id:
+    :param staff_id:
+    :param sub_department:
+    :param deposit_type:
+    :param rate_type:
+    :param rate:
+    :param transfer_price:
+    :param rate_spread:
+    :param base_rate:
+    :param floating_ratio:
+    :param acc_open_date:
+    :param start_date:
+    :param exp_date:
+    :param acc_status:
+    :param data_date:
+    :param divided_amount:
+    :param divided_md_avg:
+    :param divided_sd_avg:
+    :param divided_yd_avg:
+    :param sub_department_sr = models_operation.getSimpleSerializationRule(models.District, 'sd_code', 'caption', 'superior_id')
+    :param deposit_type_sr:
+    :param rate_type_sr:
+    :return:
+    '''
+    pass
+    pass
+
+
+def translateToSQL(txt_name):
+    pass

@@ -68,7 +68,7 @@ class AccountedCompany(models.Model):
 
 ########################################################################################################################
 class Series(models.Model):
-    code = models.CharField(primary_key=True, max_length=8, unique=True, verbose_name='代号')
+    code = models.CharField(primary_key=True, max_length=8, verbose_name='代号')
     caption = models.CharField(max_length=32, unique=True, verbose_name='名称')
     gov_plat_lev = models.ForeignKey(to='GovernmentPlatformLevel', default=1, on_delete=models.DO_NOTHING, verbose_name='平台级别')
 
