@@ -52,7 +52,7 @@ class AccountedCompany(models.Model):
     customer_type = models.ForeignKey('CustomerType', default=1, on_delete=models.DO_NOTHING, verbose_name='客户类别')
     scale = models.ForeignKey('Scale', default=1, on_delete=models.DO_NOTHING, verbose_name='规模')
     industry = models.ForeignKey('Industry', to_field='code', default=1, on_delete=models.DO_NOTHING, verbose_name='行业门类')
-    series = models.ForeignKey('Series', to_field='code', default='NONE', on_delete=models.DO_NOTHING, verbose_name='企业系列')
+    series = models.ForeignKey('Series', to_field='code', default='NONE', null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name='企业系列')
     type_of_3311 = models.ForeignKey('TypeOf3311', default=1,  on_delete=models.DO_NOTHING, verbose_name='3311类型')
     has_base_acc = models.BooleanField(default=False, verbose_name='是否基本户')
     has_credit = models.BooleanField(default=False, verbose_name='是否有贷户')

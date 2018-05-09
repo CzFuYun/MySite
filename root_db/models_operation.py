@@ -72,8 +72,8 @@ def serialize(string_as_Key, serialization_rule_dict):
 
 def createOrUpdateCompany(
         customer_id,    name,   need_update_this_company,
-        district_sr,            customer_type_sr,           scale_sr,           industry_sr,            series_sr,          type_of_3311_sr,
-        district='undefined',   customer_type='undefined',  scale='undefined',  industry='undefined',   series='undefined', type_of_3311='undefined',
+        district_sr,            customer_type_sr,           scale_sr,           industry_sr,            type_of_3311_sr,
+        district='undefined',   customer_type='undefined',  scale='undefined',  industry='undefined',   type_of_3311='undefined',
         has_base_acc=False,     has_credit=False, sum_settle=0, inter_settle=0):
     '''
     创建或更新客户，在A-存款
@@ -101,7 +101,6 @@ def createOrUpdateCompany(
     is_customer_exits = True if customer_obj.count() else False
     if not is_customer_exits or need_update_this_company or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
         customer_info_dict = {
-            'customer_id': customer_id,
             'name': name,
             'has_base_acc': has_base_acc,
             'has_credit': has_credit,
@@ -111,10 +110,13 @@ def createOrUpdateCompany(
             'customer_type_id': customer_type_sr[customer_type],
             'scale_id': scale_sr[scale],
             'industry_id': industry_sr[industry],
-            'series_id': series_sr[series],
             'type_of_3311_id': type_of_3311_sr[type_of_3311],
         }
         if not is_customer_exits:
+            customer_info_dict['customer_id'] = customer_id
+            # customer_info_dict['series_id'] = 'NONE'
+            print('not is_customer_exits')
+            print(str(customer_info_dict))
             while True:
                 ret = models.AccountedCompany.objects.create(**customer_info_dict)
                 if ret:
@@ -122,7 +124,7 @@ def createOrUpdateCompany(
             print('New Added Company【' + name + '】【' + customer_id + '】')
         else:
             while True:
-                ret = models.AccountedCompany.objects.update(**customer_info_dict)
+                ret = customer_obj.update(**customer_info_dict)
                 if ret:
                     break
             print('Update Company【' + name + '】【' + customer_id + '】')
