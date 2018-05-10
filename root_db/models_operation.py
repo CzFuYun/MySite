@@ -2,7 +2,7 @@ import xlrd
 from root_db import  models
 
 NEED_UPDATE_STAFF_INFORMATION = False
-NEED_UPDATE_ALL_COMPANIES_INFORMATION = True
+NEED_UPDATE_ALL_COMPANIES_INFORMATION = False
 
 
 ########################################################################################################################
@@ -69,103 +69,42 @@ def getSimpleSerializationRule(model_class_used_to_serialize, primary_key_field=
             serialization_rule_dict[i[0]] = i[1]
     return serialization_rule_dict
 
-
-# def getComplexSerializationRule(model_class_used_to_serialize, primary_key_field='id', caption_field='caption', fk_field=''):
-
-
-def createOrUpdateCompany(customer_id, customer_info_dict, all_serialization_rule_dict):
-    '''
-    创建或更新客户，在A-存款
-    :param customer_id:
-    :param name:
-    :param customer_info_dict: name, has_base_acc, has_credit, sum_settle, inter_settle, district, customer_type, scale, industry, type_of_3311,
-    :param district_sr = models_operation.getSimpleSerializationRule(models.District)
-    :param customer_type_sr = models_operation.getSimpleSerializationRule(models.CustomerType)
-    :param scale_sr = models_operation.getSimpleSerializationRule(models.Scale)
-    :param industry_sr = models_operation.getSimpleSerializationRule(models.Industry, 'code')
-    :param series_sr = models_operation.getSimpleSerializationRule(models.Series, 'code')
-    :param type_of_3311_sr = models_operation.getSimpleSerializationRule(models.TypeOf3311)
-    :return:
-    '''
-    customer_obj = models.AccountedCompany.objects.filter(customer_id=customer_id)
-    is_customer_exits = customer_obj.exists()
-    if not is_customer_exits or NEED_UPDATE_ALL_COMPANIES_INFORMATION:
-        if not is_customer_exits:
-            customer_info_dict['customer_id'] = customer_id
-            models.AccountedCompany.objects.create(**customer_info_dict)
-            print('New Added Company【' + customer_info_dict['name'] + '】【' + customer_id + '】')
-        else:
-            customer_obj.update(**customer_info_dict)
-            print('Update Company【' + customer_info_dict['name'] + '】【' + customer_id + '】')
-    else:
-        print('【' + customer_info_dict['name'] + '】【' + customer_id + '】' + 'already Exits')
-
-
-def insertDividedCompanyAccount(
-        customer_id, account_id, staff_id, sub_department, deposit_type, rate_type, rate, transfer_price, rate_spread,
-        base_rate, floating_ratio, acc_open_date, start_date, exp_date, acc_status, data_date, divided_amount, divided_md_avg,
-        divided_sd_avg, divided_yd_avg, sub_department_sr, deposit_type_sr, rate_type_sr):
-    '''
-
-    :param customer_id:
-    :param account_id:
-    :param staff_id:
-    :param sub_department:
-    :param deposit_type:
-    :param rate_type:
-    :param rate:
-    :param transfer_price:
-    :param rate_spread:
-    :param base_rate:
-    :param floating_ratio:
-    :param acc_open_date:
-    :param start_date:
-    :param exp_date:
-    :param acc_status:
-    :param data_date:
-    :param divided_amount:
-    :param divided_md_avg:
-    :param divided_sd_avg:
-    :param divided_yd_avg:
-    :param sub_department_sr = models_operation.getSimpleSerializationRule(models.District, 'sd_code', 'caption', 'superior_id')
-    :param deposit_type_sr:
-    :param rate_type_sr:
-    :return:
-    '''
-    pass
-
-
-def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0):
+def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0, extra_fileds_kvp=None):
     '''
 
     :param file_name:
     :param table_name:
     :param table_head_row:
+    :param extra_fileds_kvp: 在excel表现有字段外，还需要添加的自定义字段及默认值，在最终return的数据结构中，将带有这些字段
     :return:
     '''
     work_book = xlrd.open_workbook(file_name)
     work_sheet = work_book.sheet_by_name(table_name)
     table_head_data = work_sheet.row_values(table_head_row - 1)
     ret_list = []
-    db_fields = []
+    db_fields = []      # excel列名及数据列号组成的列表，其中列名与数据库表中的各字段名一致
+    c = 0
     for col in table_head_data:
         if len(str(col)):
-            db_fields.append(col)
+            db_fields.append((c, col))
+        c += 1
+    if extra_fileds_kvp:
+        for extra_filed in extra_fileds_kvp:
+            db_fields.append((-1, extra_filed))
     total_rows = work_sheet.nrows
     if last_row == 0:
         last_row = total_rows
     for row_num in range(table_head_row + 1, last_row - 1):
         row_data = work_sheet.row_values(row_num)
         row_data_dict = {}
-        i = 0
-        for cell in row_data:
-            if len(str(cell)):
-                row_data_dict[db_fields[i]] = cell
-                i += 1
+        for col in db_fields:
+            row_data_dict[col[1]] = row_data[col[0]] if col[0] >= 0 else extra_fileds_kvp[col[1]]
+            # if(col[0] == -1):
+            #     row_data_dict[col[1]] = extra_fileds_kvp[col[1]]
+            # else:
+            #     row_data_dict[col[1]] = row_data[col[0]]
         ret_list.append(row_data_dict)
-
     return ret_list
-
 
 def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_row=1, last_row=0):
     global NEED_UPDATE_ALL_COMPANIES_INFORMATION
@@ -173,9 +112,10 @@ def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_
     all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
     all_sr_dict['customer_type_id'] = getSimpleSerializationRule(models.CustomerType)
     all_sr_dict['scale_id'] = getSimpleSerializationRule(models.Scale)
-    all_sr_dict['industry_code'] = getSimpleSerializationRule(models.Industry, 'code')
+    all_sr_dict['industry_id'] = getSimpleSerializationRule(models.Industry, 'code')
     all_sr_dict['type_of_3311_id'] = getSimpleSerializationRule(models.TypeOf3311)
     data_source_list = getXlDataForOrmOperation(file_name, table_name, table_head_row, last_row)
+    data_for_bulk_create = []
     for data_dict in data_source_list:
         customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
         if customer_obj.exists() and not NEED_UPDATE_ALL_COMPANIES_INFORMATION:
@@ -186,10 +126,47 @@ def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_
                 value_before_serialize = data_dict[field]
                 data_dict[field] = field_sr[value_before_serialize]
         if not customer_obj.exists():
-            models.AccountedCompany.objects.create(**data_dict)
-            print('Add Customer:' + data_dict['name'])
+            data_for_bulk_create.append(models.AccountedCompany(**data_dict))
+            # models.AccountedCompany.objects.create(**data_dict)
+            print('Ready To Add Customer:' + data_dict['name'])
         elif NEED_UPDATE_ALL_COMPANIES_INFORMATION:
             customer_obj.update(**data_dict)
             print('Update Customer:' + data_dict['name'])
         else:
             print(data_dict['name'] + 'Already exists')
+    while True:
+        print('Try To Add New Customers...')
+        try:
+            models.AccountedCompany.objects.bulk_create(data_for_bulk_create)
+        except:
+            ipt = input('>>>Error,please check staff foreign key.Retry? <y/n>')
+            if ipt == 'n':
+                break
+        else:
+            break
+
+def createDividedCompanyAccount(file_name, table_name='@DividedCompanyAccount', table_head_row=1, last_row=0):
+    data_date = input('data_date?')
+    all_sr_dict = {}
+    all_sr_dict['sub_department_id'] = getSimpleSerializationRule(models.SubDepartment, 'sd_code', 'caption', 'superior')
+    all_sr_dict['deposit_type_id'] = getSimpleSerializationRule(models.DepositType)
+    all_sr_dict['deposit_type_id'] = getSimpleSerializationRule(models.DepositType)
+    all_sr_dict['rate_type_id'] = getSimpleSerializationRule(models.RateType)
+    all_sr_dict['acc_status_id'] = getSimpleSerializationRule(models.AccountStatus)
+    data_source_list = getXlDataForOrmOperation(file_name, table_name, table_head_row, last_row, {'department_id': '', 'data_date': data_date})
+    data_for_bulk_create = []
+    for data_dict in data_source_list:
+        for field in data_dict:
+            value_before_serialize = data_dict[field]
+            field_sr = all_sr_dict.get(field)
+            if field_sr:
+                if field == 'sub_department_id':
+                    data_dict[field] = field_sr[value_before_serialize][0]
+                    data_dict['department_id'] = field_sr[value_before_serialize][1]
+                else:
+                    data_dict[field] = field_sr[value_before_serialize]
+        data_for_bulk_create.append(models.DividedCompanyAccount(data_dict))
+    models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create)
+
+def createContributor():
+    pass

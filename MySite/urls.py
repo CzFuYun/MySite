@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'login/', views.login, name='login'),
     url(r'home/', views.home, name='home'),
     url(r'dc/', include('deposit_and_credit.urls'), name='deposit_and_credit'),
+    url(r'accounted_company\.export', views.exportAccountedCompany),
     url(r'test/', views.test)
 ]
