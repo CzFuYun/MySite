@@ -14,12 +14,11 @@ def home(request):
 
 def exportAccountedCompany(request):
     file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@AccountedCompany.xlsx'
-    table_name = '@AccountedCompany'
-    table_head_row = 1
-    models_operation.updateOrCreateCompany(file_name, table_name, table_head_row)
+    models_operation.updateOrCreateCompany(file_name)
+
+def createDividedCompanyAccount(request):
+    file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@DividedCompanyAccount.xlsx'
+    models_operation.createDividedCompanyAccount(file_name)
 
 def test(request):
-    file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@DividedCompanyAccount.xlsx'
-    table_name = '@DividedCompanyAccount'
-    table_head_row = 1
-    models_operation.createDividedCompanyAccount(file_name, table_name, table_head_row)
+    pass

@@ -48,6 +48,8 @@ class Contributor(models.Model):
     ABS_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='ABS到期日')
     defuse_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='化解到期日')
     data_date = models.DateField(auto_now_add=False, null=True, blank=True)
+    saving_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄余额（万元）')
+    saving_yd_avg = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄日均（万元）')
 
     def __str__(self):
         return self.customer.name

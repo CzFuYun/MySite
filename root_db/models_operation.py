@@ -106,7 +106,7 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
         ret_list.append(row_data_dict)
     return ret_list
 
-def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_row=1, last_row=0):
+def updateOrCreateCompany(file_name):
     global NEED_UPDATE_ALL_COMPANIES_INFORMATION
     all_sr_dict = {}
     all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
@@ -114,7 +114,7 @@ def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_
     all_sr_dict['scale_id'] = getSimpleSerializationRule(models.Scale)
     all_sr_dict['industry_id'] = getSimpleSerializationRule(models.Industry, 'code')
     all_sr_dict['type_of_3311_id'] = getSimpleSerializationRule(models.TypeOf3311)
-    data_source_list = getXlDataForOrmOperation(file_name, table_name, table_head_row, last_row)
+    data_source_list = getXlDataForOrmOperation(file_name, '@AccountedCompany', 1, 0)
     data_for_bulk_create = []
     for data_dict in data_source_list:
         customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
@@ -139,27 +139,28 @@ def updateOrCreateCompany(file_name, table_name='@AccountedCompany', table_head_
         try:
             models.AccountedCompany.objects.bulk_create(data_for_bulk_create)
         except:
-            ipt = input('>>>Error,please check staff foreign key.Retry? <y/n>')
+            ipt = input('>>>Error,Retry? <y/n>')
             if ipt == 'n':
                 break
         else:
             break
 
-def createDividedCompanyAccount(file_name, table_name='@DividedCompanyAccount', table_head_row=1, last_row=0):
-    data_date = input('data_date?')
+def createDividedCompanyAccount(file_name):
+    data_date = input('>>>data_date?')
     all_sr_dict = {}
     all_sr_dict['sub_department_id'] = getSimpleSerializationRule(models.SubDepartment, 'sd_code', 'caption', 'superior')
     all_sr_dict['deposit_type_id'] = getSimpleSerializationRule(models.DepositType)
     all_sr_dict['deposit_type_id'] = getSimpleSerializationRule(models.DepositType)
     all_sr_dict['rate_type_id'] = getSimpleSerializationRule(models.RateType)
     all_sr_dict['acc_status_id'] = getSimpleSerializationRule(models.AccountStatus)
-    data_source_list = getXlDataForOrmOperation(file_name, table_name, table_head_row, last_row, {'department_id': '', 'data_date': data_date})
+    data_source_list = getXlDataForOrmOperation(file_name, '@DividedCompanyAccount', 1, 0, {'department_id': '', 'data_date': data_date})
     data_for_bulk_create = []
     for data_dict in data_source_list:
         for field in data_dict:
-            value_before_serialize = data_dict[field]
+            # value_before_serialize = data_dict[field]
             field_sr = all_sr_dict.get(field)
             if field_sr:
+                value_before_serialize = data_dict[field]
                 if field == 'sub_department_id':
                     data_dict[field] = field_sr[value_before_serialize][0]
                     data_dict['department_id'] = field_sr[value_before_serialize][1]
@@ -168,5 +169,28 @@ def createDividedCompanyAccount(file_name, table_name='@DividedCompanyAccount', 
         data_for_bulk_create.append(models.DividedCompanyAccount(data_dict))
     models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create)
 
-def createContributor():
-    pass
+def createContributorAndUpdateSeries(file_name):
+    from deposit_and_credit import models as m
+    all_sr_dict = {}
+    all_sr_dict['series_id'] = getSimpleSerializationRule(models.Series, 'code', 'caption')
+    all_sr_dict['department_id'] = getSimpleSerializationRule(models.Department, 'code', 'caption')
+    data_source_list = getXlDataForOrmOperation(file_name, '@Contributor', 1, 0)
+    data_for_bulk_create = []
+    for data_dict in data_source_list:
+        customer_id = data_dict['customer_id']
+        if customer_id == 0:
+            continue
+        for field in data_dict:
+            field_sr = all_sr_dict.get(field)
+            if field_sr:
+                value_before_serialize = data_dict[field]
+                data_dict[field] = field_sr[value_before_serialize]
+                if field == 'series_id':
+                    customer_obj = models.AccountedCompany.objects.get(customer_id=customer_id)
+                    old_series_id = customer_obj.series_id
+                    if old_series_id != data_dict[field]:
+                        customer_obj.series_id = data_dict[field]
+                        customer_obj.save(force_update=True)
+                        print('Update %s series from %s to %s' % (customer_obj.name, old_series_id, data_dict[field]))
+        data_for_bulk_create.append(m.Contributor(data_dict))
+    m.Contributor.objects.bulk_create(data_for_bulk_create)
