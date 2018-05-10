@@ -1,4 +1,4 @@
-import xlrd
+import xlrd, json
 from root_db import  models
 
 NEED_UPDATE_STAFF_INFORMATION = False
@@ -98,11 +98,15 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
         row_data = work_sheet.row_values(row_num)
         row_data_dict = {}
         for col in db_fields:
-            row_data_dict[col[1]] = row_data[col[0]] if col[0] >= 0 else extra_fileds_kvp[col[1]]
-            # if(col[0] == -1):
-            #     row_data_dict[col[1]] = extra_fileds_kvp[col[1]]
-            # else:
-            #     row_data_dict[col[1]] = row_data[col[0]]
+            if col[0] >= 0:
+                cell_value = row_data[col[0]]
+                if len(str(cell_value)):
+                    if type(cell_value) == float and cell_value == int(cell_value):
+                        row_data_dict[col[1]] = int(cell_value)
+                    else:
+                        row_data_dict[col[1]] = cell_value
+            else:
+                row_data_dict[col[1]] = extra_fileds_kvp[col[1]]
         ret_list.append(row_data_dict)
     return ret_list
 
@@ -133,7 +137,7 @@ def updateOrCreateCompany(file_name):
             customer_obj.update(**data_dict)
             print('Update Customer:' + data_dict['name'])
         else:
-            print(data_dict['name'] + 'Already exists')
+            print(data_dict['name'], 'Already exists')
     while True:
         print('Try To Add New Customers...')
         try:
@@ -166,31 +170,33 @@ def createDividedCompanyAccount(file_name):
                     data_dict['department_id'] = field_sr[value_before_serialize][1]
                 else:
                     data_dict[field] = field_sr[value_before_serialize]
-        data_for_bulk_create.append(models.DividedCompanyAccount(data_dict))
-    models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create)
+        data_for_bulk_create.append(models.DividedCompanyAccount(**data_dict))
+    models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create, 500)
 
 def createContributorAndUpdateSeries(file_name):
     from deposit_and_credit import models as m
+    data_date = input('>>>data_date?')
     all_sr_dict = {}
     all_sr_dict['series_id'] = getSimpleSerializationRule(models.Series, 'code', 'caption')
     all_sr_dict['department_id'] = getSimpleSerializationRule(models.Department, 'code', 'caption')
-    data_source_list = getXlDataForOrmOperation(file_name, '@Contributor', 1, 0)
+    data_source_list = getXlDataForOrmOperation(file_name, '@Contributor', 1, 0, {'data_date': data_date})
     data_for_bulk_create = []
     for data_dict in data_source_list:
         customer_id = data_dict['customer_id']
-        if customer_id == 0:
+        if customer_id == 0 or len(str(customer_id)) == 0:
             continue
+        # ↓先更新系列信息
+        series_id = all_sr_dict['series_id'][data_dict.pop('series_id')]     # 在贡献度数据库表里并没有这个字段，要删掉(用pop方法删，返回被删掉的kvp的v)，以防创建数据库记录时报错
+        customer_obj = models.AccountedCompany.objects.get(customer_id=customer_id)
+        old_series_id = customer_obj.series_id
+        if old_series_id != series_id:
+            customer_obj.series_id = series_id
+            customer_obj.save(force_update=True)
+            print('Update %s series from %s to %s' % (customer_obj.name, old_series_id, series_id))
         for field in data_dict:
             field_sr = all_sr_dict.get(field)
             if field_sr:
                 value_before_serialize = data_dict[field]
                 data_dict[field] = field_sr[value_before_serialize]
-                if field == 'series_id':
-                    customer_obj = models.AccountedCompany.objects.get(customer_id=customer_id)
-                    old_series_id = customer_obj.series_id
-                    if old_series_id != data_dict[field]:
-                        customer_obj.series_id = data_dict[field]
-                        customer_obj.save(force_update=True)
-                        print('Update %s series from %s to %s' % (customer_obj.name, old_series_id, data_dict[field]))
-        data_for_bulk_create.append(m.Contributor(data_dict))
-    m.Contributor.objects.bulk_create(data_for_bulk_create)
+        data_for_bulk_create.append(m.Contributor(**data_dict))
+    m.Contributor.objects.bulk_create(data_for_bulk_create, 500)

@@ -17,8 +17,13 @@ def exportAccountedCompany(request):
     models_operation.updateOrCreateCompany(file_name)
 
 def createDividedCompanyAccount(request):
-    file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@DividedCompanyAccount.xlsx'
+    file_name = r'/home/fuyun/下载/@DividedCompanyAccount.xlsx'
     models_operation.createDividedCompanyAccount(file_name)
 
+def exportContributorAndSeries(request):
+    file_name = r'/home/fuyun/下载/@Contributor.xlsx'
+    models_operation.createContributorAndUpdateSeries(file_name)
+
 def test(request):
+
     pass
