@@ -109,6 +109,7 @@ def getContributionTree(data_date):
                 'net_total': int(contrib.net_total),
                 'lr_BAB': int(contrib.lr_BAB),
                 'invest_banking': int(contrib.invest_banking),
+                'saving_yd_avg': int(contrib.saving_yd_avg)
             }
         }
         series_key = str(gov_plat_lev) + '$' + series_code

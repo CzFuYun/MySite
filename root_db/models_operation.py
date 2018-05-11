@@ -94,7 +94,7 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
     total_rows = work_sheet.nrows
     if last_row == 0:
         last_row = total_rows
-    for row_num in range(table_head_row + 1, last_row - 1):
+    for row_num in range(table_head_row, last_row):
         row_data = work_sheet.row_values(row_num)
         row_data_dict = {}
         for col in db_fields:
@@ -147,6 +147,7 @@ def updateOrCreateCompany(file_name):
             if ipt == 'n':
                 break
         else:
+            print('Add New Customers Successfully')
             break
 
 def createDividedCompanyAccount(file_name):
@@ -171,7 +172,7 @@ def createDividedCompanyAccount(file_name):
                 else:
                     data_dict[field] = field_sr[value_before_serialize]
         data_for_bulk_create.append(models.DividedCompanyAccount(**data_dict))
-    models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create, 500)
+    models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create)
 
 def createContributorAndUpdateSeries(file_name):
     from deposit_and_credit import models as m
@@ -199,4 +200,4 @@ def createContributorAndUpdateSeries(file_name):
                 value_before_serialize = data_dict[field]
                 data_dict[field] = field_sr[value_before_serialize]
         data_for_bulk_create.append(m.Contributor(**data_dict))
-    m.Contributor.objects.bulk_create(data_for_bulk_create, 500)
+    m.Contributor.objects.bulk_create(data_for_bulk_create)

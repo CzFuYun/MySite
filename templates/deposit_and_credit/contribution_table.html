@@ -24,7 +24,7 @@
     TABLE_STRUCTURE = {
         department_caption: tableCol('经营部门'   , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
         series_caption:     tableCol('系列'       , 0     , TS_RULE.originally_value,TS_RULE.keep_originally_value),
-        cust_name:          tableCol('客户名称'   , '25%' , '<a style="color:white;cursor:pointer" customer_id=<cust_id> onclick="viewCustomerContributionHistory(this)"><cust_name></a>', '<department_caption>—<series_caption>汇总'),
+        cust_name:          tableCol('客户名称'   , '19%' , '<a style="color:white;cursor:pointer" customer_id=<cust_id> onclick="viewCustomerContributionHistory(this)"><cust_name></a>', '<department_caption>—<series_caption>汇总'),
         approve_line:       tableCol('所属条线'   , '6%'  , TS_RULE.originally_value,TS_RULE.no_need_sum),
         net_total:          tableCol('用信净额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
         loan:               tableCol('贷款金额'   , 0     , TS_RULE.originally_value,TS_RULE.col_accumulation),
@@ -37,7 +37,8 @@
         deposit_amount:     tableCol('存款余额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
         yd_avg:             tableCol('本年日均'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
         compare_yd_avg:     tableCol('日均较年初' , '6%'  , [setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'],[setDepoCompForTd, '<last_yd_avg>', '<yd_avg>'], true),
-        contrib_ratio:      tableCol('回报率'     , '8%'  , [setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>+0.333*<invest_banking>'],[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>', '<net_total>+0.333*<invest_banking>'], true)
+        saving_yd_avg:      tableCol('派生储蓄'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
+        contrib_ratio:      tableCol('回报率'     , '8%'  , [setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>+<saving_yd_avg>', '<net_total>+0.333*<invest_banking>'],[setContribRatioForTd, '<loan_interest>', '<loan>', 'BASE_RATE', '<yd_avg>+<saving_yd_avg>', '<net_total>+0.333*<invest_banking>'], true)
     };
 
     $(function () {
