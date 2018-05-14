@@ -9,7 +9,7 @@
 <script type="text/javascript" src="/static/js/highcharts/highcharts.js"></script>
 <script type="text/javascript">
     $(function(){
-
+        drawLine('container_1', {'series_code': window.SERIES_CODE, 'series_caption': window.SERIES_CAPTION});
     });
     function drawLine(divId, postDataDict){
         $.post(

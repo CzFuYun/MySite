@@ -122,25 +122,28 @@ def getContributionTree(data_date):
     return contrib_tree
 
 
-def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, group_by=None, start_date=None, end_date=None):
+
+def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, model_class, annotate_field, group_by=None, start_date=None, end_date=None):
     '''
 
     :param customer_id_list:
-    :param group_by: 'deposit_type__caption'
+    :param model_class:models.DividedCompanyAccount /   models.Contributor
+    :param group_by: 'deposit_type__caption'    /   'customer__name'    ...
+    :param annotate_field:'divided_amount'  /   'saving_amount' ...
     :param start_date:
     :param end_date:
     :return: {Group1: [(####-##-##, xxxx.xx), (####-##-##, xxxx.xx), ...], Group2: []}
     '''
     if not end_date:
-        end_date = ImportantDate().last_data_date_str(rd_models.DividedCompanyAccount)
+        end_date = ImportantDate().last_data_date_str(model_class)
     if not start_date:
         start_date = str(ImportantDate().today - timedelta(days=730))
-    deposit_qs = rd_models.DividedCompanyAccount.objects.filter(customer_id__in=customer_id_list, data_date__gte=start_date, data_date__lte=end_date)
+    deposit_qs = model_class.objects.filter(customer_id__in=customer_id_list, data_date__gte=start_date, data_date__lte=end_date)
     if group_by:
         deposit_qs = deposit_qs.values_list('data_date', group_by)
     else:
         deposit_qs = deposit_qs.values_list('data_date')
-    deposit_qs = deposit_qs.annotate(Sum('divided_amount')).order_by('data_date')
+    deposit_qs = deposit_qs.annotate(Sum(annotate_field)).order_by('data_date')
     date_group_amounts = []
     for i in deposit_qs:        # deposit_qs:[(datetime.date(2017, 11, 10), '对公定期存款', 10274), (datetime.date(2017, 11, 10), '对公活期存款', 335), (datetime.date(2017, 11, 10), '对公通知存款', 27553),
         temp = []

@@ -30,6 +30,9 @@
                 data: postDataDict,
                 dataType: 'json',
                 success: function(data, textStatus, $XHR){
+                    for(let i=0; i<data.length; i++){
+                        data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '派生储蓄')
+                    }
                     let dataForChart = convertDailyDepositAmountsToCsv(data);
                     {#console.log(data);#}
                     chart = Highcharts.chart(divId, {
@@ -138,13 +141,13 @@
         for(let i=0; i<data.length; i++){
             let date = data[i][0],
                 label = data[i][1],
-                deposit = data[i][2];
+                amount = data[i][2];
             if(!dict[label]){
                 csv += (',' + label);
                 label_list.push(label);
                 dict[label] = {};
             }
-            dict[label][date] = deposit;
+            dict[label][date] = amount;
             if($.inArray(date, date_list) < 0)
                 date_list.push(date);
         }

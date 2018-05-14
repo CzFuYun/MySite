@@ -11,6 +11,8 @@ def checkPermission(func):
         if user_id:
             user_obj = models.UserProfile.objects.filter(**{settings.USER_ID: user_id})
             if user_obj:
+                if ('super_admin',) in user_obj[0].roles.values_list('caption'):
+                    return func(request, *args, **kwargs)
                 url_name = resolve(request.path).url_name
                 permitted_url_names = request.session.get('permitted_url_names')
                 if permitted_url_names is None:

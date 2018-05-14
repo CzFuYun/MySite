@@ -116,16 +116,16 @@ def ajaxDeptOrder(request):
 ########################################################################################################################
 
 
-
-
 @checkPermission
 def viewCustomerContributionHistory(request):
     if request.method == 'GET':
         return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         customer_id = request.POST.get('customer_id')
-        date_group_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], 'deposit_type__caption')
-        return HttpResponse(json.dumps(date_group_amounts))
+        daily_deposit_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], rd_models.DividedCompanyAccount, 'divided_amount', 'deposit_type__caption')
+        daily_saving_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], dac_models.Contributor, 'saving_amount', 'customer__name')
+        daily_deposit_amounts.extend(daily_saving_amounts)
+        return HttpResponse(json.dumps(daily_deposit_amounts))
 
 
 @checkPermission
@@ -136,6 +136,7 @@ def viewSeriesContributionHistory(request):
         series_code = request.POST.get('series_code')
         series_caption = request.POST.get('series_caption')
         series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
+        
         for i in series_company_id_qs:
             customer_id = i[0]
             customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
