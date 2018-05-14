@@ -148,9 +148,11 @@ def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, model_
     for i in deposit_qs:        # deposit_qs:[(datetime.date(2017, 11, 10), '对公定期存款', 10274), (datetime.date(2017, 11, 10), '对公活期存款', 335), (datetime.date(2017, 11, 10), '对公通知存款', 27553),
         temp = []
         for j in i:     # i:(datetime.date(2017, 11, 10), '对公定期存款', 10274)
-            if type(j) == int or type(j) == str:
-                temp.append(j)
-            else:
+            try:
+                -j
+            except:
                 temp.append(str(j))
+            else:
+                temp.append(int(j))
         date_group_amounts.append(temp)
     return date_group_amounts

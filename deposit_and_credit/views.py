@@ -136,9 +136,18 @@ def viewSeriesContributionHistory(request):
         series_code = request.POST.get('series_code')
         series_caption = request.POST.get('series_caption')
         series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
-        
+        series_company_id_list = []
         for i in series_company_id_qs:
-            customer_id = i[0]
-            customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
-
-
+            series_company_id_list.append(i[0])
+            # customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
+        daily_deposit_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine(
+            series_company_id_list,
+            rd_models.DividedCompanyAccount,
+            'divided_amount',
+            'customer__name')
+        daily_saving_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine(
+            series_company_id_list,
+            dac_models.Contributor,
+            'saving_amount')
+        daily_deposit_amounts.extend(daily_saving_amounts)
+        return HttpResponse(json.dumps(daily_deposit_amounts))

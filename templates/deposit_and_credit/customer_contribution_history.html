@@ -11,6 +11,7 @@
 {% block extra_js %}
 <script type="text/javascript" src="/static/js/highcharts/highcharts.js"></script>
 <script type="text/javascript" src="/static/js/highcharts/data.js"></script>
+<script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript">
     {# CUSTOMER_ID的来龙去脉：父页面中a标签被点击后触发onclick事件，事件进行了以下操作#}
     {# 1、获取a标签包含的客户号 #}
@@ -122,52 +123,12 @@
                             }
                         }
                     });
-
-
                 },
                 error: function(){alert('error')}
             }
         );
     }
 
-    function convertDailyDepositAmountsToCsv(data){
-        // data: [["2017-11-10", "对公活期存款", 335] , ["2017-11-10", "对公通知存款", 27553], ["2017-11-20", "对公定期存款", 10274], ...]
-        // mid_status: {label1: {date1: xxxx.xx, date2: xxxx.xx}, label2: {date1: xxxx.xx, date2: xxxx.xx}}
-        // return: stringCsv
-        let dict = {},
-            date_list = [],
-            label_list = [],
-            csv = 'Date';
-        for(let i=0; i<data.length; i++){
-            let date = data[i][0],
-                label = data[i][1],
-                amount = data[i][2];
-            if(!dict[label]){
-                csv += (',' + label);
-                label_list.push(label);
-                dict[label] = {};
-            }
-            dict[label][date] = amount;
-            if($.inArray(date, date_list) < 0)
-                date_list.push(date);
-        }
-        csv += '\n';
-        for(let i=0; i<date_list.length; i++){
-            csv += date_list[i];
-            for(let j=0; j<label_list.length; j++){
-                temp = dict[label_list[j]][date_list[i]];
-                csv += ',';
-                if(temp)
-                    csv += temp;
-                else
-                    csv += 0;
-            }
-            csv += '\n';
-        }
-        {#console.log(date_list);#}
-        {#console.log(dict) ;#}
-        return csv;
-    }
 </script>
 
 {% endblock %}
