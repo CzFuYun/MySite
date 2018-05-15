@@ -32,7 +32,7 @@
                 dataType: 'json',
                 success: function(data, textStatus, $XHR){
                     for(let i=0; i<data.length; i++){
-                        data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '派生储蓄')
+                        data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '\u6d3e\u751f\u50a8\u84c4')
                     }
                     let dataForChart = convertDailyDepositAmountsToCsv(data);
                     {#console.log(data);#}
@@ -41,7 +41,7 @@
                             csv: dataForChart
                         },
                         title: {
-                            text: window.CUSTOMER_NAME + '存款余额走势'
+                            text: window.CUSTOMER_NAME + '\u5b58\u6b3e\u4f59\u989d\u8d70\u52bf'
                         },
                         subtitle: {
                             text: ''

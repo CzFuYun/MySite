@@ -22,7 +22,7 @@
                 success: function(data){
                     for(let i=0; i<data.length; i++){
                         if(data[i].length<3){
-                            data[i].splice(1, 0, '派生储蓄');
+                            data[i].splice(1, 0, '\u6d3e\u751f\u50a8\u84c4');
                         }
                     }
                     console.log(data);
@@ -33,7 +33,7 @@
                             csv: dataForChart
                         },
                         title: {
-                            text: window.SERIES_CAPTION + '存款余额走势'
+                            text: window.SERIES_CAPTION + '\u5b58\u6b3e\u4f59\u989d\u8d70\u52bf'
                         },
                         subtitle: {
                             text: ''
