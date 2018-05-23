@@ -12,20 +12,28 @@ function prepareBaseDataForEcharts(dataArray){
             unsortedSeriesData[dataArray[i][1]] = [];
     }
     let valueAvg_seriesData = {};
-    for(let k in unsortedSeriesData) {
-        let valueSum = 0;
-        for (let i = 0; i < xAxisData.length; i++) {
+    for(let k in unsortedSeriesData){
+        let valueSum = 0,
+            values = [];
+        for(let i=0; i<xAxisData.length; i++){
             let value = 0;
-            if (tmp.hasOwnProperty(xAxisData[i] + k)) {
+            if (tmp.hasOwnProperty(xAxisData[i] + k)){
                 value = tmp[xAxisData[i] + k];
                 valueSum += value;
             }
+            values.push(value);
             unsortedSeriesData[k].push(value);
         }
         if(valueSum){
-            let valueAvg = Math.round(valueSum / xAxisData.length);
-            valueAvg_seriesData[valueAvg] = {};
-            valueAvg_seriesData[valueAvg][k] = unsortedSeriesData[k];
+            let N = xAxisData.length,
+                E = 0;
+            let valueAvg = valueSum / N;
+            for(let i=0; i<values.length; i++){
+                E += Math.pow(values[i] - valueAvg, 2);
+            }
+            let S = Math.round(Math.sqrt(E / N));
+            valueAvg_seriesData[S] = {};
+            valueAvg_seriesData[S][k] = unsortedSeriesData[k];
         }
     }
     valueAvg_seriesData = sortDict(valueAvg_seriesData);
