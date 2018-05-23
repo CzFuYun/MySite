@@ -1,23 +1,39 @@
 function prepareBaseDataForEcharts(dataArray){
     // dataArray:[["2017-11-10", "对公定期保证金存款", 3000],["2017-11-10", "对公活期存款", 7],["2017-11-20", "对公定期保证金存款", 3000],["2017-11-20", "对公活期存款", 17]]
     let xAxisData = [],
+        unsortedSeriesData = {},
         seriesData = {};
     let tmp = {};
     for(let i=0; i<dataArray.length; i++){
-        tmp[dataArray[i][0] + '$' + dataArray[i][1]] = dataArray[i][2];
+        tmp[dataArray[i][0] + dataArray[i][1]] = dataArray[i][2];
         if($.inArray(dataArray[i][0], xAxisData) < 0)
             xAxisData.push(dataArray[i][0]);
-        if(!seriesData.hasOwnProperty(dataArray[i][1]))
-            seriesData[dataArray[i][1]] = [];
+        if(!unsortedSeriesData.hasOwnProperty(dataArray[i][1]))
+            unsortedSeriesData[dataArray[i][1]] = [];
     }
-    for(let k in seriesData){
-        for(let i=0; i<xAxisData.length; i++){
-            if(tmp.hasOwnProperty(xAxisData[i] + '$' + k)){
-                seriesData[k].push(tmp[xAxisData[i] + '$' + k])
-            }else{
-                seriesData[k].push(0)
+    let valueAvg_seriesData = {};
+    for(let k in unsortedSeriesData) {
+        let valueSum = 0;
+        for (let i = 0; i < xAxisData.length; i++) {
+            let value = 0;
+            if (tmp.hasOwnProperty(xAxisData[i] + k)) {
+                value = tmp[xAxisData[i] + k];
+                valueSum += value;
             }
+            unsortedSeriesData[k].push(value);
         }
+        if(valueSum){
+            let valueAvg = Math.round(valueSum / xAxisData.length);
+            valueAvg_seriesData[valueAvg] = {};
+            valueAvg_seriesData[valueAvg][k] = unsortedSeriesData[k];
+        }
+    }
+    valueAvg_seriesData = sortDict(valueAvg_seriesData);
+    console.log(valueAvg_seriesData);
+    for(let k in valueAvg_seriesData){
+        // seriesData[Object.keys(valueAvg_seriesData[k])[0]] = Object.values(valueAvg_seriesData[k])[0];
+        let kvp = valueAvg_seriesData[k];
+        seriesData[getKeyFromOneKvp(kvp)] = getValueFromOneKvp(kvp);
     }
     return {
         xAxisData: xAxisData,
@@ -25,8 +41,6 @@ function prepareBaseDataForEcharts(dataArray){
     }
 
 }
-
-
 
 function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
     // dataArray:[["2017-11-10", "对公定期保证金存款", 3000],["2017-11-10", "对公活期存款", 7],["2017-11-20", "对公定期保证金存款", 3000],["2017-11-20", "对公活期存款", 17]]
@@ -55,8 +69,9 @@ function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
                 label: {backgroundColor: '#6a7985'}
             }
         },
-        toolbox:{
-            show:true,
+        toolbox: {
+            show: true,
+            y: 'bottom',
             feature: {
                 mark: {show:true},
                 dataView : {show: true, readOnly: false},

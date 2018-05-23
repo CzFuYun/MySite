@@ -9,7 +9,7 @@
 
 
 {% block extra_js %}
-<script type="text/javascript" src="/static/js/highcharts/highcharts.js"></script>
+<script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/js/echarts/echarts.min.js"></script>
 <script type="text/javascript" src="/static/myjs/drawEcharts.js"></script>
 <script type="text/javascript">
@@ -33,11 +33,12 @@
                     for(let i=0; i<data.length; i++){
                         data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '\u6d3e\u751f\u50a8\u84c4')
                     }
-                    let option = prepareOptionForEchatrsCommonLine(data, false, false);
+                    let option = prepareOptionForEchatrsCommonLine(data, true, false);
                     option.title = {
-                        text: window.CUSTOMER_NAME + '\u5b58\u6b3e\u4f59\u989d\u60c5\u51b5'
+                        text: window.CUSTOMER_NAME + '\u5b58\u6b3e\u4f59\u989d\u60c5\u51b5',
+                        x: 'center',
+                        y: 'bottom',
                     };
-                    console.log(option);
                     let chart = echarts.init(document.getElementById(divId));
                     chart.setOption(option);
                 },
