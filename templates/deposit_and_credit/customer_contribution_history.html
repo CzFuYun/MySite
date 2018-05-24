@@ -11,6 +11,7 @@
 {% block extra_js %}
 <script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/js/echarts/echarts.min.js"></script>
+<script type="text/javascript" src="/static/js/echarts/macarons.js"></script>
 <script type="text/javascript" src="/static/myjs/drawEcharts.js"></script>
 <script type="text/javascript">
     {# CUSTOMER_ID的来龙去脉：父页面中a标签被点击后触发onclick事件，事件进行了以下操作#}
@@ -23,6 +24,8 @@
     });
 
     function drawCustomerDepositHistory(divId, postDataDict){
+        let chart = echarts.init(document.getElementById(divId), 'macarons');
+        chart.showLoading();
         $.post(
             {
                 url: '{% url "viewCustomerContributionHistory" %}',
@@ -39,7 +42,7 @@
                         x: 'center',
                         y: 'bottom',
                     };
-                    let chart = echarts.init(document.getElementById(divId));
+                    chart.hideLoading();
                     chart.setOption(option);
                 },
                 error: function(){alert('error')}
