@@ -438,12 +438,6 @@
         }else{
             contrib_tree[req_dept] = whole_contrib_tree[req_dept];
         }
-        let branch_sum_div = document.createElement('div');
-        branch_sum_div.className = 'card-body';
-        branch_sum_div.innerHTML = '<h4>本口径全行汇总数：</h4>';
-        let branch_sum_ul = document.createElement('ul');
-        branch_sum_div.appendChild(branch_sum_ul);
-        document.getElementById('right_sidebar_body').appendChild(branch_sum_div);
         for(let od in ordered_dept){
             let dept_code = ordered_dept[od],
                 dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[od]], frag);
@@ -478,12 +472,15 @@
         }
         document.getElementById('main_content').appendChild(frag);
         {# 生成分行汇总数 #}
+        let branch_sum_ul = document.getElementsByClassName('navbar-nav mr-auto mt-md-0')[0];
         for(let col in TABLE_STRUCTURE){
             if(col === 'cust_name')
                 continue;
             let sum_operation = TABLE_STRUCTURE[col].value_for_sum_td,
                 li = document.createElement('li');
-            li.innerText = TABLE_STRUCTURE[col].description + '：';
+            {#li.className = 'nav-item';#}
+            li.setAttribute('style', 'width:100px');
+            li.innerText = TABLE_STRUCTURE[col].description + '\n';
             if(sum_operation === TS_RULE.col_accumulation && branch_sum[col] && TABLE_STRUCTURE[col].shown_in_dept_sum){
                 li.innerText += branch_sum[col];
                 branch_sum_ul.appendChild(li);

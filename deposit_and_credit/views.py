@@ -122,8 +122,8 @@ def viewCustomerContributionHistory(request):
         return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         customer_id = request.POST.get('customer_id')
-        daily_deposit_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], rd_models.DividedCompanyAccount, 'divided_amount', 'deposit_type__caption')
-        daily_saving_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine([customer_id], dac_models.Contributor, 'saving_amount', 'customer__name')
+        daily_deposit_amounts = models_operation.getCustomerDailyDataForHighChartsLine([customer_id], rd_models.DividedCompanyAccount, 'divided_amount', 'deposit_type__caption')
+        daily_saving_amounts = models_operation.getCustomerDailyDataForHighChartsLine([customer_id], dac_models.Contributor, 'saving_amount', 'customer__name')
         daily_deposit_amounts.extend(daily_saving_amounts)
         return HttpResponse(json.dumps(daily_deposit_amounts))
 
@@ -140,14 +140,23 @@ def viewSeriesContributionHistory(request):
         for i in series_company_id_qs:
             series_company_id_list.append(i[0])
             # customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
-        daily_deposit_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine(
+        daily_deposit_amounts = models_operation.getCustomerDailyDataForHighChartsLine(
             series_company_id_list,
             rd_models.DividedCompanyAccount,
             'divided_amount',
             'customer__name')
-        daily_saving_amounts = models_operation.getCustomerDailyDepositAmountsDataForHighChartsLine(
+        daily_saving_amounts = models_operation.getCustomerDailyDataForHighChartsLine(
             series_company_id_list,
             dac_models.Contributor,
             'saving_amount')
         daily_deposit_amounts.extend(daily_saving_amounts)
         return HttpResponse(json.dumps(daily_deposit_amounts))
+
+
+def ajaxCustomerCreditHistory(request):
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        customer_id = request.POST.get('customer_id')
+        daily_credit_amounts = models_operation.getCustomerDailyDataForHighChartsLine([customer_id], dac_models.Contributor, 'net_total', 'customer__name')
+        return HttpResponse(json.dumps(daily_credit_amounts))

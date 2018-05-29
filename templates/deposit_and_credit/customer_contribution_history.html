@@ -2,7 +2,8 @@
 
 
 {% block content %}
-    <div id="container" style="min-width:400px;height:400px"></div>
+    <div id="container" style="min-width:400px;height:800px"></div>
+
 {#    <div class="message"></div>#}
 {% endblock %}
 
@@ -20,36 +21,45 @@
     {# 3、在第二步进行的同时，父页面给newWindow（本页面）开辟了全局变量CUSTOMER_ID并赋值 #}
     $(function(){
         document.head.getElementsByTagName('title')[0].innerText = window.CUSTOMER_NAME;
-        drawCustomerDepositHistory('container', {customer_id: window.CUSTOMER_ID});
+        drawCustomerDepositAndCreditHistory('container', {customer_id: window.CUSTOMER_ID});
     });
 
-    function drawCustomerDepositHistory(divId, postDataDict){
-        let chart = echarts.init(document.getElementById(divId), 'macarons');
+    function drawCustomerDepositAndCreditHistory(divId, postDataDict){
+        let chart = echarts.init(document.getElementById(divId)),
+            option = {};
         chart.showLoading();
-        $.post(
-            {
-                url: '{% url "viewCustomerContributionHistory" %}',
-                {#async: false,#}
-                data: postDataDict,
-                dataType: 'json',
-                success: function(data, textStatus, $XHR){
-                    for(let i=0; i<data.length; i++){
-                        data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '\u6d3e\u751f\u50a8\u84c4')
-                    }
-                    let option = prepareOptionForEchatrsCommonLine(data, true, false);
-                    option.title = {
-                        text: window.CUSTOMER_NAME + '\u5b58\u6b3e\u4f59\u989d\u60c5\u51b5',
-                        x: 'center',
-                        y: 'bottom',
-                    };
-                    chart.hideLoading();
-                    chart.setOption(option);
-                },
-                error: function(){alert('error')}
-            }
-        );
+        $.post({
+            url: '{% url "viewCustomerContributionHistory" %}',
+            async: false,
+            data: postDataDict,
+            dataType: 'json',
+            success: function(data, textStatus, $XHR){
+                for(let i=0; i<data.length; i++)
+                    data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '\u6d3e\u751f\u50a8\u84c4');
+                option = prepareOptionForEchatrsCommonLine(data, false, false);
+                option.title = {
+                    text: window.CUSTOMER_NAME + '\u5b58\u6b3e\u53ca\u7528\u4fe1\u4f59\u989d',
+                    x: 'center',
+                    y: 'bottom',
+                };
+            },
+            error: function(){alert('\u83b7\u53d6\u5b58\u6b3e\u6570\u636e\u5931\u8d25');}
+        });
+        $.post({
+            url: '{% url "ajaxCustomerCreditHistory" %}',
+            {#async: false,#}
+            data: postDataDict,
+            dataType: 'json',
+            success: function(data){
+                for(let i=0; i<data.length; i++)
+                    data[i][1] = data[i][1].replace(window.CUSTOMER_NAME, '\u7528\u4fe1\u51c0\u989d');
+                prepareOptionForEchartsInteractionLine(data, option);
+            chart.hideLoading();
+            chart.setOption(option);
+        },
+            error: function(){alert('\u83b7\u53d6\u7528\u4fe1\u6570\u636e\u5931\u8d25');}
+        });
     }
-
 </script>
 
 {% endblock %}

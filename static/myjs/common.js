@@ -19,3 +19,7 @@ function getKeyFromOneKvp(kvp){
 function getValueFromOneKvp(kvp){
     return Object.values(kvp)[0];
 }
+
+// Array.prototype.insert = function (index, item) {
+// //   this.splice(index, 0, item);
+// // };

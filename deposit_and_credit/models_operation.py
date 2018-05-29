@@ -16,6 +16,9 @@ class ImportantDate():
     def last_year_num(self):
         return self.today.year - 1
 
+    def first_data_date_str(self, model_class, field='data_date'):
+        return getNeighbourDate(model_class, 1, '1900-01-01', field)
+
     def last_data_date_str(self, model_class, field='data_date'):
         return getNeighbourDate(model_class, -1, self.today_str, field)
 
@@ -123,7 +126,7 @@ def getContributionTree(data_date):
 
 
 
-def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, model_class, annotate_field, group_by=None, start_date=None, end_date=None):
+def getCustomerDailyDataForHighChartsLine(customer_id_list, model_class, annotate_field, group_by=None, start_date=None, end_date=None):
     '''
 
     :param customer_id_list:
@@ -136,8 +139,9 @@ def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, model_
     '''
     if not end_date:
         end_date = ImportantDate().last_data_date_str(model_class)
+    first_data_date = ImportantDate().first_data_date_str(model_class)
     if not start_date:
-        start_date = str(ImportantDate().today - timedelta(days=730))
+        start_date = first_data_date
     deposit_qs = model_class.objects.filter(customer_id__in=customer_id_list, data_date__gte=start_date, data_date__lte=end_date)
     if group_by:
         deposit_qs = deposit_qs.values_list('data_date', group_by)
@@ -156,3 +160,7 @@ def getCustomerDailyDepositAmountsDataForHighChartsLine(customer_id_list, model_
                 temp.append(int(j))
         date_group_amounts.append(temp)
     return date_group_amounts
+
+def getCustomerCreditAndIbDataForHighChartsLine(customer_id_list, model_class, annotate_field, group_by=None, start_date=None, end_date=None):
+
+    pass
