@@ -2,8 +2,8 @@ function prepareBaseDataForEcharts(dataArray){
     // dataArray:[["2017-11-10", "对公定期保证金存款", 3000],["2017-11-10", "对公活期存款", 7],["2017-11-20", "对公定期保证金存款", 3000],["2017-11-20", "对公活期存款", 17]]
     let xAxisData = [],
         unsortedSeriesData = {},
-        seriesData = {};
-    let tmp = {};
+        seriesData = {},
+        tmp = {};
     for(let i=0; i<dataArray.length; i++){
         tmp[dataArray[i][0] + dataArray[i][1]] = dataArray[i][2];
         if($.inArray(dataArray[i][0], xAxisData) < 0)
@@ -31,9 +31,13 @@ function prepareBaseDataForEcharts(dataArray){
             for(let i=0; i<values.length; i++){
                 E += Math.pow(values[i] - valueAvg, 2);
             }
-            let S = Math.round(Math.sqrt(E / N));
-            valueAvg_seriesData[S] = {};
-            valueAvg_seriesData[S][k] = unsortedSeriesData[k];
+            let S = Math.round(Math.sqrt(E / N)).toString();
+            let randomStr = Math.round(Math.random()*9.9).toString();
+            while((S + randomStr) in valueAvg_seriesData){      // 末尾拼接一位随机值，防止方差S重复
+                randomStr = Math.round(Math.random()*9.9).toString();
+            }
+            valueAvg_seriesData[S + randomStr] = {};
+            valueAvg_seriesData[S + randomStr][k] = unsortedSeriesData[k];
         }
     }
     valueAvg_seriesData = sortDict(valueAvg_seriesData);
@@ -51,10 +55,10 @@ function prepareBaseDataForEcharts(dataArray){
 function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
     // dataArray:[["2017-11-10", "对公定期保证金存款", 3000],["2017-11-10", "对公活期存款", 7],["2017-11-20", "对公定期保证金存款", 3000],["2017-11-20", "对公活期存款", 17]]
     let series = [],
-        legend = {data: []};
-    let stack = needStack ? '总量' : '';
-    dataForEcharts = prepareBaseDataForEcharts(dataArray);
-    let seriesData = dataForEcharts.seriesData;
+        legend = {data: []},
+        stack = needStack ? '总量' : '',
+        dataForEcharts = prepareBaseDataForEcharts(dataArray),
+        seriesData = dataForEcharts.seriesData;
     for(let k in seriesData){
         legend['data'].push(k);
         series.push({
@@ -112,8 +116,8 @@ function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption){
         newSeriesName = dataArray[0][1],
         newSeriesData = [],
         delta = 0;
-    console.log('commonLineOption');
-    console.log(commonLineOption);
+    // console.log('commonLineOption');
+    // console.log(commonLineOption);
     legendData.push(newSeriesName);
     // 补足缺失的用信数据
     while(xAxis1Data[delta] < dataArray[delta][0]){     // 若X轴上的最小日期小于传入数据的最小日期
@@ -174,5 +178,5 @@ function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption){
         areaStyle: series[0].areaStyle,
         smooth: series[0].smooth,
     });
-    console.log(commonLineOption);
+    // console.log(commonLineOption);
 }
