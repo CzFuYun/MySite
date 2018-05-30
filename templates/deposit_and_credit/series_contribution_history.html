@@ -8,12 +8,15 @@
 {% block extra_js %}
 <script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/js/echarts/echarts.min.js"></script>
+<script type="text/javascript" src="/static/js/echarts/macarons.js"></script>
 <script type="text/javascript" src="/static/myjs/drawEcharts.js"></script>
 <script type="text/javascript">
     $(function(){
         drawLine('container_1', {'series_code': window.SERIES_CODE, 'series_caption': window.SERIES_CAPTION});
     });
     function drawLine(divId, postDataDict){
+        let chart = echarts.init(document.getElementById(divId), 'macarons');
+        chart.showLoading();
         $.post(
             {
                 url: '{% url "viewSeriesContributionHistory" %}',
@@ -32,7 +35,7 @@
                         x: 'center',
                         y: 'bottom',
                     };
-                    let chart = echarts.init(document.getElementById(divId));
+                    chart.hideLoading();
                     chart.setOption(option);
                 },
                 error: function(){alert('error')}

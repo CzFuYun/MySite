@@ -37,9 +37,7 @@ function prepareBaseDataForEcharts(dataArray){
         }
     }
     valueAvg_seriesData = sortDict(valueAvg_seriesData);
-    console.log(valueAvg_seriesData);
     for(let k in valueAvg_seriesData){
-        // seriesData[Object.keys(valueAvg_seriesData[k])[0]] = Object.values(valueAvg_seriesData[k])[0];
         let kvp = valueAvg_seriesData[k];
         seriesData[getKeyFromOneKvp(kvp)] = getValueFromOneKvp(kvp);
     }
@@ -95,7 +93,86 @@ function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
                 data : dataForEcharts.xAxisData
             }
         ],
-        yAxis: {type: 'value'},
+        yAxis: [{
+            // name : '流量(m^3/s)',
+            type : 'value',
+        }],
         series: series,
     }
+}
+
+function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption){
+    // dataArray: [["2018-03-31", "常州体育产业集团有限公司", 3000], ["2018-04-30", "常州体育产业集团有限公司", 3000], ["2018-05-10", "常州体育产业集团有限公司", 3000]]
+    let legendData = commonLineOption.legend.data,
+        xAxis = commonLineOption.xAxis,
+        xAxis1Data = xAxis[0].data,
+        yAxis = commonLineOption.yAxis,
+        // yAxisData = yAxis.data,
+        series = commonLineOption.series,
+        newSeriesName = dataArray[0][1],
+        newSeriesData = [],
+        delta = 0;
+    console.log('commonLineOption');
+    console.log(commonLineOption);
+    legendData.push(newSeriesName);
+    // 补足缺失的用信数据
+    while(xAxis1Data[delta] < dataArray[delta][0]){     // 若X轴上的最小日期小于传入数据的最小日期
+        dataArray.splice(delta, 0, [xAxis1Data[delta], newSeriesName, 0]);
+        delta++;
+    }
+    for(let i=0; i<dataArray.length; i++){
+        newSeriesData.push(dataArray[i][2]);
+    }
+    commonLineOption.axisPointer = {link: {xAxisIndex: 'all'}};       // 联动全部X轴
+    // commonLineOption.dataZoom =  [
+    //     {
+    //         show: true,
+    //         realtime: true,
+    //         start: 60,
+    //         end: 100,
+    //         xAxisIndex: [0, 1]
+    //     },
+    //     {
+    //         type: 'inside',
+    //         realtime: true,
+    //         start: 60,
+    //         end: 100,
+    //         xAxisIndex: [0, 1]
+    //     }
+    // ;
+    commonLineOption.grid = [{
+        left: 50,
+        right: 50,
+        height: '35%'
+    }, {
+        left: 50,
+        right: 50,
+        top: '55%',
+        height: '35%'
+    }];
+    xAxis.push({
+        gridIndex: 1,
+        type: 'category',
+        boundaryGap: false,
+        // axisLine: {onZero: true},
+        data: xAxis1Data,
+        // position: 'top'
+    });
+    yAxis.push({
+        gridIndex: 1,
+        // name: newSeriesName,
+        type: 'value',
+        // inverse: true
+    });
+    series.push({
+        name: newSeriesName,
+        type: 'line',
+        xAxisIndex: 1,
+        yAxisIndex: 1,
+        stack: series[0].stack,
+        data: newSeriesData,
+        areaStyle: series[0].areaStyle,
+        smooth: series[0].smooth,
+    });
+    console.log(commonLineOption);
 }
