@@ -8,8 +8,9 @@ urlpatterns = [
     url(r'contribution\.view', views.viewContribution, name='viewContribution'),
     url(r'contribution\.ajax', views.ajaxContribution, name='ajaxContribution'),
     url(r'deptorder\.ajax', views.ajaxDeptOrder, name='ajaxDeptOrder'),
-    url(r'dept_contrib\.view', views.viewDepartmentContribution, name='viewDepartmentContribution'),
+    # url(r'dept_contrib\.view', views.viewDepartmentContribution, name='viewDepartmentContribution'),
     url(r'customercontributionhistory\.view', views.viewCustomerContributionHistory, name='viewCustomerContributionHistory'),
     url(r'seriescontributionhistory\.view', views.viewSeriesContributionHistory, name='viewSeriesContributionHistory'),
-    url(r'customercredithistory\.ajax', views.ajaxCustomerCreditHistory, name='ajaxCustomerCreditHistory')
+    url(r'customercredithistory\.ajax', views.ajaxCustomerCreditHistory, name='ajaxCustomerCreditHistory'),
+    url(r'departmentcontributionhistory\.view', views.viewDepartmentContributionHistory, name='viewDepartmentContributionHistory'),
 ]

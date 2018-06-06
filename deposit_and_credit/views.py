@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 from django.shortcuts import render, HttpResponse
 from root_db import models as rd_models
 from deposit_and_credit import models as dac_models, models_operation
@@ -91,9 +92,6 @@ def viewContribution(request):
         })
 
 
-def viewDepartmentContribution(request):
-    pass
-
 
 def ajaxContribution(request):
     data_date = request.POST.get('data_date', None) or models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
@@ -160,3 +158,41 @@ def ajaxCustomerCreditHistory(request):
         customer_id = request.POST.get('customer_id')
         daily_credit_amounts = models_operation.getCustomerDailyDataForHighChartsLine([customer_id], dac_models.Contributor, 'net_total', 'customer__name')
         return HttpResponse(json.dumps(daily_credit_amounts))
+
+
+
+def viewDepartmentContributionHistory(request):
+    if request.method == 'GET':
+        return  render(request, 'deposit_and_credit/department_contribution_history.html')
+    elif request.method == 'POST':
+        dept_code = request.POST.get('dept_code')
+        customers_qs = dac_models.Contributor.objects.filter(
+            department=dept_code,
+            data_date=models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
+        ).values('customer_id')
+        dept_customers = []
+        for i in customers_qs:
+            dept_customers.append(i[0])
+        dept_deposit = models_operation.getCustomerDailyDataForHighChartsLine(dept_customers, rd_models.DividedCompanyAccount, 'divided_amount')
+        dept_credit = dac_models.Contributor.objects.filter(department=dept_code, data_date__gte='2018-03-31').values_list(
+            'data_date',
+            'customer__name',
+            'customer__industry__caption',
+            'customer__series__caption',
+            'customer__series__gov_plat_lev',
+            'invest_banking',
+            'net_total',
+            'loan_rate',
+            'saving_amount',
+        ).order_by('data_date')
+        series_by_date = {}
+        for i in dept_credit:
+            date = str(i[0])
+            customer = i[1]
+            if date not in series_by_date:
+                series_by_date[date] = {}
+            if customer not in series_by_date[date]:
+                series_by_date[date][customer] = []
+            for j in range(2, len(i)):
+                series_by_date[date][customer].append(float(i[j]) if type(i[j]) == Decimal else i[j])
+        print(series_by_date)
