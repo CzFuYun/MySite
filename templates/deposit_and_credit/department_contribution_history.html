@@ -1,0 +1,28 @@
+{% extends 'blank.html' %}
+
+{% block content %}
+    <div id="container" style="min-width:400px;height:800px"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript" src="/static/myjs/common.js"></script>
+<script type="text/javascript" src="/static/js/echarts/echarts.min.js"></script>
+<script type="text/javascript" src="/static/js/echarts/macarons.js"></script>
+<script type="text/javascript" src="/static/myjs/drawEcharts.js"></script>
+<script type="text/javascript">
+    $(function (){
+       drawDepartmentContributionHistory('container', {dept_code: DEPT_CODE});
+    });
+    function drawDepartmentContributionHistory(divId, postDataDict){
+        let chart = echarts.init(document.getElementById(divId)),
+            option = {};
+        chart.showLoading();
+        $.post({
+            url: '{% url "viewDepartmentContributionHistory" %}',
+            data: postDataDict,
+            dataType: 'json',
+        })
+    }
+</script>
+
+{% endblock %}
