@@ -169,7 +169,7 @@ def viewDepartmentContributionHistory(request):
         customers_qs = dac_models.Contributor.objects.filter(
             department=dept_code,
             data_date=models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
-        ).values('customer_id')
+        ).values_list('customer_id')
         dept_customers = []
         for i in customers_qs:
             dept_customers.append(i[0])
@@ -195,4 +195,4 @@ def viewDepartmentContributionHistory(request):
                 series_by_date[date][customer] = []
             for j in range(2, len(i)):
                 series_by_date[date][customer].append(float(i[j]) if type(i[j]) == Decimal else i[j])
-        print(series_by_date)
+        return HttpResponse(json.dumps(series_by_date))

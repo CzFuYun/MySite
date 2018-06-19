@@ -33,14 +33,15 @@ function prepareBaseDataForEcharts(dataArray){
             }
             let S = Math.round(Math.sqrt(E / N)).toString();
             let randomStr = Math.round(Math.random()*9.9).toString();
-            while((S + randomStr) in valueAvg_seriesData){      // 末尾拼接一位随机值，防止方差S重复
+            while((valueSum + S + randomStr) in valueAvg_seriesData){      // 末尾拼接一位随机值，防止方差S重复
                 randomStr = Math.round(Math.random()*9.9).toString();
             }
-            valueAvg_seriesData[S + randomStr] = {};
-            valueAvg_seriesData[S + randomStr][k] = unsortedSeriesData[k];
+            let keyStr = valueSum + S + randomStr;
+            valueAvg_seriesData[keyStr] = {};
+            valueAvg_seriesData[keyStr][k] = unsortedSeriesData[k];
         }
     }
-    valueAvg_seriesData = sortDict(valueAvg_seriesData);
+    valueAvg_seriesData = getValuesOrderByKeys(valueAvg_seriesData);
     for(let k in valueAvg_seriesData){
         let kvp = valueAvg_seriesData[k];
         seriesData[getKeyFromOneKvp(kvp)] = getValueFromOneKvp(kvp);
@@ -52,11 +53,12 @@ function prepareBaseDataForEcharts(dataArray){
 
 }
 
-function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
+function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth, stepType){
     // dataArray:[["2017-11-10", "对公定期保证金存款", 3000],["2017-11-10", "对公活期存款", 7],["2017-11-20", "对公定期保证金存款", 3000],["2017-11-20", "对公活期存款", 17]]
     let series = [],
         legend = {data: []},
         stack = needStack ? '总量' : '',
+        step = stepType || '',
         dataForEcharts = prepareBaseDataForEcharts(dataArray),
         seriesData = dataForEcharts.seriesData;
     for(let k in seriesData){
@@ -64,6 +66,7 @@ function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
         series.push({
             name: k,
             type: 'line',
+            step: step,
             stack: stack,
             data: seriesData[k],
             areaStyle: {normal: {}},
@@ -105,7 +108,7 @@ function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth){
     }
 }
 
-function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption){
+function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption, stepType){
     // dataArray: [["2018-03-31", "常州体育产业集团有限公司", 3000], ["2018-04-30", "常州体育产业集团有限公司", 3000], ["2018-05-10", "常州体育产业集团有限公司", 3000]]
     let legendData = commonLineOption.legend.data,
         xAxis = commonLineOption.xAxis,
@@ -171,6 +174,7 @@ function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption){
     series.push({
         name: newSeriesName,
         type: 'line',
+        step: stepType || '',
         xAxisIndex: 1,
         yAxisIndex: 1,
         stack: series[0].stack,
@@ -180,3 +184,7 @@ function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption){
     });
     // console.log(commonLineOption);
 }
+
+// function prepareOptionForEchartsBarLine(dataArray){
+//
+// }
