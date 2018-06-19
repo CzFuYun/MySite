@@ -21,6 +21,9 @@
             url: '{% url "viewDepartmentContributionHistory" %}',
             data: postDataDict,
             dataType: 'json',
+            success: function(data){
+                console.log(data);
+            },
         })
     }
 </script>
