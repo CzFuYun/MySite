@@ -11,6 +11,9 @@ class Staff(models.Model):
     name = models.CharField(blank=True, null=True, max_length=16, verbose_name='姓名')
     staff_level = models.SmallIntegerField(blank=True, null=True, verbose_name='行员等级')
     sub_department = models.ForeignKey(to='SubDepartment', to_field='sd_code', on_delete=models.DO_NOTHING, verbose_name='部门（细分）')     # 细分部门，例如溧阳大客户部应记作LY_2
+    phone_number = models.CharField(max_length=16, null=True, blank=True)
+    cellphone_number = models.CharField(max_length=16, null=True, blank=True)
+    oa = models.CharField(max_length=8, null=True, blank=True)
 
     def __str__(self):
         return '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)

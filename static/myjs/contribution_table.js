@@ -316,10 +316,10 @@ function buildDeptContribCard(filter_condict, dept_code, depart_contrib, fragmen
     return dept_has_content ? dept_sum : null;
 }
 
-function setDepoCompForTd(depoBefore, deptAfter){
+function setDepoCompForTd(depoBefore, depoAfter){
     let compare = depoBefore
-        ? deptAfter  / depoBefore - 1
-        : (deptAfter ? 1 : 0);
+        ? depoAfter  / depoBefore - 1
+        : (depoAfter ? 1 : 0);
         compare = Math.max(compare, -1);        // 最多-100%
         compare = Math.round(compare * 10000) / 100;
         let arrow, color;
@@ -336,7 +336,7 @@ function setDepoCompForTd(depoBefore, deptAfter){
             arrow = '"fa fa-level-up"';
             color = '"text-info text-semibold"';
         }
-        return '<span class=' + color + '><i class=' + arrow + ' aria-hidden="true"></i>' + (deptAfter - depoBefore) + '</span>';
+        return '<span class=' + color + '><i class=' + arrow + ' aria-hidden="true"></i>' + (depoAfter - depoBefore) + '</span>';
 }
 
 function setContribRatioForTd(interest, loan, base_rate, yd_avg, net_total){

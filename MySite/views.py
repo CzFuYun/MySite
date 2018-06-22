@@ -13,19 +13,19 @@ def home(request):
 
 
 def exportAccountedCompany(request):
-    # accounted_company.export
+    # http://139.17.1.35:8000/accounted_company.export
     file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@AccountedCompany.xlsx'
     models_operation.updateOrCreateCompany(file_name)
     print('Success')
 
 def createDividedCompanyAccount(request):
-    # divided_company_account.create
+    # http://139.17.1.35:8000/divided_company_account.create
     file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@DividedCompanyAccount.xlsx'
     models_operation.createDividedCompanyAccount(file_name)
     print('Success')
 
 def exportContributorAndSeries(request):
-    # contributor_and_series.export
+    # http://139.17.1.35:8000/contributor_and_series.export
     file_name = r'E:\AAA报表定期更新\各项报表整理导入数据库\@Contributor.xlsx'
     models_operation.createContributorAndUpdateSeries(file_name)
     print('Success')

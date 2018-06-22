@@ -5,6 +5,7 @@
     <title>{{ content_title }}</title>
     <link href="/static/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/assets/plugins/sweetalert/sweetalert.css" rel="stylesheet">
     <link href="/static/css/colors/blue.css" id="theme" rel="stylesheet">
 
     {% block extra_css %}
@@ -50,6 +51,9 @@
 {#            <div class="slimScrollRail" style="width: 5px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(51, 51, 51); opacity: 0.2; z-index: 90; right: 1px;"></div>#}
         </div>
     </div>
+
+    <div id="mask" style="position: fixed; background-color: black; opacity: 0.5; display: none; top: 0; bottom: 0; left: 0; right: 0;"></div>
+
     <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
     <script src="/static/assets/plugins/bootstrap/js/popper.min.js"></script>
 
@@ -63,6 +67,17 @@
         }finally {
             ;
         }
+
+        function turnMask(status){
+            let e = document.getElementById('mask'),
+                s = '';
+            if(status)
+                s = 'block';
+            else
+                s = 'none';
+            e.style.display = s;
+        }
+
     </script>
     {% block extra_js %}
 

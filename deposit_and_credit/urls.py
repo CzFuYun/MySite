@@ -13,4 +13,6 @@ urlpatterns = [
     url(r'seriescontributionhistory\.view', views.viewSeriesContributionHistory, name='viewSeriesContributionHistory'),
     url(r'customercredithistory\.ajax', views.ajaxCustomerCreditHistory, name='ajaxCustomerCreditHistory'),
     url(r'departmentcontributionhistory\.view', views.viewDepartmentContributionHistory, name='viewDepartmentContributionHistory'),
+    url(r'expireprompt\.view', views.viewExpirePrompt, name='viewExpirePrompt'),
+    url(r'expireprompttable\.view', views.viewExpirePromptTable, name='viewExpirePromptTable'),
 ]

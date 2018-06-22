@@ -1,5 +1,7 @@
 import xlrd, json
 from root_db import  models
+from django.utils.timezone import timedelta, datetime
+
 
 NEED_UPDATE_STAFF_INFORMATION = False
 NEED_UPDATE_ALL_COMPANIES_INFORMATION = False
@@ -176,18 +178,27 @@ def createDividedCompanyAccount(file_name):
 
 def createContributorAndUpdateSeries(file_name):
     from deposit_and_credit import models as m
-    data_date = input('>>>data_date?')
+    data_date_str = input('>>>data_date?')
+    data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
+    expire_data_for_bulk_create = []
+    expire_data_qs = m.ExpirePrompt.objects.filter(
+        expire_date__gte=str(data_date - timedelta(days=180))
+    ).values_list('customer_id', 'expire_date')
+    customer_expire_dict = {}
+    for expire_data in expire_data_qs:
+        customer_expire_dict[expire_data[0]] = expire_data[1]
     all_sr_dict = {}
     all_sr_dict['series_id'] = getSimpleSerializationRule(models.Series, 'code', 'caption')
     all_sr_dict['department_id'] = getSimpleSerializationRule(models.Department, 'code', 'caption')
-    data_source_list = getXlDataForOrmOperation(file_name, '@Contributor', 1, 0, {'data_date': data_date})
-    data_for_bulk_create = []
+    all_sr_dict['staff_id'] = getSimpleSerializationRule(models.Staff, 'staff_id', 'name')
+    data_source_list = getXlDataForOrmOperation(file_name, '@Contributor', 1, 0, {'data_date': data_date_str})
+    contributors_for_bulk_create = []
     for data_dict in data_source_list:
         customer_id = data_dict['customer_id']
         if customer_id == 0 or len(str(customer_id)) == 0:
             continue
-        # ↓先更新系列信息
-        series_id = all_sr_dict['series_id'][data_dict.pop('series_id')]     # 在贡献度数据库表里并没有这个字段，要删掉(用pop方法删，返回被删掉的kvp的v)，以防创建数据库记录时报错
+        # ↓更新系列信息
+        series_id = all_sr_dict['series_id'][data_dict.pop('series_id')]        # 在贡献度数据库表里并没有这个字段，要删掉(用pop方法删，返回被删掉的kvp的v)，以防创建数据库记录时报错
         customer_obj = models.AccountedCompany.objects.get(customer_id=customer_id)
         old_series_id = customer_obj.series_id
         if old_series_id != series_id:
@@ -195,9 +206,25 @@ def createContributorAndUpdateSeries(file_name):
             customer_obj.save(force_update=True)
             print('Update %s series from %s to %s' % (customer_obj.name, old_series_id, series_id))
         for field in data_dict:
-            field_sr = all_sr_dict.get(field)
-            if field_sr:
-                value_before_serialize = data_dict[field]
-                data_dict[field] = field_sr[value_before_serialize]
-        data_for_bulk_create.append(m.Contributor(**data_dict))
-    m.Contributor.objects.bulk_create(data_for_bulk_create)
+            field_value = data_dict[field]
+            if field_value:
+                field_sr = all_sr_dict.get(field)
+                if field_sr:
+                    data_dict[field] = field_sr[field_value]
+        contributors_for_bulk_create.append(m.Contributor(**data_dict))
+        # ↓建立到期提醒
+        try:
+            expire_date = datetime.strptime(data_dict.get('expire_date'), '%Y-%m-%d').date()
+        except:
+            pass
+        else:
+            expire_date_str = str(expire_date)
+            if customer_id not in customer_expire_dict:     #customer_expire_dict.get(customer_id) != expire_date_str:     # 若到期提醒的数据库里不存在该提醒信息
+                if expire_date - timedelta(days=100) <= data_date and expire_date + timedelta(days=180) >= data_date:
+                    expire_data_for_bulk_create.append(m.ExpirePrompt(**{
+                        'customer_id': customer_id,
+                        'expire_date': expire_date_str,
+                    }))
+    m.Contributor.objects.bulk_create(contributors_for_bulk_create)
+    if expire_data_for_bulk_create:
+        m.ExpirePrompt.objects.bulk_create(expire_data_for_bulk_create)

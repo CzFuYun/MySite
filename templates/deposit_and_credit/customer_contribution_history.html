@@ -21,7 +21,7 @@
     {# 3、在第二步进行的同时，父页面给newWindow（本页面）开辟了全局变量CUSTOMER_ID并赋值 #}
     $(function(){
         document.head.getElementsByTagName('title')[0].innerText = window.CUSTOMER_NAME;
-        drawCustomerDepositAndCreditHistory2('container', {customer_id: window.CUSTOMER_ID});
+        drawCustomerDepositAndCreditHistory('container', {customer_id: window.CUSTOMER_ID});
     });
 
     function drawCustomerDepositAndCreditHistory(divId, postDataDict){

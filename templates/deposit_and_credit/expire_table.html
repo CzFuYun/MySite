@@ -1,0 +1,319 @@
+{% extends 'blank.html' %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+<div class="container-fluid">
+<div id="form" class="row" style="position: fixed; display: none; z-index: 2;">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <form action="#">
+                        <div class="form-body">
+                            <h3 class="card-title">Person Info</h3>
+                            <hr>
+                            <div class="row p-t-20">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">First Name</label>
+                                        <input type="text" id="firstName" class="form-control" placeholder="John doe">
+                                        <small class="form-control-feedback"> This is inline help </small> </div>
+                                </div>
+                                <!--/span-->
+                                <div class="col-md-6">
+                                    <div class="form-group has-danger">
+                                        <label class="control-label">Last Name</label>
+                                        <input type="text" id="lastName" class="form-control form-control-danger" placeholder="12n">
+                                        <small class="form-control-feedback"> This field has error. </small> </div>
+                                </div>
+                                <!--/span-->
+                            </div>
+                            <!--/row-->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group has-success">
+                                        <label class="control-label">Gender</label>
+                                        <select class="form-control custom-select">
+                                            <option value="">Male</option>
+                                            <option value="">Female</option>
+                                        </select>
+                                        <small class="form-control-feedback"> Select your gender </small> </div>
+                                </div>
+                                <!--/span-->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Date of Birth</label>
+                                        <input type="date" class="form-control" placeholder="dd/mm/yyyy">
+                                    </div>
+                                </div>
+                                <!--/span-->
+                            </div>
+                            <!--/row-->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Category</label>
+                                        <select class="form-control custom-select" data-placeholder="Choose a Category" tabindex="1">
+                                            <option value="Category 1">Category 1</option>
+                                            <option value="Category 2">Category 2</option>
+                                            <option value="Category 3">Category 5</option>
+                                            <option value="Category 4">Category 4</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!--/span-->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">Membership</label>
+                                        <div class="form-check">
+                                            <label class="custom-control custom-radio">
+                                                <input id="radio1" name="radio" type="radio" checked="" class="custom-control-input">
+                                                <span class="custom-control-indicator"></span>
+                                                <span class="custom-control-description">Free</span>
+                                            </label>
+                                            <label class="custom-control custom-radio">
+                                                <input id="radio2" name="radio" type="radio" class="custom-control-input">
+                                                <span class="custom-control-indicator"></span>
+                                                <span class="custom-control-description">Paid</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--/span-->
+                            </div>
+                            <!--/row-->
+                            <h3 class="box-title m-t-40">Address</h3>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-12 ">
+                                    <div class="form-group">
+                                        <label>Street</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>City</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                </div>
+                                <!--/span-->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>State</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                </div>
+                                <!--/span-->
+                            </div>
+                            <!--/row-->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Post Code</label>
+                                        <input type="text" class="form-control">
+                                    </div>
+                                </div>
+                                <!--/span-->
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Country</label>
+                                        <select class="form-control custom-select">
+                                            <option>--Select your Country--</option>
+                                            <option>India</option>
+                                            <option>Sri Lanka</option>
+                                            <option>USA</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!--/span-->
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success"> <i class="fa fa-check"></i> Save</button>
+                            <button type="button" class="btn btn-inverse" onclick="turnForm(0)">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+{% endblock %}
+
+
+
+
+
+{% block extra_js %}
+    <script type="text/javascript">
+        EXPIRE_DATA = [];
+        TABLE_STRUCTURE = [
+            tableCol('#', '3%', '【display_num】'),
+            tableCol('客户名称', '18%', '【customer_name】', {customer_id: '【customer_id】'}),
+            tableCol('经营部门', '6%', '【dept_caption】', {dept_id: '【dept_id】'}),
+            tableCol('经办人员', '6%', '<a style="cursor:pointer" staff_id=【staff_id】 onclick="showStaff(this)">【staff_name】</a>', {staff_id: '【staff_id】'}),
+            tableCol('到期日', '8%', '【expire_date】'),
+            tableCol('剩余天数', '6%', [colorDays, '【days_remain】']),
+            tableCol('备注', '40%', '【remark】'),
+            tableCol('Action', '8%', '<a data-toggle="tooltip" style="cursor:pointer" title="情况说明" expire_prompt_id=【expire_prompt_id】 onclick="showExplain(this)"><i class="mdi mdi-book-open m-r-10"></i></a>' +
+                '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="editRemark(this)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
+                '<a data-toggle="tooltip" style="cursor:pointer" title="办结" expire_prompt_id=【expire_prompt_id】 onclick="setFinish(this)"><i class="fa fa-check m-r-10 m-r-10 text-danger"></i></a>')
+        ];
+
+        function tableCol(description, col_width, html_str_of_td, td_extra_property_dict){
+            return{
+                description: description,
+                col_width: col_width,
+                html_str_of_td: html_str_of_td,
+                td_extra_property_dict: td_extra_property_dict
+            }
+        }
+
+        function formatString(string, obj){
+            let r = /【(\w+)】/g;
+            let m = r.exec(string);
+            let s = string;
+            while (m){
+                s = s.replace(m[0], obj[m[1]]);
+                m = r.exec(string);
+            }
+            return s;
+        }
+
+        function calculate(formulaString, obj){
+            try{
+                return eval(formulaString);
+            }catch (e){
+                return formatString(formulaString, obj);
+            }
+        }
+
+        function turnForm(status){
+            turnMask(status);
+            let s = '';
+            if(status)
+                s = 'block';
+            else
+                s = 'none';
+            document.getElementById('form').style.display = s;
+        }
+
+        function showStaff(elem){
+            staff_id = elem.getAttribute('staff_id');
+
+
+        }
+
+        function showExplain(elem){
+            expire_prompt_id = elem.getAttribute('expire_prompt_id');
+
+
+        }
+
+        function editRemark(elem){
+            turnForm(1);
+            let expire_prompt_id = elem.getAttribute('expire_prompt_id'),
+                tr = elem.parentElement.parentElement,
+                tds = tr.children,
+                sn = tds[0].innerText,
+                dept_id = EXPIRE_DATA[sn]['dept_id'],
+                dept_caption = EXPIRE_DATA[sn]['dept_caption'],
+                staff_id = EXPIRE_DATA[sn]['staff_id'],
+                staff_name = EXPIRE_DATA[sn]['staff_name'];
+
+        }
+
+        function setFinish(elem){
+            expire_prompt_id = elem.getAttribute('expire_prompt_id');
+
+
+        }
+
+        function colorDays(days){
+            let red = 0,
+                green = 0,
+                blue = 0,
+                color = '';
+            if(days <= 30)
+                color = '"text-danger text-semibold"';
+            else if(days <= 60)
+                color = '"text-warning text-semibold"';
+            else
+                color = '"text-success text-semibold"';
+            return '<span class=' + color + '><i class=' + ' aria-hidden="true"></i>' + days + '</span>';
+        }
+
+        function getPropertyFromElemArray(propertyName, elemArray){
+            for(let i=0; i<elemArray.length; i++){
+                if(elemArray[i].getAttribute(propertyName))
+                    return elemArray[i].getAttribute(propertyName);
+            }
+        }
+
+
+
+        $(function(){
+            getExpireData();
+        });
+
+        function getExpireData(){
+            let fragment = document.createDocumentFragment(),
+                table = document.createElement('table');
+            $.post({
+                url: '{% url "viewExpirePromptTable" %}',
+                dataType: 'json',
+                postData: FILTER,
+                success: function(data){
+                    EXPIRE_DATA = data;
+                    table.className = 'table full-color-table full-dark-table hover-table';
+                    let thead = document.createElement('thead'),
+                        thead_row = document.createElement('tr'),
+                        tbody = document.createElement('tbody');
+                    for(let i=0; i<TABLE_STRUCTURE.length; i++){
+                        let th = document.createElement('th');
+                        th.setAttribute('width', TABLE_STRUCTURE[i]['col_width']);
+                        th.innerText = TABLE_STRUCTURE[i]['description'];
+                        thead_row.appendChild(th);
+                    }
+                    thead.appendChild(thead_row);
+                    table.appendChild(thead);
+                    for(let i=0; i<data.length; i++){
+                        {#console.log(data[i]);#}
+                        let tr = document.createElement('tr');
+                        for(let j=0; j<TABLE_STRUCTURE.length; j++){
+                            let td = document.createElement('td'),
+                                td_extra_property_dict = TABLE_STRUCTURE[j]['td_extra_property_dict'];
+                            if(td_extra_property_dict){
+                                for(let k in td_extra_property_dict)
+                                    td.setAttribute(k, calculate(td_extra_property_dict[k], data[i]));
+                            }
+                            let display = TABLE_STRUCTURE[j]['html_str_of_td'];
+                            if(typeof display == 'object')
+                                td.innerHTML = display[0](calculate(display[1], data[i]));
+                            else
+                                td.innerHTML = calculate(TABLE_STRUCTURE[j]['html_str_of_td'], data[i]);
+                            tr.appendChild(td);
+                        }
+                        tbody.appendChild(tr);
+                    }
+                    table.appendChild(tbody);
+                    fragment.appendChild(table);
+                    document.getElementById('main_content').appendChild(fragment);
+                }
+            })
+        }
+
+    </script>
+{% endblock %}
