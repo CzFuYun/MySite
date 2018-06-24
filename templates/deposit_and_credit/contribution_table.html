@@ -44,7 +44,10 @@
 
     $(function () {
         let filter_condict = OPENER_PARAMS,
-            ordered_dept = getDeptOrder();
+            ordered_dept_dict = getOrderedDeptDict(),
+            ordered_dept = [];
+        for(let i in ordered_dept_dict)
+            ordered_dept.push(i);
         buildContribTable(filter_condict, ordered_dept);
     });
 

@@ -5,20 +5,38 @@ function getValues(dict){
     return values;
 }
 
-function getDeptOrder() {
-    let ordered_dept = [];
-    $.ajax(
-        {
-            url: '/dc/deptorder.ajax',        // '{% url "ajaxDeptOrder" %}',
-            type: 'POST',
-            async: false,
-            dataType: 'json',
-            success: function (data) {
-                ordered_dept = data;
-            }
+function getOrderedDeptDict() {
+    let deptDict;
+    $.ajax({
+        url: '/dc/deptorder.ajax',        // '{% url "ajaxDeptOrder" %}',
+        type: 'POST',
+        async: false,
+        dataType: 'json',
+        success: function (data) {
+                deptDict = data;
+        },
+        error: function(){
+            alert('\u83b7\u53d6\u7ecf\u8425\u90e8\u95e8\u4fe1\u606f\u5931\u8d25');
         }
-    );
-    return ordered_dept;
+    });
+    return deptDict;
+}
+
+function getStaffDict(deptCode){
+    let staffDict;
+    $.post({
+        url: '/dc/staff.ajax',
+        async: false,
+        data: {dept_code: deptCode},
+        dataType: 'json',
+        success: function (data) {
+            staffDict = data;
+        },
+        error: function () {
+            alert('\u83b7\u53d6\u5458\u5de5\u540d\u5355\u5931\u8d25');
+        }
+    });
+    return staffDict;
 }
 
 function sortDict(dict, asc){
