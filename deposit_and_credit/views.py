@@ -1,10 +1,10 @@
 import json
 from decimal import Decimal
-from django.shortcuts import render, HttpResponse
-from root_db import models as rd_models
-from deposit_and_credit import models as dac_models, models_operation
+from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.db.models import Q, Sum, F
 from django.utils.timezone import datetime, timedelta
+from root_db import models as rd_models
+from deposit_and_credit import models as dac_models, models_operation
 from app_permission.views import checkPermission
 # import collections
 
@@ -113,7 +113,7 @@ def ajaxDeptOrder(request):
 
 def ajaxStaff(request):
     dept_code = request.POST.get('dept_code')
-    staff_qs = rd_models.Staff.objects.filter(sub_department__superior=dept_code).values_list('staff_id', 'name')
+    staff_qs = rd_models.Staff.objects.filter(sub_department__superior=dept_code).values_list('staff_id', 'name').order_by('name')
     staffs = {}
     if staff_qs:
         for i in staff_qs:
@@ -242,6 +242,7 @@ def viewExpirePromptTable(request):
             'id',
             'remark',
             'punishment',
+            'staff_id',
         )
         expire_customers = []
         customer_expire_data_dict = {}
@@ -252,6 +253,7 @@ def viewExpirePromptTable(request):
                 i[1],
                 i[2],
                 i[3],
+                i[4],
             ]
         customer_qs = dac_models.Contributor.objects.filter(
             customer_id__in=expire_customers,
@@ -270,6 +272,12 @@ def viewExpirePromptTable(request):
         for i in customer_qs:
             display_num += 1
             customer_id = i[0]
+            staff_id = i[4]
+            staff_name = i[5]
+            staff_id_in_expire_prompt = customer_expire_data_dict[customer_id][3]
+            if staff_id_in_expire_prompt != staff_id and staff_id_in_expire_prompt:
+                staff_id = staff_id_in_expire_prompt
+                staff_name = rd_models.Staff.objects.filter(staff_id=staff_id_in_expire_prompt)[0].name
             tmp = {
                 'display_num': display_num,
                 'expire_prompt_id': customer_expire_data_dict[customer_id][0],
@@ -277,8 +285,8 @@ def viewExpirePromptTable(request):
                 'customer_name': i[1],
                 'dept_id': i[2],
                 'dept_caption': i[3],
-                'staff_id': i[4],
-                'staff_name': i[5],
+                'staff_id': staff_id,
+                'staff_name': staff_name,
                 'expire_date': str(i[6]),
                 'days_remain': (i[6] - today).days,
                 'remark': customer_expire_data_dict[customer_id][1],
@@ -286,3 +294,13 @@ def viewExpirePromptTable(request):
             }
             ret.append(tmp)
         return HttpResponse(json.dumps(ret))
+
+def editExpirePrompt(request):
+    expire_id = request.POST.get('expire_id')
+    expire_dict = {}
+    expire_dict['expire_date'] = request.POST.get('expire_date')
+    expire_dict['staff_id'] = request.POST.get('staff')
+    expire_dict['punishment'] = request.POST.get('punishment')
+    expire_dict['remark'] = request.POST.get('remark')
+    dac_models.ExpirePrompt.objects.filter(id=expire_id).update(**expire_dict)
+    return HttpResponse(json.dumps('ok'))

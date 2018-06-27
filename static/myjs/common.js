@@ -1,12 +1,13 @@
 function getValues(dict){
-    let values = [];
-    for(let key in dict)
+    var values = [];
+    for(var key in dict){
         values.push(dict[key]);
+    }
     return values;
 }
 
 function getOrderedDeptDict() {
-    let deptDict;
+    var deptDict;
     $.ajax({
         url: '/dc/deptorder.ajax',        // '{% url "ajaxDeptOrder" %}',
         type: 'POST',
@@ -23,7 +24,7 @@ function getOrderedDeptDict() {
 }
 
 function getStaffDict(deptCode){
-    let staffDict;
+    var staffDict;
     $.post({
         url: '/dc/staff.ajax',
         async: false,
@@ -40,14 +41,17 @@ function getStaffDict(deptCode){
 }
 
 function sortDict(dict, asc){
-    let sort_key,
+    var sort_key,
         new_dict = {};
-    if(asc == null || asc)
+    if(asc == null || asc){
         sort_key = Object.keys(dict).sort();
-    else
+    }
+    else{
         sort_key = Object.keys(dict).sort().reverse();
-    for(let i in sort_key)
+    }
+    for(var i in sort_key){
         new_dict[sort_key[i]] = dict[sort_key[i]];
+    }
     return new_dict;
 }
 
@@ -58,37 +62,43 @@ function sortNumber(a,b) {
 function getValuesOrderByKeys(dict, needReverse){
     // 获取字典的全部值，按键排序
     needReverse = needReverse || false;
-    let dictKeysAreNumric = true;
-    let keyList = Object.keys(dict);
-    for(let i=0; i<keyList.length; i++){
-        let tmp = Number(keyList[i]);
-        if(tmp)
+    var dictKeysAreNumric = true;
+    var keyList = Object.keys(dict);
+    for(var i=0; i<keyList.length; i++){
+        var tmp = Number(keyList[i]);
+        if(tmp){
             keyList[i] = tmp;
+        }
         else{
             dictKeysAreNumric = false;
             break;
         }
     }
-    if(dictKeysAreNumric)
+    if(dictKeysAreNumric){
         keyList.sort(sortNumber);
-    else
+    }
+    else{
         keyList.sort();
-    let valuesList = [];
-    if(needReverse)
+    }
+    var valuesList = [];
+    if(needReverse){
         keyList.reverse();
-    for(let i=0; i<keyList.length; i++){
-        valuesList.push(dict[keyList[i]])
+    }
+    for(var i=0; i<keyList.length; i++){
+        valuesList.push(dict[keyList[i]]);
     }
     return valuesList;
 }
 
 function getKeyFromOneKvp(kvp){
-    for(let k in kvp)
+    for(var k in kvp){
         return k;
+    }
 }
 
 function getValueFromOneKvp(kvp){
-    for(let k in kvp)
+    for(var k in kvp){
         return kvp[k];
+    }
 }
 

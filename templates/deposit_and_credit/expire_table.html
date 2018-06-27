@@ -1,7 +1,7 @@
 {% extends 'blank.html' %}
 
 {% block extra_css %}
-
+<link href="/static/assets/plugins/dropify/dist/css/dropify.min.css" rel="stylesheet">
 {% endblock %}
 
 
@@ -10,56 +10,21 @@
 
 {% block content %}
 <div class="container-fluid">
-<div id="form" class="row" style="position: fixed; display: none; z-index: 2;">
+    <div id="form" class="row" style="position: fixed; display: none; z-index: 2;">
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="#">
+                    <form action="{% url 'editExpirePrompt' %}" method="post">
                         <div class="form-body">
-                            <h3 class="card-title">Person Info</h3>
+                            <h3 id="customer_name" class="card-title"></h3>
                             <hr>
-                            <div class="row p-t-20">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="control-label">First Name</label>
-                                        <input type="text" id="firstName" class="form-control" placeholder="John doe">
-                                        <small class="form-control-feedback"> This is inline help </small> </div>
-                                </div>
-                                <!--/span-->
-                                <div class="col-md-6">
-                                    <div class="form-group has-danger">
-                                        <label class="control-label">Last Name</label>
-                                        <input type="text" id="lastName" class="form-control form-control-danger" placeholder="12n">
-                                        <small class="form-control-feedback"> This field has error. </small> </div>
-                                </div>
-                                <!--/span-->
-                            </div>
-                            <!--/row-->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group has-success">
-                                        <label class="control-label">Gender</label>
-                                        <select class="form-control custom-select">
-                                            <option value="">Male</option>
-                                            <option value="">Female</option>
-                                        </select>
-                                        <small class="form-control-feedback"> Select your gender </small> </div>
-                                </div>
-                                <!--/span-->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="control-label">Date of Birth</label>
-                                        <input type="date" class="form-control" placeholder="dd/mm/yyyy">
-                                    </div>
-                                </div>
-                                <!--/span-->
-                            </div>
-                            <!--/row-->
+                            <label for="expire_prompt_id"></label>
+                            <input id="expire_prompt_id" name="expire_id" type="text" class="form-control" style="display: none;">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="control-label">经营部门</label>
-                                        <select id="dept_selector" class="form-control custom-select" data-placeholder="Choose a Category" tabindex="1">
+                                        <label class="control-label" for="dept_selector">经营部门</label>
+                                        <select id="dept_selector" name="dept" class="form-control custom-select" data-placeholder="Choose a Category" tabindex="1">
                                             <option value="Category 1">Category 1</option>
                                             <option value="Category 2">Category 2</option>
                                         </select>
@@ -68,76 +33,52 @@
                                 <!--/span-->
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="control-label">Membership</label>
-                                        <div class="form-check">
-                                            <label class="custom-control custom-radio">
-                                                <input id="radio1" name="radio" type="radio" checked="" class="custom-control-input">
-                                                <span class="custom-control-indicator"></span>
-                                                <span class="custom-control-description">Free</span>
-                                            </label>
-                                            <label class="custom-control custom-radio">
-                                                <input id="radio2" name="radio" type="radio" class="custom-control-input">
-                                                <span class="custom-control-indicator"></span>
-                                                <span class="custom-control-description">Paid</span>
-                                            </label>
-                                        </div>
+                                        <label class="control-label" for="staff_selector">客户经理</label>
+                                        <select id="staff_selector" name="staff" class="form-control custom-select" data-placeholder="Choose a Staff" tabindex="1">
+                                            <option value="Category 1">Category 1</option>
+                                            <option value="Category 2">Category 2</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <!--/span-->
                             </div>
                             <!--/row-->
-                            <h3 class="box-title m-t-40">Address</h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label">到期日</label>
+                                        <input id="expire_date_selector" name="expire_date" type="date" class="form-control" placeholder="dd/mm/yyyy">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="control-label" for="punishment">扣罚金额</label>
+                                        <input id="punishment" name="punishment" type="text" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            <!--/row-->
                             <hr>
                             <div class="row">
                                 <div class="col-md-12 ">
                                     <div class="form-group">
-                                        <label>Street</label>
-                                        <input type="text" class="form-control">
+                                        <label for="remark">备注</label>
+                                        <textarea id="remark" name="remark" class="form-control" rows="5"></textarea>
+{#                                        <small class="form-control-feedback">修改备注</small>#}
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="form-group">
-                                        <label>City</label>
-                                        <input type="text" class="form-control">
-                                    </div>
+                                        <label>情况说明</label>
+                                        <input type="file" id="input-file-now" class="dropify">
                                 </div>
-                                <!--/span-->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>State</label>
-                                        <input type="text" class="form-control">
-                                    </div>
-                                </div>
-                                <!--/span-->
                             </div>
                             <!--/row-->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Post Code</label>
-                                        <input type="text" class="form-control">
-                                    </div>
-                                </div>
-                                <!--/span-->
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Country</label>
-                                        <select class="form-control custom-select">
-                                            <option>--Select your Country--</option>
-                                            <option>India</option>
-                                            <option>Sri Lanka</option>
-                                            <option>USA</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <!--/span-->
-                            </div>
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-success"> <i class="fa fa-check"></i> Save</button>
-                            <button type="button" class="btn btn-inverse" onclick="turnForm(0)">Cancel</button>
+                            <button type="button" class="btn btn-success" onclick="edit()"><i class="fa fa-check"></i> Save</button>
+                            <button type="button" class="btn btn-inverse" onclick="showForm('form', 0)">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -155,7 +96,56 @@
 
 
 {% block extra_js %}
+    <script src="/static/assets/plugins/dropify/dist/js/dropify.min.js"></script>
+{#    <script src="/static/js/jquery.slimscroll.js"></script>#}
+{#    <script src="/static/js/custom.min.js"></script>#}
+{#    <script src="/static/js/waves.js"></script>#}
+
+    <script src="/static/js/waves.js"></script>
     <script type="text/javascript" src="/static/myjs/common.js"></script>
+    <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Basic
+            $('.dropify').dropify();
+
+            // Translated
+            $('.dropify-fr').dropify({
+                messages: {
+                    default: 'Glissez-déposez un fichier ici ou cliquez',
+                    replace: 'Glissez-déposez un fichier ou cliquez pour remplacer',
+                    remove: 'Supprimer',
+                    error: 'Désolé, le fichier trop volumineux'
+                }
+            });
+
+            // Used events
+            var drEvent = $('#input-file-events').dropify();
+
+            drEvent.on('dropify.beforeClear', function(event, element) {
+                return confirm("Do you really want to delete \"" + element.file.name + "\" ?");
+            });
+
+            drEvent.on('dropify.afterClear', function(event, element) {
+                alert('File deleted');
+            });
+
+            drEvent.on('dropify.errors', function(event, element) {
+                console.log('Has Errors');
+            });
+
+            var drDestroy = $('#input-file-to-destroy').dropify();
+            drDestroy = drDestroy.data('dropify')
+            $('#toggleDropify').on('click', function(e) {
+                e.preventDefault();
+                if (drDestroy.isDropified()) {
+                    drDestroy.destroy();
+                } else {
+                    drDestroy.init();
+                }
+            })
+        });
+    </script>
     <script type="text/javascript">
         EXPIRE_DATA = [];
         DEPARTMENTS = {};
@@ -169,7 +159,7 @@
             tableCol('备注', '40%', '【remark】'),
             tableCol('扣罚金额', '6%', '【punishment】'),
             tableCol('Action', '8%', '<a data-toggle="tooltip" style="cursor:pointer" title="情况说明" expire_prompt_id=【expire_prompt_id】 onclick="showExplain(this)"><i class="mdi mdi-book-open m-r-10"></i></a>' +
-                '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="editRemark(this)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
+                '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="showEdit(this)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
                 '<a data-toggle="tooltip" style="cursor:pointer" title="办结" expire_prompt_id=【expire_prompt_id】 onclick="setFinish(this)"><i class="fa fa-check m-r-10 m-r-10 text-danger"></i></a>')
         ];
 
@@ -201,14 +191,9 @@
             }
         }
 
-        function turnForm(status){
-            turnMask(status);
-            let s = '';
-            if(status)
-                s = 'block';
-            else
-                s = 'none';
-            document.getElementById('form').style.display = s;
+        function showForm(formId, status){
+            showMask(status);
+            document.getElementById(formId).style.display = status ? 'block' : 'none';
         }
 
         function showStaff(elem){
@@ -223,20 +208,38 @@
 
         }
 
-        function editRemark(elem){
-            turnForm(1);
+        function showEdit(elem){
+            showForm('form', 1);
             let expire_prompt_id = elem.getAttribute('expire_prompt_id'),
                 tr = elem.parentElement.parentElement,
                 tds = tr.children,
                 sn = Number(tds[0].innerText) - 1,
-                customer_name = EXPIRE_DATA[sn]['customer_name'],
-                dept_id = EXPIRE_DATA[sn]['dept_id'],
-                dept_caption = EXPIRE_DATA[sn]['dept_caption'],
-                staff_id = EXPIRE_DATA[sn]['staff_id'],
-                staff_name = EXPIRE_DATA[sn]['staff_name'];
-            $('#form .card-title')[0].innerText = customer_name;
-            addItems('dept_selector', DEPARTMENTS, dept_caption, true);
+                nowEdit = EXPIRE_DATA[sn],
+                staff_dict = getStaffDict(nowEdit['dept_id']);
+            $('#form .card-title')[0].innerText = nowEdit['customer_name'];
+            $('#expire_prompt_id')[0].value = nowEdit['expire_prompt_id'];
+            $('#expire_date_selector')[0].value = nowEdit['expire_date'];
+            $('#remark')[0].value = nowEdit['remark'];
+            $('#punishment')[0].value = nowEdit['punishment'];
+            addItems('dept_selector', DEPARTMENTS, nowEdit['dept_caption'], 1, getStaffDict2);
+            addItems('staff_selector', staff_dict, nowEdit['staff_name'], 1);
+        }
 
+        function edit() {
+            let data = getKvpsOfForm('form');
+            $.post({
+                url: '{% url "editExpirePrompt" %}',
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function(data){
+                    console.log(data);
+                    document.getElementById('expire_table').remove();
+                    buildExpireTable();
+                    showForm('form', 0);
+                },
+                error: function(){alert('');}
+            });
         }
 
         function setFinish(elem){
@@ -266,17 +269,16 @@
             }
         }
 
-
-
         $(function(){
-            getExpireData();
+            buildExpireTable();
             DEPARTMENTS = getOrderedDeptDict();
 
         });
 
-        function getExpireData(){
+        function buildExpireTable(){
             let fragment = document.createDocumentFragment(),
                 table = document.createElement('table');
+            table.id = 'expire_table';
             $.post({
                 url: '{% url "viewExpirePromptTable" %}',
                 dataType: 'json',
@@ -321,31 +323,11 @@
             })
         }
 
-
-
-
-        function addItems(selectElemId, valueTextDict, defaultSelectedText, clearBeforeAdd, onchangeFunctionObject){
-            let selectElem = document.getElementById(selectElemId),
-                index = 0;
-            if(clearBeforeAdd){
-                let oldOptions = selectElem.options;
-                for(let i=oldOptions.length-1; i>=0; i--)
-                        oldOptions[i].remove();
-            }
-            for(let v in valueTextDict){
-                let option = document.createElement('option');
-                option.setAttribute('value', v);
-                option.innerText = valueTextDict[v];
-                selectElem.appendChild(option);
-                if(valueTextDict[v] == defaultSelectedText){
-                    selectElem.selectedIndex = index;
-                }
-                index ++;
-            }
-            if(onchangeFunctionObject)
-                selectElem.setAttribute('onchange', onchangeFunctionObject.name + '(this)')
+        function getStaffDict2(elem){
+            let deptCode = elem.selectedOptions[0].getAttribute('value'),
+                staffDict = getStaffDict(deptCode);
+            addItems('staff_selector', staffDict, '', 1);
         }
-
 
     </script>
 {% endblock %}

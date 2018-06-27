@@ -15,4 +15,5 @@ urlpatterns = [
     url(r'departmentcontributionhistory\.view', views.viewDepartmentContributionHistory, name='viewDepartmentContributionHistory'),
     url(r'expireprompt\.view', views.viewExpirePrompt, name='viewExpirePrompt'),
     url(r'expireprompttable\.view', views.viewExpirePromptTable, name='viewExpirePromptTable'),
+    url(r'expireprompt\.edit', views.editExpirePrompt, name='editExpirePrompt'),
 ]

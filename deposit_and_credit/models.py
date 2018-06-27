@@ -64,6 +64,7 @@ class ContributionTrees(models.Model):
 
 class ExpirePrompt(models.Model):
     customer = models.ForeignKey(m.AccountedCompany, on_delete=models.PROTECT)
+    staff_id = models.ForeignKey(m.Staff, blank=True, null=True, on_delete=models.PROTECT)
     expire_date = models.DateField(auto_now_add=False, null=True, blank=True)
     remark = models.CharField(max_length=512, default='')
     explain = models.CharField(max_length=256, blank=True, null=True)

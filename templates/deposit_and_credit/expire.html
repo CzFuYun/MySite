@@ -113,9 +113,9 @@
     <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
     <script type="text/javascript">
         function turnFinishedBetween(elem){
-            if(elem.id == 'is_finished_yes')
+            if(elem.id === 'is_finished_yes')
                 document.getElementById('finished_between').style.display = '';
-            else if(elem.id == 'is_finished_no')
+            else if(elem.id === 'is_finished_no')
                 document.getElementById('finished_between').style.display = 'none';
         }
 
@@ -123,7 +123,6 @@
             let kvp = getKvpsOfForm("expire_filter"),
                 newWindow = window.open('{% url "viewExpirePromptTable" %}');
                 newWindow.FILTER = kvp;
-
         }
 
     </script>
