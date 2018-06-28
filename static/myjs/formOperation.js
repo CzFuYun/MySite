@@ -23,7 +23,7 @@ function getOrSetFormChildValue(formChildElem, valueToSet) {
     var tag = formChildElem.tagName.toLowerCase();
     var elemType = tag === 'input' ? formChildElem.type.toLowerCase() : tag;
     var elemName = formChildElem.name, elemValue;
-    if((elemType !== 'radio'/* && elemType !=='select'*/) || formChildElem.checked){
+    if((elemType !== 'radio' && elemType !=='checkbox') || formChildElem.checked){
         var valueSource;
         for(var i=0; i<valueSourceList.length; i++){
             valueSource = valueSourceList[i];
@@ -46,7 +46,10 @@ function getKvpsOfForm(formId){
     for(var i=0; i<inputElemArray.length; i++){
         var tmp = getOrSetFormChildValue(inputElemArray[i]);
         if(tmp){
-            kvp[tmp[0]] = tmp[1];
+            if(!kvp[tmp[0]]){
+                kvp[tmp[0]] = [];
+            }
+            kvp[tmp[0]].push(tmp[1]);
         }
     }
     return kvp;

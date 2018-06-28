@@ -53,6 +53,7 @@
                                     <div class="form-group">
                                         <label class="control-label" for="punishment">扣罚金额</label>
                                         <input id="punishment" name="punishment" type="text" class="form-control">
+                                        <small class="form-control-feedback">单人扣罚金额（元，整数）</small>
                                     </div>
                                 </div>
                             </div>
@@ -63,7 +64,6 @@
                                     <div class="form-group">
                                         <label for="remark">备注</label>
                                         <textarea id="remark" name="remark" class="form-control" rows="5"></textarea>
-{#                                        <small class="form-control-feedback">修改备注</small>#}
                                     </div>
                                 </div>
                             </div>
@@ -150,7 +150,7 @@
         EXPIRE_DATA = [];
         DEPARTMENTS = {};
         TABLE_STRUCTURE = [
-            tableCol('#', '3%', '【display_num】'),
+            tableCol('#', '3%', '【display_num】', {id: '【display_num】'}),
             tableCol('客户名称', '18%', '【customer_name】', {customer_id: '【customer_id】'}),
             tableCol('经营部门', '6%', '【dept_caption】', {dept_id: '【dept_id】'}),
             tableCol('经办人员', '6%', '<a style="cursor:pointer" staff_id=【staff_id】 onclick="showStaff(this)">【staff_name】</a>', {staff_id: '【staff_id】'}),
@@ -233,9 +233,8 @@
                 data: data,
                 dataType: 'json',
                 success: function(data){
-                    console.log(data);
                     document.getElementById('expire_table').remove();
-                    buildExpireTable();
+                    buildExpireTable(FILTER);
                     showForm('form', 0);
                 },
                 error: function(){alert('');}
@@ -243,9 +242,25 @@
         }
 
         function setFinish(elem){
-            expire_prompt_id = elem.getAttribute('expire_prompt_id');
+            if(confirm('确认办结')){
+                let expire_prompt_id = elem.getAttribute('expire_prompt_id');
+                $.post({
+                    url: '{% url "finishExpirePrompt" %}',
+                    type: 'POST',
+                    data: {expire_prompt_id: expire_prompt_id},
+                    dataType: 'json',
+                    success: function (data) {
+                        console.log(data);
+                        if(data.success){
+                            document.getElementById('expire_table').remove();
+                            buildExpireTable(FILTER);
+                        }else{
+                            alert(data.error);
+                        }
 
-
+                    }
+                });
+            }
         }
 
         function colorDays(days){
@@ -270,21 +285,22 @@
         }
 
         $(function(){
-            buildExpireTable();
+            {#console.log(FILTER);#}
+            buildExpireTable(FILTER);
             DEPARTMENTS = getOrderedDeptDict();
 
         });
 
-        function buildExpireTable(){
+        function buildExpireTable(postData){
             let fragment = document.createDocumentFragment(),
                 table = document.createElement('table');
-            table.id = 'expire_table';
             $.post({
                 url: '{% url "viewExpirePromptTable" %}',
                 dataType: 'json',
-                postData: FILTER,
+                data: postData,
                 success: function(data){
                     EXPIRE_DATA = data;
+                    table.id = 'expire_table';
                     table.className = 'table full-color-table full-dark-table hover-table';
                     let thead = document.createElement('thead'),
                         thead_row = document.createElement('tr'),
@@ -308,7 +324,7 @@
                                     td.setAttribute(k, calculate(td_extra_property_dict[k], data[i]));
                             }
                             let display = TABLE_STRUCTURE[j]['html_str_of_td'];
-                            if(typeof display == 'object')
+                            if(typeof display === 'object')
                                 td.innerHTML = display[0](calculate(display[1], data[i]));
                             else
                                 td.innerHTML = calculate(TABLE_STRUCTURE[j]['html_str_of_td'], data[i]);

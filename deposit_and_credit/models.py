@@ -70,3 +70,4 @@ class ExpirePrompt(models.Model):
     explain = models.CharField(max_length=256, blank=True, null=True)
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
+    created_at = models.DateField(auto_now_add=True, null=True, blank=True)

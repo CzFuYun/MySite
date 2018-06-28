@@ -220,21 +220,22 @@ def viewExpirePromptTable(request):
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
-        is_finished = True if request.POST.get('is_finished') == '1' else False
-        finish_after = Q()
-        finish_before = Q()
+        is_finished = True if request.POST.get('is_finished[]') == '1' else False
         if is_finished:
             finish_after = Q(
-                finish_date__gte=request.POST.get('finish_after') if request.POST.get('finish_after') else '1990-01-01')
+                finish_date__gte=request.POST.get('finish_after[]') if request.POST.get('finish_after[]') else '1990-01-01')
             finish_before = Q(
-                finish_date__lte=request.POST.get('finish_before') if request.POST.get('finish_before') else str(today))
-        expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
+                finish_date__lte=request.POST.get('finish_before[]') if request.POST.get('finish_before[]') else str(today))
+        else:
+            finish_after = Q(finish_date=None)
+            finish_before = Q(finish_date=None)
+        expire_after = Q(expire_date__gte=request.POST.get('expire_after[]') if request.POST.get('expire_after[]') else str(
             data_date - timedelta(days=100)))
         expire_before = Q(
-            expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
+            expire_date__lte=request.POST.get('expire_before[]') if request.POST.get('expire_before[]') else str(
                 today + timedelta(days=180)))
-        has_punishment = Q(punishment__gt=0) if request.POST.get('has_punishment') == 'on' else Q(punishment=0)
-        non_punishment = Q(punishment=0) if request.POST.get('non_punishment') == 'on' else Q(punishment__gt=0)
+        has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment[]') else Q(punishment=0)
+        non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment[]') else Q(punishment__gt=0)
         expire_qs = dac_models.ExpirePrompt.objects.filter(
             expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
         ).values_list(
@@ -296,11 +297,31 @@ def viewExpirePromptTable(request):
         return HttpResponse(json.dumps(ret))
 
 def editExpirePrompt(request):
-    expire_id = request.POST.get('expire_id')
-    expire_dict = {}
-    expire_dict['expire_date'] = request.POST.get('expire_date')
-    expire_dict['staff_id'] = request.POST.get('staff')
-    expire_dict['punishment'] = request.POST.get('punishment')
-    expire_dict['remark'] = request.POST.get('remark')
-    dac_models.ExpirePrompt.objects.filter(id=expire_id).update(**expire_dict)
-    return HttpResponse(json.dumps('ok'))
+    expire_id = request.POST.get('expire_id[]')
+    q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
+    if not q[0].finish_date:
+        expire_dict = {}
+        expire_dict['expire_date'] = request.POST.get('expire_date[]')
+        expire_dict['staff_id'] = request.POST.get('staff[]')
+        expire_dict['punishment'] = int(request.POST.get('punishment[]'))
+        expire_dict['remark'] = request.POST.get('remark[]')
+        q.update(**expire_dict)
+        return HttpResponse(json.dumps('ok'))
+    else:
+        pass
+
+def finishExpirePrompt(request):
+    ajax_result = {
+        'success': False,
+        'error': None,
+    }
+    expire_prompt_id = request.POST.get('expire_prompt_id')
+    q = dac_models.ExpirePrompt.objects.filter(id=expire_prompt_id)[0]
+    if q and not q.finish_date:
+        q.finish_date = models_operation.ImportantDate().today
+        q.save()
+        ajax_result['success'] = True
+        return HttpResponse(json.dumps(ajax_result))
+    else:
+        ajax_result['error'] = '不可重复办结'
+        return HttpResponse(json.dumps(ajax_result))
