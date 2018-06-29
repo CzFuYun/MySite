@@ -224,6 +224,7 @@ def createContributorAndUpdateSeries(file_name):
                     expire_data_for_bulk_create.append(m.ExpirePrompt(**{
                         'customer_id': customer_id,
                         'expire_date': expire_date_str,
+                        'staff_id': all_sr_dict['staff_id'].get(data_dict.get('staff_id')),
                     }))
     m.Contributor.objects.bulk_create(contributors_for_bulk_create)
     if expire_data_for_bulk_create:

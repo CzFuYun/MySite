@@ -49,6 +49,7 @@ class Contributor(models.Model):
     data_date = models.DateField(auto_now_add=False, null=True, blank=True)
     saving_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄余额（万元）')
     saving_yd_avg = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄日均（万元）')
+    is_green_finance = models.BooleanField(default=False)
 
     def __str__(self):
         return self.customer.name
@@ -71,3 +72,19 @@ class ExpirePrompt(models.Model):
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
     created_at = models.DateField(auto_now_add=True, null=True, blank=True)
+
+    def toDict(self):
+        fields = []
+        d = {}
+        for field in self._meta.fields:
+            fields.append(field.name)
+        import datetime
+        for field in fields:
+            field_obj = getattr(self, field)
+            if isinstance(field_obj, datetime.datetime):
+                d[field] = field_obj.strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(field_obj, datetime.date):
+                d[field] = field_obj.strftime('%Y-%m-%d')
+            else:
+                d[field] = str(field_obj)
+        return d

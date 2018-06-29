@@ -1,0 +1,1 @@
+EXPIRE_EXPLAIN_IMG_FOLDER = r'E:\AAA报表定期更新\存量授信提示\情况说明'

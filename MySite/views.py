@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, HttpResponse, reverse
 from app_permission import views, settings
 from root_db import models_operation
@@ -33,3 +34,17 @@ def exportContributorAndSeries(request):
 def test(request):
 
     pass
+
+def convertToUrl(request):
+    ajax_result = {
+        'success': False,
+        'data': None,
+        'error': None,
+    }
+    url_name = request.POST.get('url_name')
+    try:
+        ajax_result['data'] = reverse(url_name)
+        ajax_result['success'] = True
+    except:
+        ajax_result['error'] = '无对应url映射'
+    return HttpResponse(json.dumps(ajax_result))

@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'login/', views.login, name='login'),
     url(r'home/', views.home, name='home'),
+    url(r'url\.convert', views.convertToUrl),
     url(r'dc/', include('deposit_and_credit.urls'), name='deposit_and_credit'),
     url(r'accounted_company\.export', views.exportAccountedCompany),
     url(r'divided_company_account\.create', views.createDividedCompanyAccount),

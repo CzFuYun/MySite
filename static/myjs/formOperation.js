@@ -96,8 +96,6 @@ function addItems(selectElemId, valueTextDict, defaultSelectedText, clearBeforeA
     }
 }
 
-
-
 function fillForm(formId, idValueDict){
     var form = document.getElementById(formId);
     for(var i in idValueDict){
@@ -106,4 +104,19 @@ function fillForm(formId, idValueDict){
 
         e.value = idValueDict[i];
     }
+}
+
+function uploadFileByAjax(fileInputId, url){
+    var formData = new FormData();
+    var fileInfo = $('#' + fileInputId)[0].files[0];
+    formData.append('file', fileInfo);
+    $.post({
+        url: url,
+        data:formData,
+        processData: false,
+        contentType: false,
+        success: function(response){
+            console.log(response);
+        }
+    });
 }

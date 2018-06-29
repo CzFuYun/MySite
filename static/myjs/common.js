@@ -1,3 +1,22 @@
+function parseUrl(urlName){
+    var ret = false;
+    $.post({
+        async: false,
+        url: 'url.convert',
+        data: {url_name: urlName},
+        dataType: 'json',
+        success: function(response){
+            if(response.success){
+                ret = response.data;
+            }else{
+                alert(response.error);
+            }
+        },
+        error: function(){}
+    });
+    return ret;
+}
+
 function getValues(dict){
     var values = [];
     for(var key in dict){
@@ -8,9 +27,8 @@ function getValues(dict){
 
 function getOrderedDeptDict() {
     var deptDict;
-    $.ajax({
-        url: '/dc/deptorder.ajax',        // '{% url "ajaxDeptOrder" %}',
-        type: 'POST',
+    $.get({
+        url: parseUrl('ajaxDeptOrder'),
         async: false,
         dataType: 'json',
         success: function (data) {
@@ -26,7 +44,7 @@ function getOrderedDeptDict() {
 function getStaffDict(deptCode){
     var staffDict;
     $.post({
-        url: '/dc/staff.ajax',
+        url: parseUrl('ajaxStaff'),
         async: false,
         data: {dept_code: deptCode},
         dataType: 'json',

@@ -71,7 +71,7 @@
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label>情况说明</label>
-                                        <input type="file" id="input-file-now" class="dropify">
+                                        <input type="file" id="explain" name="explain" class="dropify">
                                 </div>
                             </div>
                             <!--/row-->
@@ -209,36 +209,50 @@
         }
 
         function showEdit(elem){
-            showForm('form', 1);
-            let expire_prompt_id = elem.getAttribute('expire_prompt_id'),
-                tr = elem.parentElement.parentElement,
-                tds = tr.children,
-                sn = Number(tds[0].innerText) - 1,
-                nowEdit = EXPIRE_DATA[sn],
-                staff_dict = getStaffDict(nowEdit['dept_id']);
-            $('#form .card-title')[0].innerText = nowEdit['customer_name'];
-            $('#expire_prompt_id')[0].value = nowEdit['expire_prompt_id'];
-            $('#expire_date_selector')[0].value = nowEdit['expire_date'];
-            $('#remark')[0].value = nowEdit['remark'];
-            $('#punishment')[0].value = nowEdit['punishment'];
-            addItems('dept_selector', DEPARTMENTS, nowEdit['dept_caption'], 1, getStaffDict2);
-            addItems('staff_selector', staff_dict, nowEdit['staff_name'], 1);
+            if(FILTER.is_finished.includes('1')){
+                alert('已办结，不可编辑');
+                return;
+            }
+            $.post({
+                url: '{% url "viewExpirePromptTable" %}',
+                data: {'expire_id': elem.getAttribute('expire_prompt_id')},
+                dataType: 'json',
+                async: false,
+                success: function(response){
+                    console.log(response);
+                    let nowEdit = response[0],
+                        staff_dict = getStaffDict(nowEdit['dept_id']);
+                    $('#form .card-title')[0].innerText = nowEdit['customer_name'];
+                    $('#expire_prompt_id')[0].value = nowEdit['expire_prompt_id'];
+                    $('#expire_date_selector')[0].value = nowEdit['expire_date'];
+                    $('#remark')[0].value = nowEdit['remark'];
+                    $('#punishment')[0].value = nowEdit['punishment'];
+                    addItems('dept_selector', DEPARTMENTS, nowEdit['dept_caption'], 1, getStaffDict2);
+                    addItems('staff_selector', staff_dict, nowEdit['staff_name'], 1);
+                    showForm('form', 1);
+                },
+                error: function(){}
+            });
         }
 
         function edit() {
             let data = getKvpsOfForm('form');
             $.post({
                 url: '{% url "editExpirePrompt" %}',
-                type: 'POST',
                 data: data,
                 dataType: 'json',
                 success: function(data){
-                    document.getElementById('expire_table').remove();
-                    buildExpireTable(FILTER);
-                    showForm('form', 0);
+                    if(data.success){
+                        document.getElementById('expire_table').remove();
+                        buildExpireTable(FILTER);
+                        showForm('form', 0);
+                    }else{
+                        alert(data.error);
+                    }
                 },
                 error: function(){alert('');}
             });
+            uploadFileByAjax('explain', '{% url "uploadExpireExplain" %}')
         }
 
         function setFinish(elem){
@@ -246,18 +260,15 @@
                 let expire_prompt_id = elem.getAttribute('expire_prompt_id');
                 $.post({
                     url: '{% url "finishExpirePrompt" %}',
-                    type: 'POST',
                     data: {expire_prompt_id: expire_prompt_id},
                     dataType: 'json',
                     success: function (data) {
-                        console.log(data);
                         if(data.success){
                             document.getElementById('expire_table').remove();
                             buildExpireTable(FILTER);
                         }else{
                             alert(data.error);
                         }
-
                     }
                 });
             }

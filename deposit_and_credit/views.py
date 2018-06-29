@@ -1,10 +1,12 @@
-import json
+import json, os
+import datetime as python_datetime
 from decimal import Decimal
 from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.db.models import Q, Sum, F
+from django.forms.models import model_to_dict
 from django.utils.timezone import datetime, timedelta
 from root_db import models as rd_models
-from deposit_and_credit import models as dac_models, models_operation
+from deposit_and_credit import models as dac_models, models_operation, settings
 from app_permission.views import checkPermission
 # import collections
 
@@ -220,6 +222,7 @@ def viewExpirePromptTable(request):
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
+        expire_id = Q(id=request.POST.get('expire_id')) if request.POST.get('expire_id') else Q(id__gt=0)
         is_finished = True if request.POST.get('is_finished[]') == '1' else False
         if is_finished:
             finish_after = Q(
@@ -227,8 +230,8 @@ def viewExpirePromptTable(request):
             finish_before = Q(
                 finish_date__lte=request.POST.get('finish_before[]') if request.POST.get('finish_before[]') else str(today))
         else:
-            finish_after = Q(finish_date=None)
-            finish_before = Q(finish_date=None)
+            finish_after = Q(finish_date__isnull=True)
+            finish_before = Q(finish_date__isnull=True)
         expire_after = Q(expire_date__gte=request.POST.get('expire_after[]') if request.POST.get('expire_after[]') else str(
             data_date - timedelta(days=100)))
         expire_before = Q(
@@ -237,7 +240,7 @@ def viewExpirePromptTable(request):
         has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment[]') else Q(punishment=0)
         non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment[]') else Q(punishment__gt=0)
         expire_qs = dac_models.ExpirePrompt.objects.filter(
-            expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
+            expire_id, expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
         ).values_list(
             'customer_id',
             'id',
@@ -297,6 +300,10 @@ def viewExpirePromptTable(request):
         return HttpResponse(json.dumps(ret))
 
 def editExpirePrompt(request):
+    ajax_result = {
+        'success': False,
+        'error': None,
+    }
     expire_id = request.POST.get('expire_id[]')
     q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
     if not q[0].finish_date:
@@ -305,10 +312,22 @@ def editExpirePrompt(request):
         expire_dict['staff_id'] = request.POST.get('staff[]')
         expire_dict['punishment'] = int(request.POST.get('punishment[]'))
         expire_dict['remark'] = request.POST.get('remark[]')
-        q.update(**expire_dict)
-        return HttpResponse(json.dumps('ok'))
+        if q.update(**expire_dict):
+            ajax_result['success'] = True
     else:
-        pass
+        ajax_result['error'] = '已办结，不可编辑'
+    return HttpResponse(json.dumps(ajax_result))
+
+def uploadExpireExplain(request):
+
+    file_obj = request.FILES.get('file')
+    if file_obj:
+        print('file-obj', file_obj)
+        with open(os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_obj.name), 'wb') as f:
+            for i in file_obj:
+                f.write(i)
+
+
 
 def finishExpirePrompt(request):
     ajax_result = {
