@@ -5,6 +5,7 @@ from django.shortcuts import render, HttpResponse, redirect, reverse
 from django.db.models import Q, Sum, F
 from django.forms.models import model_to_dict
 from django.utils.timezone import datetime, timedelta
+from MySite import utilities
 from root_db import models as rd_models
 from deposit_and_credit import models as dac_models, models_operation, settings
 from app_permission.views import checkPermission
@@ -304,28 +305,44 @@ def editExpirePrompt(request):
         'success': False,
         'error': None,
     }
-    expire_id = request.POST.get('expire_id[]')
+    expire_id = request.POST.get('expire_id')
     q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
-    if not q[0].finish_date:
-        expire_dict = {}
-        expire_dict['expire_date'] = request.POST.get('expire_date[]')
-        expire_dict['staff_id'] = request.POST.get('staff[]')
-        expire_dict['punishment'] = int(request.POST.get('punishment[]'))
-        expire_dict['remark'] = request.POST.get('remark[]')
-        if q.update(**expire_dict):
-            ajax_result['success'] = True
-    else:
+    if q[0].finish_date:
         ajax_result['error'] = '已办结，不可编辑'
+    else:
+        file_obj = request.FILES.get('explain')
+        if file_obj:
+            file_full_name = os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_obj.name)
+            try:
+                tmp_file = open(file_full_name)
+            except:
+                with open(file_full_name, 'wb') as f:
+                    for i in file_obj:
+                        f.write(i)
+                q.update(**{'explain': file_obj.name})
+                ajax_result['success'] = True
+            else:
+                tmp_file.close()
+                ajax_result['success'] = False
+                ajax_result['error'] = '已存在同名文件'
+                return HttpResponse(json.dumps(ajax_result))
+        expire_dict = {}
+        expire_dict['expire_date'] = request.POST.get('expire_date')
+        expire_dict['staff_id'] = request.POST.get('staff')
+        expire_dict['punishment'] = int(request.POST.get('punishment'))
+        expire_dict['remark'] = request.POST.get('remark')
+        if q.update(**expire_dict):
+            ajax_result['success'] = True and (ajax_result['success'] or not file_obj)
     return HttpResponse(json.dumps(ajax_result))
 
-def uploadExpireExplain(request):
-
-    file_obj = request.FILES.get('file')
-    if file_obj:
-        print('file-obj', file_obj)
-        with open(os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_obj.name), 'wb') as f:
-            for i in file_obj:
-                f.write(i)
+def viewExpireExplain(request):
+    expire_id = request.GET.get('expire_prompt_id')
+    q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
+    if q:
+        file_name = q[0].explain
+        if file_name:
+            file_full_name = os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_name)
+            return utilities.fileDownload(file_full_name)
 
 
 

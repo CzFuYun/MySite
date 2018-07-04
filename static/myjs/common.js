@@ -120,3 +120,9 @@ function getValueFromOneKvp(kvp){
     }
 }
 
+function download(url){
+    var tmpForm = $('<form method="GET"></form>');
+    tmpForm.attr('action', url);
+    tmpForm.appendTo($('body'));
+    tmpForm.submit();
+}

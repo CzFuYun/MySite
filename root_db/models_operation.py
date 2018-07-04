@@ -4,7 +4,7 @@ from django.utils.timezone import timedelta, datetime
 
 
 NEED_UPDATE_STAFF_INFORMATION = False
-NEED_UPDATE_ALL_COMPANIES_INFORMATION = False
+NEED_UPDATE_ALL_COMPANIES_INFORMATION = True
 
 
 ########################################################################################################################

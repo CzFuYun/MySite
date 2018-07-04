@@ -10,11 +10,11 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div id="form" class="row" style="position: fixed; display: none; z-index: 2;">
+    <div id="expire_editor_div" class="row" style="position: fixed; display: none; z-index: 2;">
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{% url 'editExpirePrompt' %}" method="post">
+                    <form id="expire_editor" action="{% url 'editExpirePrompt' %}" method="post" enctype="multipart/form-data">
                         <div class="form-body">
                             <h3 id="customer_name" class="card-title"></h3>
                             <hr>
@@ -78,7 +78,7 @@
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-success" onclick="edit()"><i class="fa fa-check"></i> Save</button>
-                            <button type="button" class="btn btn-inverse" onclick="showForm('form', 0)">Cancel</button>
+                            <button type="button" class="btn btn-inverse" onclick="showForm('expire_editor_div', 0)">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -204,8 +204,7 @@
 
         function showExplain(elem){
             expire_prompt_id = elem.getAttribute('expire_prompt_id');
-
-
+            download('{% url "viewExpireExplain" %}' + '?expire_prompt_id=' + expire_prompt_id);
         }
 
         function showEdit(elem){
@@ -222,37 +221,26 @@
                     console.log(response);
                     let nowEdit = response[0],
                         staff_dict = getStaffDict(nowEdit['dept_id']);
-                    $('#form .card-title')[0].innerText = nowEdit['customer_name'];
+                    $('#expire_editor_div .card-title')[0].innerText = nowEdit['customer_name'];
                     $('#expire_prompt_id')[0].value = nowEdit['expire_prompt_id'];
                     $('#expire_date_selector')[0].value = nowEdit['expire_date'];
                     $('#remark')[0].value = nowEdit['remark'];
                     $('#punishment')[0].value = nowEdit['punishment'];
                     addItems('dept_selector', DEPARTMENTS, nowEdit['dept_caption'], 1, getStaffDict2);
                     addItems('staff_selector', staff_dict, nowEdit['staff_name'], 1);
-                    showForm('form', 1);
+                    showForm('expire_editor_div', 1);
                 },
                 error: function(){}
             });
         }
 
         function edit() {
-            let data = getKvpsOfForm('form');
-            $.post({
-                url: '{% url "editExpirePrompt" %}',
-                data: data,
-                dataType: 'json',
-                success: function(data){
-                    if(data.success){
-                        document.getElementById('expire_table').remove();
-                        buildExpireTable(FILTER);
-                        showForm('form', 0);
-                    }else{
-                        alert(data.error);
-                    }
-                },
-                error: function(){alert('');}
-            });
-            uploadFileByAjax('explain', '{% url "uploadExpireExplain" %}')
+            if(submitByAjax('{% url "editExpirePrompt" %}', 'expire_editor')){
+                document.getElementById('expire_table').remove();
+                buildExpireTable(FILTER);
+                alert('修改成功');
+                showForm('expire_editor_div', 0);
+            }
         }
 
         function setFinish(elem){
@@ -296,10 +284,8 @@
         }
 
         $(function(){
-            {#console.log(FILTER);#}
             buildExpireTable(FILTER);
             DEPARTMENTS = getOrderedDeptDict();
-
         });
 
         function buildExpireTable(postData){
@@ -347,7 +333,7 @@
                     fragment.appendChild(table);
                     document.getElementById('main_content').appendChild(fragment);
                 }
-            })
+            });
         }
 
         function getStaffDict2(elem){

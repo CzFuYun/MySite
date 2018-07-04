@@ -121,7 +121,7 @@
 
         function showExpirePromptTable(){
             let newWindow = window.open('{% url "viewExpirePromptTable" %}');
-                newWindow.FILTER = getKvpsOfForm("expire_filter");
+                newWindow.FILTER = getFormData("expire_filter");
         }
 
     </script>

@@ -40,19 +40,38 @@ function getOrSetFormChildValue(formChildElem, valueToSet) {
     }
 }
 
-function getKvpsOfForm(formId){
+function getFormData(formId){
+    // 获取表单中的数据，若需上传文件，返回FormData对象；否则返回键值对
     var inputElemArray = getInputsOnForm(formId),
-        kvp = {};
+        formData;
     for(var i=0; i<inputElemArray.length; i++){
-        var tmp = getOrSetFormChildValue(inputElemArray[i]);
-        if(tmp){
-            if(!kvp[tmp[0]]){
-                kvp[tmp[0]] = [];
-            }
-            kvp[tmp[0]].push(tmp[1]);
+        if(inputElemArray[i].type === 'file'){      // enctype="multipart/form-data"
+            formData = new FormData();
+            break;
         }
     }
-    return kvp;
+    if(formData){
+        for(var i=0; i<inputElemArray.length; i++){
+            if(inputElemArray[i].type === 'file'){
+                formData.append(inputElemArray[i].name, inputElemArray[i].files[0]);
+            }else{
+                formData.append(inputElemArray[i].name, getOrSetFormChildValue(inputElemArray[i])[1]);
+            }
+        }
+        return formData;
+    } else{
+        var dataDict = {};
+        for(var i=0; i<inputElemArray.length; i++){
+            var tmp = getOrSetFormChildValue(inputElemArray[i]);
+            if(tmp){
+                if(!dataDict[tmp[0]]){
+                    dataDict[tmp[0]] = [];
+                }
+                dataDict[tmp[0]].push(tmp[1]);
+            }
+        }
+        return dataDict;
+    }
 }
 
 function addItems(selectElemId, valueTextDict, defaultSelectedText, clearBeforeAdd, onchangeFunctionObject){
@@ -106,17 +125,24 @@ function fillForm(formId, idValueDict){
     }
 }
 
-function uploadFileByAjax(fileInputId, url){
-    var formData = new FormData();
-    var fileInfo = $('#' + fileInputId)[0].files[0];
-    formData.append('file', fileInfo);
+function submitByAjax(url, formId){
+    var requestSuccess;
+    // var formData = getFormData(formId);
     $.post({
         url: url,
-        data:formData,
+        data: getFormData(formId),
+        dataType:'json',
+        cache: false,
         processData: false,
         contentType: false,
+        async: false,
         success: function(response){
-            console.log(response);
+            requestSuccess = response.success;
+            if(!requestSuccess){
+                alert(response.error);
+            }
         }
     });
+    return requestSuccess;
 }
+
