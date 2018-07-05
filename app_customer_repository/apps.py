@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class AppInformationConfig(AppConfig):
-    name = 'app_information'
+    name = 'app_customer_repository'

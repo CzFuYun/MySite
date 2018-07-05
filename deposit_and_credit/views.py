@@ -336,15 +336,23 @@ def editExpirePrompt(request):
     return HttpResponse(json.dumps(ajax_result))
 
 def viewExpireExplain(request):
-    expire_id = request.GET.get('expire_prompt_id')
+    ajax_result = {
+        'success': False,
+        'data': None,
+        'error': None,
+    }
+    expire_id = request.POST.get('expire_prompt_id')
     q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
     if q:
         file_name = q[0].explain
         if file_name:
-            file_full_name = os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_name)
-            return utilities.fileDownload(file_full_name)
-
-
+            ajax_result['data'] = file_name
+            ajax_result['success'] = True
+        else:
+            ajax_result['error'] = '未上传情况说明'
+    else:
+        ajax_result['error'] = '记录不存在'
+    return HttpResponse(json.dumps(ajax_result))
 
 def finishExpirePrompt(request):
     ajax_result = {

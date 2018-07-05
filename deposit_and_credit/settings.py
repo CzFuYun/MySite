@@ -1,1 +1,4 @@
-EXPIRE_EXPLAIN_IMG_FOLDER = r'E:\AAA报表定期更新\存量授信提示\情况说明'
+import os
+from MySite import settings
+
+EXPIRE_EXPLAIN_IMG_FOLDER = os.path.join(settings.BASE_DIR, 'deposit_and_credit', 'expire_explain')

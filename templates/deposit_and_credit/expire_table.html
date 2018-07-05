@@ -150,7 +150,7 @@
         EXPIRE_DATA = [];
         DEPARTMENTS = {};
         TABLE_STRUCTURE = [
-            tableCol('#', '3%', '【display_num】', {id: '【display_num】'}),
+            tableCol('#', '3%', '【display_num】', {id: '【expire_prompt_id】'}),
             tableCol('客户名称', '18%', '【customer_name】', {customer_id: '【customer_id】'}),
             tableCol('经营部门', '6%', '【dept_caption】', {dept_id: '【dept_id】'}),
             tableCol('经办人员', '6%', '<a style="cursor:pointer" staff_id=【staff_id】 onclick="showStaff(this)">【staff_name】</a>', {staff_id: '【staff_id】'}),
@@ -197,14 +197,27 @@
         }
 
         function showStaff(elem){
-            staff_id = elem.getAttribute('staff_id');
+            let staff_id = elem.getAttribute('staff_id');
 
 
         }
 
         function showExplain(elem){
-            expire_prompt_id = elem.getAttribute('expire_prompt_id');
-            download('{% url "viewExpireExplain" %}' + '?expire_prompt_id=' + expire_prompt_id);
+            let expire_prompt_id = elem.getAttribute('expire_prompt_id')
+            $.post({
+                url: '{% url "viewExpireExplain" %}',
+                data: {expire_prompt_id: expire_prompt_id},
+                dataType: 'json',
+                async: false,
+                success: function(data){
+                    if(data.success){
+                        let file_name = data.data;
+                        downloadSmallFile(['/static/'+ file_name]);
+                    }else{
+                        alert(data.error);
+                    }
+                }
+            });
         }
 
         function showEdit(elem){
@@ -221,6 +234,7 @@
                     console.log(response);
                     let nowEdit = response[0],
                         staff_dict = getStaffDict(nowEdit['dept_id']);
+                    $('#expire_editor_div .dropify-clear')[0].click();
                     $('#expire_editor_div .card-title')[0].innerText = nowEdit['customer_name'];
                     $('#expire_prompt_id')[0].value = nowEdit['expire_prompt_id'];
                     $('#expire_date_selector')[0].value = nowEdit['expire_date'];
@@ -236,10 +250,12 @@
 
         function edit() {
             if(submitByAjax('{% url "editExpirePrompt" %}', 'expire_editor')){
+                let position = getElemLocation($('#expire_prompt_id')[0].value, 0, '-138');
                 document.getElementById('expire_table').remove();
                 buildExpireTable(FILTER);
                 alert('修改成功');
                 showForm('expire_editor_div', 0);
+                locateScreen(position);
             }
         }
 
@@ -295,6 +311,7 @@
                 url: '{% url "viewExpirePromptTable" %}',
                 dataType: 'json',
                 data: postData,
+                async: false,
                 success: function(data){
                     EXPIRE_DATA = data;
                     table.id = 'expire_table';

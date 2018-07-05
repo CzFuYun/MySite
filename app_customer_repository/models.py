@@ -19,3 +19,5 @@ class CustomerStore(models.Model):
     class Meta:
         verbose_name_plural = '客户库'
 
+class CustomerRepository(models.Model):
+    name = models.CharField(max_length=128, unique=True, verbose_name='企业名称')

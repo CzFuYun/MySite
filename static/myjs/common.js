@@ -120,9 +120,38 @@ function getValueFromOneKvp(kvp){
     }
 }
 
-function download(url){
-    var tmpForm = $('<form method="GET"></form>');
-    tmpForm.attr('action', url);
-    tmpForm.appendTo($('body'));
-    tmpForm.submit();
+function downloadSmallFile(urlList){
+    for(var i=0; i<urlList.length; i++){
+        $('<a href="' + urlList[i] + '" download></a>')[0].click();
+    }
+}
+
+function getElemLocation(elem, offsetX, offsetY){
+    // elem: 元素对象或id字符串
+    offsetX = offsetX || '+0';
+    offsetY = offsetY || '+0';
+    var obj = typeof elem === 'string' ? $('#' + elem) : $(elem);
+    var location = obj.offset();
+    return [
+        eval(location.left /*- document.documentElement.scrollLeft*/ + offsetX),
+        eval(location.top /*- document.documentElement.scrollTop*/ + offsetY)
+    ];
+}
+
+function locateScreen(elem){
+    // 将屏幕滚动至指定位置，elem: 元素对象或id字符串或数值或坐标
+    var location;
+    if(typeof elem === 'string' || $(elem)[0].tagName){
+        location = getElemLocation(elem);
+    }else if(typeof elem === 'number'){
+        location = [0, elem];
+    }else{
+        location = elem;
+    }
+    $(window).scrollLeft(location[0]);
+    $(window).scrollTop(location[1]);
+}
+
+function getMouseLocation(e){
+
 }
