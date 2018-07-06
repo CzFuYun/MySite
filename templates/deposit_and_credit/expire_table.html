@@ -72,9 +72,10 @@
                                     <div class="form-group">
                                         <label>情况说明</label>
                                         <input type="file" id="explain" name="explain" class="dropify">
+                                    </div>
                                 </div>
-                            </div>
                             <!--/row-->
+                            </div>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-success" onclick="edit()"><i class="fa fa-check"></i> Save</button>
@@ -85,8 +86,6 @@
             </div>
         </div>
     </div>
-
-
 </div>
 
 {% endblock %}
@@ -135,7 +134,7 @@
             });
 
             var drDestroy = $('#input-file-to-destroy').dropify();
-            drDestroy = drDestroy.data('dropify')
+            drDestroy = drDestroy.data('dropify');
             $('#toggleDropify').on('click', function(e) {
                 e.preventDefault();
                 if (drDestroy.isDropified()) {
@@ -147,6 +146,8 @@
         });
     </script>
     <script type="text/javascript">
+        MOUSE_PAGE_LOCATION = [0, 0];
+        MOUSE_WINDOW_LOCATION = [0, 0];
         EXPIRE_DATA = [];
         DEPARTMENTS = {};
         TABLE_STRUCTURE = [
@@ -155,11 +156,11 @@
             tableCol('经营部门', '6%', '【dept_caption】', {dept_id: '【dept_id】'}),
             tableCol('经办人员', '6%', '<a style="cursor:pointer" staff_id=【staff_id】 onclick="showStaff(this)">【staff_name】</a>', {staff_id: '【staff_id】'}),
             tableCol('到期日', '8%', '【expire_date】'),
-            tableCol('剩余天数', '6%', [colorDays, '【days_remain】']),
+            FILTER.is_finished.includes("0") ? tableCol('剩余天数', '6%', [colorDays, '【days_remain】']) : tableCol('办结日', '6%',  '【finish_date】'),
             tableCol('备注', '40%', '【remark】'),
             tableCol('扣罚金额', '6%', '【punishment】'),
             tableCol('Action', '8%', '<a data-toggle="tooltip" style="cursor:pointer" title="情况说明" expire_prompt_id=【expire_prompt_id】 onclick="showExplain(this)"><i class="mdi mdi-book-open m-r-10"></i></a>' +
-                '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="showEdit(this)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
+                '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="showEdit(this, event)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
                 '<a data-toggle="tooltip" style="cursor:pointer" title="办结" expire_prompt_id=【expire_prompt_id】 onclick="setFinish(this)"><i class="fa fa-check m-r-10 m-r-10 text-danger"></i></a>')
         ];
 
@@ -203,7 +204,7 @@
         }
 
         function showExplain(elem){
-            let expire_prompt_id = elem.getAttribute('expire_prompt_id')
+            let expire_prompt_id = elem.getAttribute('expire_prompt_id');
             $.post({
                 url: '{% url "viewExpireExplain" %}',
                 data: {expire_prompt_id: expire_prompt_id},
@@ -220,11 +221,14 @@
             });
         }
 
-        function showEdit(elem){
+        function showEdit(elem, e){
             if(FILTER.is_finished.includes('1')){
                 alert('已办结，不可编辑');
                 return;
             }
+            MOUSE_PAGE_LOCATION = getMousePageLocation(e);
+            MOUSE_WINDOW_LOCATION = getMouseWindowLocation(e);
+            console.log(MOUSE_PAGE_LOCATION);
             $.post({
                 url: '{% url "viewExpirePromptTable" %}',
                 data: {'expire_id': elem.getAttribute('expire_prompt_id')},
@@ -250,12 +254,12 @@
 
         function edit() {
             if(submitByAjax('{% url "editExpirePrompt" %}', 'expire_editor')){
-                let position = getElemLocation($('#expire_prompt_id')[0].value, 0, '-138');
+                {#let position = getElemLocation($('#expire_prompt_id')[0].value, 0, '-500');#}
                 document.getElementById('expire_table').remove();
                 buildExpireTable(FILTER);
                 alert('修改成功');
                 showForm('expire_editor_div', 0);
-                locateScreen(position);
+                locateScreen(MOUSE_PAGE_LOCATION[1] - MOUSE_WINDOW_LOCATION[1]);
             }
         }
 

@@ -152,6 +152,16 @@ function locateScreen(elem){
     $(window).scrollTop(location[1]);
 }
 
-function getMouseLocation(e){
+function getMouseWindowLocation(e){
+    var ev = e || window.event;
+    return [ev.clientX, ev.clientY];
+}
 
+function getMousePageLocation(e){
+    var ev = e || window.event;
+    var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+    var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+    var x = ev.pageX || ev.clientX + scrollX;
+    var y = ev.pageY || ev.clientY + scrollY;
+    return [x, y];
 }

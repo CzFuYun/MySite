@@ -248,6 +248,7 @@ def viewExpirePromptTable(request):
             'remark',
             'punishment',
             'staff_id',
+            'finish_date',
         )
         expire_customers = []
         customer_expire_data_dict = {}
@@ -259,6 +260,7 @@ def viewExpirePromptTable(request):
                 i[2],
                 i[3],
                 i[4],
+                i[5],
             ]
         customer_qs = dac_models.Contributor.objects.filter(
             customer_id__in=expire_customers,
@@ -296,6 +298,7 @@ def viewExpirePromptTable(request):
                 'days_remain': (i[6] - today).days,
                 'remark': customer_expire_data_dict[customer_id][1],
                 'punishment': customer_expire_data_dict[customer_id][2],
+                'finish_date': str(customer_expire_data_dict[customer_id][4]),
             }
             ret.append(tmp)
         return HttpResponse(json.dumps(ret))
