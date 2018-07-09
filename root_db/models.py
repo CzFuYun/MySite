@@ -86,6 +86,7 @@ class Series(models.Model):
 class TypeOf3311(models.Model):
     caption = models.CharField(max_length=32)
     level = models.CharField(max_length=16, null=True ,blank=True)
+    remark = models.CharField(max_length=64, null=True, blank=True)
 
     def __str__(self):
         return self.caption
