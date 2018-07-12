@@ -3,8 +3,8 @@ from root_db import  models
 from django.utils.timezone import timedelta, datetime
 
 
-NEED_UPDATE_STAFF_INFORMATION = False
-NEED_UPDATE_ALL_COMPANIES_INFORMATION = True
+NEED_UPDATE_STAFF_INFORMATION = True
+NEED_UPDATE_ALL_COMPANIES_INFORMATION = False
 
 
 ########################################################################################################################

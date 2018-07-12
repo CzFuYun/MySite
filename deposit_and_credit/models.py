@@ -44,6 +44,7 @@ class Contributor(models.Model):
     lr_BAB = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='全额银票（万元）')
     expire_date = models.DateField(auto_now_add=False, null=True, blank=True)
     invest_banking = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='投行业务（万元）')
+    invest_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='投行到期日')
     ABS_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='ABS到期日')
     defuse_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='化解到期日')
     data_date = models.DateField(auto_now_add=False, null=True, blank=True)

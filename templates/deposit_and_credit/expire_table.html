@@ -161,7 +161,7 @@
             tableCol('扣罚金额', '6%', '【punishment】'),
             tableCol('Action', '8%', '<a data-toggle="tooltip" style="cursor:pointer" title="情况说明" expire_prompt_id=【expire_prompt_id】 onclick="showExplain(this)"><i class="mdi mdi-book-open m-r-10"></i></a>' +
                 '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="showEdit(this, event)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
-                '<a data-toggle="tooltip" style="cursor:pointer" title="办结" expire_prompt_id=【expire_prompt_id】 onclick="setFinish(this)"><i class="fa fa-check m-r-10 m-r-10 text-danger"></i></a>')
+                '<a data-toggle="tooltip" style="cursor:pointer" title="办结" expire_prompt_id=【expire_prompt_id】 onclick="setFinish(this, event)"><i class="fa fa-check m-r-10 m-r-10 text-danger"></i></a>')
         ];
 
         function tableCol(description, col_width, html_str_of_td, td_extra_property_dict){
@@ -263,7 +263,9 @@
             }
         }
 
-        function setFinish(elem){
+        function setFinish(elem, e){
+            MOUSE_PAGE_LOCATION = getMousePageLocation(e);
+            MOUSE_WINDOW_LOCATION = getMouseWindowLocation(e);
             if(confirm('确认办结')){
                 let expire_prompt_id = elem.getAttribute('expire_prompt_id');
                 $.post({
@@ -274,6 +276,7 @@
                         if(data.success){
                             document.getElementById('expire_table').remove();
                             buildExpireTable(FILTER);
+                            locateScreen(MOUSE_PAGE_LOCATION[1] - MOUSE_WINDOW_LOCATION[1]);
                         }else{
                             alert(data.error);
                         }
