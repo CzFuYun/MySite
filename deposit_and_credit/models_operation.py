@@ -16,6 +16,10 @@ class ImportantDate():
     def last_year_num(self):
         return self.today.year - 1
 
+    @property
+    def last_year_today(self):
+        return self.today - timedelta(days=365)
+
     def first_data_date_str(self, model_class, field='data_date'):
         return getNeighbourDate(model_class, 1, '1900-01-01', field)
 
