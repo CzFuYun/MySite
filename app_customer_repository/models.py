@@ -1,10 +1,7 @@
 from django.db import models
+from django.db.models import Q, F, Sum, Max
 from deposit_and_credit import models_operation
-from django.db.models import Q, Sum, F
 
-EVENT = {
-
-}
 
 industry_factor_rule = {
     'C': 1.5,
@@ -62,14 +59,16 @@ class ProjectRepository(models.Model):
     business = models.ForeignKey('SubBusiness', on_delete=models.PROTECT)
     total_net = models.IntegerField(default=0, verbose_name='总敞口')
     existing_net = models.IntegerField(default=0, verbose_name='存量敞口')
+    reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
     account_num = models.DecimalField(default=0, max_digits=3, decimal_places=2, verbose_name='折算户数')
     is_defuse = models.BooleanField(default=False, verbose_name='涉及化解')
     is_pure_credit = models.BooleanField(default=False, verbose_name='纯信用')
     close_date = models.DateField(blank=True, null=True, verbose_name='关闭日期')
+    tmp_close_date = models.DateField(blank=True, null=True, verbose_name='临时关闭日期')
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True)
     whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True)
 
-    def decide_is_focus(self):
+    def judge_is_focus(self):
         self.is_focus = True if self.total_net > 8000 or self.is_pure_credit or self.business.id >= 15 else False
 
     def calculate_acc_num(self):
@@ -82,7 +81,7 @@ class ProjectRepository(models.Model):
             industry = self.customer.industry_id
             factor = 2 if b_id == 15 else industry_factor_rule.get(industry, 1)     # 项目贷系数2，制造业1.5，其他1
             factor = max(factor, 2 if self.customer.type_of_3311.id >= 10 else 1)   # 3311系数2
-            imp_d = models_operation.ImportantDate()
+            imp_d = models_operation.DateOperation()
             if self.existing_net:
                 base = 0.5
             else:
@@ -95,13 +94,32 @@ class ProjectRepository(models.Model):
             base = 0        # 投行和一般授信以外的业务，不折算户数
         self.account_num = base * factor
 
-    def create_or_update(self):
-        self.decide_is_focus()
-        self.calculate_acc_num()
-        self.save()
+    @classmethod
+    def create_or_update(cls, pr_dict):
+        '''
+        根据传入的数据更新或创建储备项目，自动填充创建日期并生成快照
+        :param pr_dict:
+        :return:
+        '''
+        # fields = self._meta.fields
+        imp_date = models_operation.DateOperation()
+        need_photo = False
+        if pr_dict.get('id'):       # 修改
+            pr = ProjectRepository.objects.get(id=pr_dict['id'])
+        else:       # 创建
+            pr = ProjectRepository(**pr_dict)
+            pr.create_date = imp_date.today
+            need_photo = True
+        pr.judge_is_focus()
+        pr.calculate_acc_num()
+        pr.save()
+        if need_photo:
+            ProjectExecution.takePhoto(pr)
 
-    def close(self):
-        pass
+    # def close(self):
+    #     imp_date = models_operation.DateOperation()
+    #     self.close_date = imp_date.today
+    #     self.save()
 
 
 class PretrialMeeting(models.Model):
@@ -124,33 +142,115 @@ class ProjectExecution(models.Model):
         (40, '信审'),
         (50, '批复'),
         (60, '投放'),
-        (70, '结束'),
+        (70, '关闭'),
     )
     project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT)
-    event = models.IntegerField(choices=key_node_choices, blank=True, null=True)
+    event = models.IntegerField(choices=key_node_choices, blank=True, null=True)        # 事件，也可作为申报阶段
     event_date = models.DateField(blank=True, null=True, verbose_name='事件日期')       # 区别于更新日，此为事件的发生日期
-    update_date = models.DateTimeField(blank=True, null=True)
+    update_date = models.DateField(blank=True, null=True)
     current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='进度')
-    this_time_used = models.IntegerField(default=0, verbose_name='本次投放敞口')
-    total_used = models.IntegerField(default=0, verbose_name='累计投放敞口')          # 自动计算
-    new_net_used = models.IntegerField(default=0, verbose_name='累计投放新增敞口')      # 自动计算
+    total_used = models.IntegerField(default=0, verbose_name='累计投放敞口')          # 含本次
+    this_time_used = models.IntegerField(default=0, verbose_name='本次投放敞口')      # 自动计算
+    new_net_used = models.IntegerField(default=0, verbose_name='累计投放新增敞口')      # 自动计算，含本次
     remark = models.ForeignKey('ProjectRemark', blank=True, null=True, on_delete=models.PROTECT)
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
-    photo_date = models.DateField(auto_now_add=True, verbose_name='快照日期')
+    photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
     class Meta:
         get_latest_by = 'update_date'
-        ordering = (
-            # 'project__staff__sub_department__superior',
-            '-update_date',
-        )
+        ordering = ('-update_date', )
 
     @property
     def previous_update(self):
-        return ProjectExecution.objects.filter(project_id=self.project_id).values_list('update_count', 'update_date').order_by('-update_count')[0]
+        if self.id:     # 若本条记录确实存在于数据库
+            today = models_operation.DateOperation().today
+            pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
+            if pe.exists():
+                return pe.values_list('update_count', 'update_date').order_by('-update_count')[0]
+            return (0, None)
 
-    def update(self):
-        pass
+    def execute_processing(self, pe_dict):
+        '''
+        更新进度，并判断事件的发生
+        :param pe_dict: 字段名和新值构成的字典
+        :return:
+        '''
+        fields_to_compare = {
+            # 'event': 'event',
+            'total_used': 'total_used',
+            'remark': 'remark.content',
+        }
+        # fields_no_edit = ['project', 'event', '']
+        imp_date = models_operation.DateOperation()
+        field_list = self._meta.fields
+        self.previous_pe = ProjectExecution.objects.get(project=self.project, update_count=self.update_count-1) or ProjectExecution()
+        for f in field_list:
+            field = f.name
+            # if field in fields_no_edit:
+            #     continue
+            new_value = pe_dict.get(field, None)
+            if new_value:
+                if field in fields_to_compare:
+                    if eval('self.previous_pe.' + fields_to_compare[field]) != new_value:
+                        edit_method = getattr(self, '_edit_' + field)
+                        edit_method(new_value)
+                    else:
+                        pass
+                else:
+                    eval('self.' + field + '=' + new_value)
+            else:
+                pass
+        # self.judge_event()
+        self.update_date = imp_date.today
+        self.save()
+
+    def _edit_total_used(self, new_value):
+        self.total_used = new_value
+        self.this_time_used = self.total_used - self.previous_pe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
+        self.new_net_used = self.this_time_used + self.previous_pe.new_net_used
+
+    def _edit_remark(self, new_value):
+        new_remark = ProjectRemark(content=new_value)
+        new_remark.save()
+        self.remark = new_remark
+
+    # def judge_event(self):
+    #     self.event_date = models_operation.DateOperation().today
+    #     pass
+
+    @classmethod
+    def takePhoto(cls, project_obj=None):
+        # from app_customer_repository import models
+        imp_date = models_operation.DateOperation()
+        if project_obj:
+            ProjectExecution(
+                project=project_obj,
+                photo_date=imp_date.today,
+            ).save()
+        else:
+            photo_date_str = input('photo date?>>>')
+            if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
+                return
+            if photo_date_str:
+                photo_date = imp_date.strToDate(photo_date_str)
+            else:
+                return
+            exclude_fields = ['id', 'photo_date']
+            ProjectRepository.objects.filter(tmp_close_date__lte=imp_date.delta_date(-180, photo_date)).update(close_date=imp_date.today)
+            pe_on_the_way = cls.objects.filter(project__close_date__isnull=True)
+            fields = cls._meta.get_fields()
+            pe_photo_list = []
+            for pe in pe_on_the_way:
+                tmp = {}
+                for field in fields:
+                    field_name = field.name
+                    if field_name in exclude_fields:
+                        continue
+                    tmp[field_name] = getattr(pe, field_name)
+                tmp['photo_date'] = photo_date
+                pe_photo_list.append(cls(**tmp))
+            if pe_photo_list:
+                cls.objects.bulk_create(pe_photo_list)
 
 
 class Progress(models.Model):
@@ -181,5 +281,41 @@ class ProjectRemark(models.Model):
     content = models.TextField(blank=True, null=True)
     create_date = models.DateTimeField(auto_now_add=True)
 
+
+class TargetTask(models.Model):
+    '''
+
+    '''
+    target_type_choices = (
+        (10, '户数'),
+        (20, '金额'),
+    )
+    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.PROTECT)
+    business = models.ForeignKey('Business', blank=True, null=True, on_delete=models.PROTECT)
+    target_amount = models.FloatField(blank=True, null=True)
+    target_type = models.IntegerField(choices=target_type_choices, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+
+    @classmethod
+    def calculate_target_amount(cls, sd='', ed='', business_obj=None):
+        imp_date = models_operation.DateOperation()
+        start_date = imp_date.strToDate(sd) if sd else imp_date.this_year_start_date
+        end_date = imp_date.strToDate(ed) if ed else imp_date.this_year_end_date
+        q_start_date = Q(start_date=start_date)
+        q_end_date = Q(end_date__lte=end_date)
+        q_business = Q(business=business_obj)
+        if start_date.month in (1, 4, 7, 10) and start_date.day == 1 and end_date.month in (3, 6, 9, 12) and end_date.day >= 28:
+            if cls.objects.filter(q_start_date & q_end_date & q_business).exists():
+                qs = cls.objects.filter(q_start_date & q_end_date & q_business).values(
+                    'department',
+                    'target_type',
+                    'business'
+                ).annotate(Sum('target_amount'))
+            else:
+                pass
+
+        else:
+            return
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
 # SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')

@@ -6,11 +6,26 @@ def field_choices_to_dict(field_choices):
         dic[str(i[1])] = i[0]
     return dic
 
+def model_object(request, model_cls):
+    '''
+    从视图函数的request对象中提取数据库表字段值
+    :param request:
+    :return: dict
+    '''
+    ret = {}
+    method = request.method
+    data_dict = getattr(request, method)
+    field_list = model_cls._meta.fields
+    for field in field_list:
+        key = field.name
+        value = data_dict.get(key)
+        if value:
+            ret[key] = value
+    return ret
 
 class batchOperation:
     def __init__(self, clsModel):
         self.model = clsModel
-
 
     def time_line(self, main_field, main_value, time_field, time_value=0, cursor=0):
         '''

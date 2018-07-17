@@ -4,7 +4,7 @@ from django.utils.timezone import timedelta, datetime
 from deposit_and_credit import models as dac_models
 from root_db import models as rd_models
 
-class ImportantDate():
+class DateOperation():
     def __init__(self):
         self.today = datetime.today().date()
 
@@ -19,6 +19,27 @@ class ImportantDate():
     @property
     def last_year_today(self):
         return self.today - timedelta(days=365)
+
+    @property
+    def this_year_start_date(self):
+        return self.strToDate(str(self.today.year) + '-01-01')
+
+    @property
+    def this_year_end_date(self):
+        return  self.strToDate(str(self.today.year) + '-12-31')
+
+    def strToDate(self, s):
+        return datetime.strptime(s, '%Y-%m-%d').date()
+
+    def delta_date(self, days, date=''):
+        if date:
+            if type(date) == str:
+                date_obj = self.strToDate(date)
+            else:
+                date_obj = date
+        else:
+            date_obj = self.today
+        return date_obj + timedelta(days=days)
 
     def first_data_date_str(self, model_class, field='data_date'):
         return getNeighbourDate(model_class, 1, '1900-01-01', field)
@@ -40,7 +61,7 @@ def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date
     if date_str:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
     else:
-        imp_date = ImportantDate()
+        imp_date = DateOperation()
         date_obj = imp_date.today
         date_str = str(date_obj)
     before_date = after_date = None
@@ -65,7 +86,7 @@ def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date
 
 
 def getContributionTree(data_date):
-    last_year_str = str(ImportantDate().last_year_num)
+    last_year_str = str(DateOperation().last_year_num)
     last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(
         data_date=last_year_str + '-12-31').values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'))
@@ -143,8 +164,8 @@ def getCustomerDailyDataForHighChartsLine(customer_id_list, model_class, annotat
     :return: {Group1: [(####-##-##, xxxx.xx), (####-##-##, xxxx.xx), ...], Group2: []}
     '''
     if not end_date:
-        end_date = ImportantDate().last_data_date_str(model_class)
-    first_data_date = ImportantDate().first_data_date_str(model_class)
+        end_date = DateOperation().last_data_date_str(model_class)
+    first_data_date = DateOperation().first_data_date_str(model_class)
     if not start_date:
         start_date = first_data_date
     deposit_qs = model_class.objects.filter(customer_id__in=customer_id_list, data_date__gte=start_date, data_date__lte=end_date)

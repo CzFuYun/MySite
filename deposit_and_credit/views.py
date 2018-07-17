@@ -26,7 +26,7 @@ def ajaxOverViewBranch(request, *args):
             nDays = int(request.POST.get('days'))
         except:
             nDays = 30
-        strStart = str(models_operation.ImportantDate().today - timedelta(days=nDays))
+        strStart = str(models_operation.DateOperation().today - timedelta(days=nDays))
         qsDepositAmountEveryDay = rd_models.DividedCompanyAccount.objects.filter(
             data_date__gte=strStart).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
         qsBasicDepositAmountEveryDay = rd_models.DividedCompanyAccount.objects.filter(
@@ -97,7 +97,7 @@ def viewContribution(request):
 
 
 def ajaxContribution(request):
-    data_date = request.POST.get('data_date', None) or models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
+    data_date = request.POST.get('data_date', None) or models_operation.DateOperation().last_data_date_str(dac_models.Contributor)
     try:
         tree = dac_models.ContributionTrees.objects.filter(data_date=data_date).values_list('contribution_tree')[0][0]
     except:
@@ -180,7 +180,7 @@ def viewDepartmentContributionHistory(request):
         dept_code = request.POST.get('dept_code')
         customers_qs = dac_models.Contributor.objects.filter(
             department=dept_code,
-            data_date=models_operation.ImportantDate().last_data_date_str(dac_models.Contributor)
+            data_date=models_operation.DateOperation().last_data_date_str(dac_models.Contributor)
         ).values_list('customer_id')
         dept_customers = []
         for i in customers_qs:
@@ -219,7 +219,7 @@ def viewExpirePromptTable(request):
     if request.method == 'GET':
         return render(request, 'deposit_and_credit/expire_table.html')
     elif request.method == 'POST':
-        imp_date = models_operation.ImportantDate()
+        imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
@@ -365,7 +365,7 @@ def finishExpirePrompt(request):
     expire_prompt_id = request.POST.get('expire_prompt_id')
     q = dac_models.ExpirePrompt.objects.filter(id=expire_prompt_id)[0]
     if q and not q.finish_date:
-        q.finish_date = models_operation.ImportantDate().today
+        q.finish_date = models_operation.DateOperation().today
         q.save()
         ajax_result['success'] = True
         return HttpResponse(json.dumps(ajax_result))
