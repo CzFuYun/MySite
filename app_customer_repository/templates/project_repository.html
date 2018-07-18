@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+
+{% block extra_css %}
+
+{% endblock %}
+
+
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-outline-info">
+                <div class="card-header">
+                    <h4 class="m-b-0 text-white">项目储备</h4>
+                </div>
+                <div class="card-body">
+                    <form id="expire_filter" action="{% url 'viewExpirePromptTable' %}" target="_blank" method="post">
+                        <div class="form-group row">
+                            <div class="col-md-1">
+                            </div>
+                            <label for="start_date" class="col-md-1 col-form-label">起始日期</label>
+                            <div class="col-md-2">
+                                <input class="form-control" type="date" value="{{ start_date }}" id="start_date">
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <label for="end_date" class="col-md-1 col-form-label">截至日期</label>
+                            <div class="col-md-2">
+                                <input class="form-control" type="date" value="{{ end_date }}" id="end_date">
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-success" onclick=""><i class="fa fa-check"></i>确认</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+{% block extra_js %}
+<script>
+    $(function(){
+
+    });
+
+    function getProjectOverview(){
+        var start_date = document.getElementById('start_date').value,
+            end_date = document.getElementById('end_date').value;
+        $.post({
+            url: '{% url "viewProjectRepository" %}',
+            data: {
+                start_date: start_date,
+                end_date: end_date
+            },
+            {#async: false,#}
+            dataType:'json',
+            success: function(response){
+                console.log(response);
+            }
+        });
+    }
+</script>
+{% endblock %}

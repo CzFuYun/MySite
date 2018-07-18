@@ -18,15 +18,28 @@ class DateOperation():
 
     @property
     def last_year_today(self):
-        return self.today - timedelta(days=365)
+        year = self.today.year - 1
+        if year / 4 == 0  and year / 100 != 0:
+            days = 366
+        else:
+            days = 365
+        return self.today - timedelta(days=days)
+
+    @property
+    def this_year_start_date_str(self):
+        return str(self.today.year) + '-01-01'
 
     @property
     def this_year_start_date(self):
-        return self.strToDate(str(self.today.year) + '-01-01')
+        return self.strToDate(self.this_year_start_date_str)
+
+    @property
+    def this_year_end_date_str(self):
+        return str(self.today.year) + '-12-31'
 
     @property
     def this_year_end_date(self):
-        return  self.strToDate(str(self.today.year) + '-12-31')
+        return  self.strToDate(self.this_year_end_date_str)
 
     def strToDate(self, s):
         return datetime.strptime(s, '%Y-%m-%d').date()
@@ -40,6 +53,11 @@ class DateOperation():
         else:
             date_obj = self.today
         return date_obj + timedelta(days=days)
+
+    def month_and_date(self, date):
+        month = '{:0>2d}'.format(date.month)
+        day = '{:0>2d}'.format(date.day)
+        return month + '-' + day
 
     def first_data_date_str(self, model_class, field='data_date'):
         return getNeighbourDate(model_class, 1, '1900-01-01', field)

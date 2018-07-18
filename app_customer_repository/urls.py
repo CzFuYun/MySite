@@ -4,4 +4,5 @@ from . import views
 
 urlpatterns = [
     url('test', views.test),
+    url('pr\.view', views.viewProjectRepository, name='viewProjectRepository'),
 ]

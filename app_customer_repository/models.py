@@ -17,7 +17,7 @@ class CustomerRepository(models.Model):
     simple_name = models.CharField(max_length=32, unique=True, blank=True, null=True)
     customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, verbose_name='核心客户号', on_delete=models.PROTECT)
     credit_file = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
-    claimer = models.ForeignKey('root_db.SubDepartment', null=True, blank=True, on_delete=models.PROTECT, verbose_name='认领')
+    department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='支行')
     type_of_3311 = models.ForeignKey('root_db.TypeOf3311', blank=True, null=True, on_delete=models.PROTECT, verbose_name='3311类型')
     is_strategy = models.BooleanField(default=False, verbose_name='是否战略客户')
     industry = models.ForeignKey('root_db.Industry', blank=True, null=True, on_delete=models.PROTECT)
@@ -48,7 +48,7 @@ class ProjectRepository(models.Model):
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
     is_green = models.BooleanField(default=False, verbose_name='绿色金融')
     is_focus = models.BooleanField(default=False, verbose_name='重点项目')
-    pretrial_doc = models.OneToOneField('PretrialDocument', blank=True, null=True, on_delete=models.PROTECT, verbose_name='预审表')
+    pretrial_doc = models.ForeignKey('PretrialDocument', blank=True, null=True, on_delete=models.PROTECT, verbose_name='预审表')
     create_date = models.DateField(auto_now_add=True, verbose_name='创建日期')
     plan_pretrial_date =  models.DateField(blank=True, null=True, verbose_name='计划预审')
     plan_chushen =  models.DateField(blank=True, null=True, verbose_name='计划初审')
@@ -67,6 +67,7 @@ class ProjectRepository(models.Model):
     tmp_close_date = models.DateField(blank=True, null=True, verbose_name='临时关闭日期')
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True)
     whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True)
+    reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
 
     def judge_is_focus(self):
         self.is_focus = True if self.total_net > 8000 or self.is_pure_credit or self.business.id >= 15 else False
@@ -135,17 +136,17 @@ class PretrialDocument(models.Model):
 
 
 class ProjectExecution(models.Model):
-    key_node_choices = (
-        (10, '预审/立项'),
-        (20, '初审'),
-        (30, '专审'),
-        (40, '信审'),
-        (50, '批复'),
-        (60, '投放'),
-        (70, '关闭'),
-    )
+    # key_node_choices = (
+    #     (10, '预审/立项'),
+    #     (20, '初审'),
+    #     (30, '专审'),
+    #     (40, '信审'),
+    #     (50, '批复'),
+    #     (60, '投放'),
+    #     (70, '关闭'),
+    # )
     project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT)
-    event = models.IntegerField(choices=key_node_choices, blank=True, null=True)        # 事件，也可作为申报阶段
+    # event = models.IntegerField(choices=key_node_choices, blank=True, null=True)        # 事件，也可作为申报阶段
     event_date = models.DateField(blank=True, null=True, verbose_name='事件日期')       # 区别于更新日，此为事件的发生日期
     update_date = models.DateField(blank=True, null=True)
     current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='进度')
@@ -171,7 +172,7 @@ class ProjectExecution(models.Model):
 
     def execute_processing(self, pe_dict):
         '''
-        更新进度，并判断事件的发生
+        更新进度
         :param pe_dict: 字段名和新值构成的字典
         :return:
         '''
@@ -200,7 +201,6 @@ class ProjectExecution(models.Model):
                     eval('self.' + field + '=' + new_value)
             else:
                 pass
-        # self.judge_event()
         self.update_date = imp_date.today
         self.save()
 
@@ -214,13 +214,9 @@ class ProjectExecution(models.Model):
         new_remark.save()
         self.remark = new_remark
 
-    # def judge_event(self):
-    #     self.event_date = models_operation.DateOperation().today
-    #     pass
-
     @classmethod
     def takePhoto(cls, project_obj=None):
-        # from app_customer_repository import models
+        # from app_customer_repository.models import ProjectExecution
         imp_date = models_operation.DateOperation()
         if project_obj:
             ProjectExecution(
@@ -298,24 +294,39 @@ class TargetTask(models.Model):
     end_date = models.DateField(blank=True, null=True)
 
     @classmethod
-    def calculate_target_amount(cls, sd='', ed='', business_obj=None):
+    def calculate_target(cls, sd='', ed='', business_obj=None):
         imp_date = models_operation.DateOperation()
         start_date = imp_date.strToDate(sd) if sd else imp_date.this_year_start_date
         end_date = imp_date.strToDate(ed) if ed else imp_date.this_year_end_date
-        q_start_date = Q(start_date=start_date)
-        q_end_date = Q(end_date__lte=end_date)
-        q_business = Q(business=business_obj)
-        if start_date.month in (1, 4, 7, 10) and start_date.day == 1 and end_date.month in (3, 6, 9, 12) and end_date.day >= 28:
-            if cls.objects.filter(q_start_date & q_end_date & q_business).exists():
-                qs = cls.objects.filter(q_start_date & q_end_date & q_business).values(
-                    'department',
-                    'target_type',
-                    'business'
-                ).annotate(Sum('target_amount'))
-            else:
-                pass
+        if imp_date.month_and_date(start_date) in ('01-01', '04-01', '07-01', '10-01') and imp_date.month_and_date(end_date) in ('03-31', '06-30', '09-30', '12-31'):
+            q_start_date = Q(start_date=start_date)
+            q_end_date = Q(end_date=end_date)
+            q_business = Q(business=business_obj) if business_obj else Q(business_id__gte=0)
+            filter_condition = (q_start_date & q_end_date & q_business)
+            if not cls.objects.filter(filter_condition).exists():
+                q_start_date = Q(start_date__gte=start_date)
+                q_end_date = Q(end_date__lte=end_date)
+                filter_condition = (q_start_date & q_end_date & q_business)
+            qs = cls.objects.filter(filter_condition).values(
+                'department',
+                'business',
+                'target_type',
+            ).annotate(Sum('target_amount')).order_by('department__display_order')
+            dept_target = {}
+            for i in qs:
+                department = i['department']
+                business = i['business']
+                target_type = i['target_type']
+                target_amount__sum = i['target_amount__sum']
+                if not dept_target.get(department):
+                    dept_target[department] = {}
+                if not dept_target[department].get(business):
+                    dept_target[department][business] = {}
+                if not dept_target[department][business].get(target_type):
+                    dept_target[department][business][target_type] = 0
+                dept_target[department][business][target_type] = target_amount__sum
+            return dept_target
 
-        else:
-            return
+
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
 # SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')
