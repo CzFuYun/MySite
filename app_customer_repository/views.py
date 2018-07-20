@@ -1,4 +1,5 @@
-from django.shortcuts import render
+import json
+from django.shortcuts import render, HttpResponse
 from . import models
 from deposit_and_credit import models_operation
 # Create your views here.
@@ -32,3 +33,7 @@ def viewProjectRepository(request):
         return render(request, 'project_repository.html', locals())
     elif request.method == 'POST':
         pass
+
+def ajaxTarget(request):
+    ret = models.TargetTask.calculate_target()
+    return HttpResponse(json.dumps(ret))

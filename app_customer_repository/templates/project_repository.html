@@ -33,7 +33,7 @@
                             <div class="col-md-1">
                             </div>
                             <div class="col-md-1">
-                                <button type="button" class="btn btn-success" onclick=""><i class="fa fa-check"></i>确认</button>
+                                <button type="button" class="btn btn-success" onclick="buildProjectTable()"><i class="fa fa-check"></i>确认</button>
                             </div>
                         </div>
                     </form>
@@ -48,21 +48,49 @@
 
 
 {% block extra_js %}
+<script type="text/javascript" src="/static/myjs/common.js"></script>
+<script type="text/javascript" src="/static/myjs/formOperation.js"></script>
 <script>
+
     $(function(){
+
+
 
     });
 
-    function getProjectOverview(){
+    function buildProjectTable(){
         var start_date = document.getElementById('start_date').value,
             end_date = document.getElementById('end_date').value;
+        target = getTarget(start_date, end_date);
+
+        {#getProjectOverview(start_date, end_date);#}
+    }
+
+    function getTarget(start_date, end_date){
+        var target;
+        $.post({
+            url: '{% url "ajaxTarget" %}',
+            data: {
+                start_date: start_date,
+                end_date: end_date
+            },
+            async: false,
+            dataType:'json',
+            success: function(response){
+                target = response;
+            }
+        });
+        return target
+    }
+
+    function getProjectOverview(start_date, end_date){
         $.post({
             url: '{% url "viewProjectRepository" %}',
             data: {
                 start_date: start_date,
                 end_date: end_date
             },
-            {#async: false,#}
+            async: false,
             dataType:'json',
             success: function(response){
                 console.log(response);

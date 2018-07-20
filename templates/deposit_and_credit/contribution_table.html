@@ -49,7 +49,27 @@
         for(let i in ordered_dept_dict)
             ordered_dept.push(i);
         buildContribTable(filter_condict, ordered_dept);
+        let help_btn = document.createElement('button');
+        help_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';
+        help_btn.type = 'button';
+        help_btn.setAttribute('onclick', 'showHelp()');
+        help_btn.innerHTML = '<i class="fa fa-question">数据日期：{{ data_date }}</i>';
+        $('#topbar .navbar-expand-md')[0].appendChild(help_btn);
     });
+
+    function showHelp(){
+        alert('关于【回报率】进度条的说明：\n' +
+            '1、进度条颜色与数值表征存款沉淀率：\n' +
+            '   沉淀率 = 日均存款 ÷ 用信金额（投行项目按1/3折算）\n' +
+            '   进度条红：存款沉淀率0-15%\n' +
+            '   进度条黄：15-30%\n' +
+            '   进度条绿：30-45%\n' +
+            '   进度条蓝：45-60%\n' +
+            '   进度条紫：>60%\n' +
+            '2、进度条长度表征综合回报率：\n' +
+            '   综合回报率 = 存款沉淀率 + 利率上浮比例\n' +
+            '   进度条长度封顶为100')
+    }
 
 </script>
 

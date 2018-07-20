@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Q, F, Sum, Max
-from deposit_and_credit import models_operation
+from deposit_and_credit import models_operation, models as dac_m
 
 
 industry_factor_rule = {
@@ -25,6 +25,8 @@ class CustomerRepository(models.Model):
     taxes_2017 = models.IntegerField(default=0, verbose_name='2017年纳税（万元）')
     inter_clearing_2017 = models.IntegerField(default=0, verbose_name='2017年国际结算（万元）')
 
+    def __str__(self):
+        return self.name
 
 class ProjectRepository(models.Model):
     close_reason_choices = (
@@ -36,6 +38,7 @@ class ProjectRepository(models.Model):
         (60, '获批后不再继续'),
         (70, '部分落地后终止'),
         (80, '全部落地'),
+        (90, '授信到期')
     )
     whose_matter_choices = (
         (10, '我行原因'),
@@ -68,6 +71,10 @@ class ProjectRepository(models.Model):
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True)
     whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True)
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
+    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='初审')
+
+    def __str__(self):
+        return self.customer.name
 
     def judge_is_focus(self):
         self.is_focus = True if self.total_net > 8000 or self.is_pure_credit or self.business.id >= 15 else False
@@ -117,6 +124,11 @@ class ProjectRepository(models.Model):
         if need_photo:
             ProjectExecution.takePhoto(pr)
 
+    @classmethod
+    def getProject(cls, start_date, end_date, include_close):
+
+        pass
+
     # def close(self):
     #     imp_date = models_operation.DateOperation()
     #     self.close_date = imp_date.today
@@ -136,30 +148,13 @@ class PretrialDocument(models.Model):
 
 
 class ProjectExecution(models.Model):
-    # key_node_choices = (
-    #     (10, '预审/立项'),
-    #     (20, '初审'),
-    #     (30, '专审'),
-    #     (40, '信审'),
-    #     (50, '批复'),
-    #     (60, '投放'),
-    #     (70, '关闭'),
-    # )
     project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT)
-    # event = models.IntegerField(choices=key_node_choices, blank=True, null=True)        # 事件，也可作为申报阶段
-    event_date = models.DateField(blank=True, null=True, verbose_name='事件日期')       # 区别于更新日，此为事件的发生日期
-    update_date = models.DateField(blank=True, null=True)
     current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='进度')
     total_used = models.IntegerField(default=0, verbose_name='累计投放敞口')          # 含本次
-    this_time_used = models.IntegerField(default=0, verbose_name='本次投放敞口')      # 自动计算
     new_net_used = models.IntegerField(default=0, verbose_name='累计投放新增敞口')      # 自动计算，含本次
     remark = models.ForeignKey('ProjectRemark', blank=True, null=True, on_delete=models.PROTECT)
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
-
-    class Meta:
-        get_latest_by = 'update_date'
-        ordering = ('-update_date', )
 
     @property
     def previous_update(self):
@@ -167,8 +162,8 @@ class ProjectExecution(models.Model):
             today = models_operation.DateOperation().today
             pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
             if pe.exists():
-                return pe.values_list('update_count', 'update_date').order_by('-update_count')[0]
-            return (0, None)
+                return pe.values_list('update_count').order_by('-update_count')[0]
+            return (0, )
 
     def execute_processing(self, pe_dict):
         '''
@@ -177,11 +172,10 @@ class ProjectExecution(models.Model):
         :return:
         '''
         fields_to_compare = {
-            # 'event': 'event',
             'total_used': 'total_used',
             'remark': 'remark.content',
         }
-        # fields_no_edit = ['project', 'event', '']
+        # fields_no_edit = ['project']
         imp_date = models_operation.DateOperation()
         field_list = self._meta.fields
         self.previous_pe = ProjectExecution.objects.get(project=self.project, update_count=self.update_count-1) or ProjectExecution()
@@ -201,13 +195,26 @@ class ProjectExecution(models.Model):
                     eval('self.' + field + '=' + new_value)
             else:
                 pass
-        self.update_date = imp_date.today
         self.save()
+
+    @property
+    def total_used_in_last_contribution(self):
+        data_date = models_operation.DateOperation().last_data_date_str(dac_m.Contributor)
+        c = self.project.customer.customer.contributor_set.filter(data_date=data_date)
+        # customer = self.objects.prefetch_related('project__customer__customer_id')
+        return c.annotate(Sum('net_total'))
+
+    # @property
+    # def total_used_after_last_borrow(self):
+    #     '''
+    #     上次投放后的用信净余额
+    #     :return:
+    #     '''
 
     def _edit_total_used(self, new_value):
         self.total_used = new_value
-        self.this_time_used = self.total_used - self.previous_pe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
-        self.new_net_used = self.this_time_used + self.previous_pe.new_net_used
+        this_time_used = self.total_used - self.previous_pe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
+        self.new_net_used = this_time_used + self.previous_pe.new_net_used
 
     def _edit_remark(self, new_value):
         new_remark = ProjectRemark(content=new_value)
@@ -224,7 +231,8 @@ class ProjectExecution(models.Model):
                 photo_date=imp_date.today,
             ).save()
         else:
-            photo_date_str = input('photo date?>>>')
+            # photo_date_str = input('photo date?>>>')
+            photo_date_str = str(imp_date.today)
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
                 return
             if photo_date_str:
@@ -330,3 +338,18 @@ class TargetTask(models.Model):
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
 # SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')
+# ProjectRepository.objects.filter().prefetch_related('customer__customer__contributor_set')
+
+# CustomerRepository.objects.prefetch_related(
+#     'customer__contributor_set', 'projectrepository_set', 'projectrepository_set__projectexecution_set'
+# ).filter(
+#     customer__contributor__data_date='2018-07-18', projectrepository__projectexecution__photo_date='2018-07-18',
+# ).values(
+#     'name',
+#     'is_strategy',
+#     'customer__contributor__net_total',
+#     'projectrepository__business__caption',
+#     'projectrepository__projectexecution__total_used',
+#     'projectrepository__projectexecution__new_net_used'
+# )
+

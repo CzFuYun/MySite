@@ -92,6 +92,7 @@ def viewContribution(request):
                 customer_type='+'.join(customer_types),
                 data_date=opener_params['data_date']),
             'opener_params': json.dumps(opener_params),
+            'data_date': opener_params['data_date'],
         })
 
 
