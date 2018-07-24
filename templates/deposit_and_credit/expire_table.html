@@ -153,13 +153,13 @@
         TABLE_STRUCTURE = [
             tableCol('#', '3%', '【display_num】', {id: '【expire_prompt_id】'}),
             tableCol('客户名称', '18%', '【customer_name】', {customer_id: '【customer_id】'}),
-            tableCol('经营部门', '6%', '【dept_caption】', {dept_id: '【dept_id】'}),
-            tableCol('经办人员', '6%', '<a style="cursor:pointer" staff_id=【staff_id】 onclick="showStaff(this)">【staff_name】</a>', {staff_id: '【staff_id】'}),
-            tableCol('到期日', '8%', '【expire_date】'),
-            FILTER.is_finished.includes("0") ? tableCol('剩余天数', '6%', [colorDays, '【days_remain】']) : tableCol('办结日', '6%',  '【finish_date】'),
+            tableCol('经营部门', '5%', '【dept_caption】', {dept_id: '【dept_id】'}),
+            tableCol('经办人员', '5%', [renderStaffName, '【red_card_start_date】', '【yellow_red_card】', '【staff_id】', '【staff_name】'], {staff_id: '【staff_id】'}),
+            tableCol('到期日', '6%', '【expire_date】'),
+            FILTER.is_finished.includes("0") ? tableCol('剩余天数', '5%', [colorDays, '【days_remain】']) : tableCol('办结日', '6%',  '【finish_date】'),
             tableCol('备注', '40%', '【remark】'),
-            tableCol('扣罚金额', '6%', '【punishment】'),
-            tableCol('Action', '8%', '<a data-toggle="tooltip" style="cursor:pointer" title="情况说明" expire_prompt_id=【expire_prompt_id】 onclick="showExplain(this)"><i class="mdi mdi-book-open m-r-10"></i></a>' +
+            tableCol('扣罚金额', '5%', '【punishment】'),
+            tableCol('Action', '5%', '<a data-toggle="tooltip" style="cursor:pointer" title="情况说明" expire_prompt_id=【expire_prompt_id】 onclick="showExplain(this)"><i class="mdi mdi-book-open m-r-10"></i></a>' +
                 '<a data-toggle="tooltip" style="cursor:pointer" title="编辑" expire_prompt_id=【expire_prompt_id】 onclick="showEdit(this, event)"><i class="mdi mdi-lead-pencil m-r-10"></i></a>' +
                 '<a data-toggle="tooltip" style="cursor:pointer" title="办结" expire_prompt_id=【expire_prompt_id】 onclick="setFinish(this, event)"><i class="fa fa-check m-r-10 m-r-10 text-danger"></i></a>')
         ];
@@ -285,6 +285,38 @@
             }
         }
 
+        function renderStaffName(args_list){
+            // args_list = [red_card_start_date, yellow_red_card, staff_id, staff_name]
+            let color = '',
+                yellow_red_card = Number(args_list[1]);
+            if(yellow_red_card > 1){
+                // 红牌
+                if(dateDif(args_list[0]) < -90){
+                    // 持有红牌超过90天
+                    resetRedCard(args_list[2]);
+                }else{
+                    color = 'text-danger text-semibold';
+                }
+            }else if(yellow_red_card === 1){
+                // 黄牌
+                color = 'text-warning text-semibold';
+            }
+            return '<a style="cursor:pointer" class="' + color + '" staff_id="' + args_list[2] + '" onclick="showStaff(this)">' + args_list[3] + '</a>';
+        }
+
+        function resetRedCard(staffId){
+            $.post({
+                url: '{% url "resetRedCard" %}',
+                data: {staff_id: staffId},
+                dataType:'json',
+                success: function(response){
+                    if(!response.success){
+                        alert(response.error);
+                    }
+                }
+            });
+        }
+
         function colorDays(days){
             let red = 0,
                 green = 0,
@@ -345,8 +377,18 @@
                                     td.setAttribute(k, calculate(td_extra_property_dict[k], data[i]));
                             }
                             let display = TABLE_STRUCTURE[j]['html_str_of_td'];
-                            if(typeof display === 'object')
-                                td.innerHTML = display[0](calculate(display[1], data[i]));
+                            if(typeof display === 'object'){
+                                let func = display[0];
+                                if(display.length <= 2){
+                                    td.innerHTML = func(calculate(display[1], data[i]));
+                                }else{
+                                    let args_list = [];
+                                    for(let n=1; n<display.length; n++){
+                                        args_list.push(calculate(display[n], data[i]))
+                                    }
+                                    td.innerHTML = func(args_list);
+                                }
+                            }
                             else
                                 td.innerHTML = calculate(TABLE_STRUCTURE[j]['html_str_of_td'], data[i]);
                             tr.appendChild(td);

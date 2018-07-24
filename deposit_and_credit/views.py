@@ -250,6 +250,9 @@ def viewExpirePromptTable(request):
             'punishment',
             'staff_id',
             'finish_date',
+            'expire_date',
+            'staff_id__yellow_red_card',
+            'staff_id__red_card_start_date',
         )
         expire_customers = []
         customer_expire_data_dict = {}
@@ -262,6 +265,9 @@ def viewExpirePromptTable(request):
                 i[3],
                 i[4],
                 i[5],
+                i[6],
+                i[7],
+                i[8],
             ]
         customer_qs = dac_models.Contributor.objects.filter(
             customer_id__in=expire_customers,
@@ -283,6 +289,7 @@ def viewExpirePromptTable(request):
             staff_id = i[4]
             staff_name = i[5]
             staff_id_in_expire_prompt = customer_expire_data_dict[customer_id][3]
+            expire_date = customer_expire_data_dict[customer_id][5]
             if staff_id_in_expire_prompt != staff_id and staff_id_in_expire_prompt:
                 staff_id = staff_id_in_expire_prompt
                 staff_name = rd_models.Staff.objects.filter(staff_id=staff_id_in_expire_prompt)[0].name
@@ -295,11 +302,13 @@ def viewExpirePromptTable(request):
                 'dept_caption': i[3],
                 'staff_id': staff_id,
                 'staff_name': staff_name,
-                'expire_date': str(i[6]),
+                'expire_date': str(expire_date) if expire_date else str(i[6]),
                 'days_remain': (i[6] - today).days,
                 'remark': customer_expire_data_dict[customer_id][1],
                 'punishment': customer_expire_data_dict[customer_id][2],
                 'finish_date': str(customer_expire_data_dict[customer_id][4]),
+                'yellow_red_card': customer_expire_data_dict[customer_id][6],
+                'red_card_start_date': str(customer_expire_data_dict[customer_id][7]),
             }
             ret.append(tmp)
         return HttpResponse(json.dumps(ret))
@@ -366,12 +375,39 @@ def finishExpirePrompt(request):
     expire_prompt_id = request.POST.get('expire_prompt_id')
     q = dac_models.ExpirePrompt.objects.filter(id=expire_prompt_id)[0]
     if q and not q.finish_date:
-        q.finish_date = models_operation.DateOperation().today
+        today = models_operation.DateOperation().today
+        q.finish_date = today
         q.save()
+        if q.punishment:
+            staff = q.staff_id
+            staff.setYellowRedCard()
         ajax_result['success'] = True
         return HttpResponse(json.dumps(ajax_result))
     else:
         ajax_result['error'] = '不可重复办结'
         return HttpResponse(json.dumps(ajax_result))
 
-    # rd_models.Staff.objects.filter(su)
+def resetRedCard(request):
+    ajax_result = {
+        'success': False,
+        'error': None,
+    }
+    staff_id = request.POST.get('staff_id')
+    if staff_id:
+        staff = rd_models.Staff.objects.filter(staff_id=staff_id)
+        if staff.exists():
+            red_card_start_date = staff.values('red_card_start_date')[0]['red_card_start_date']
+            if models_operation.DateOperation().date_dif(red_card_start_date) < -90:
+                staff[0].resetRedCard()
+                ajax_result['success'] = True
+            else:
+                ajax_result['error'] = 'Do NOT cheat me'
+        else:
+            ajax_result['error'] = '无员工信息'
+    else:
+        ajax_result['error'] = '未能获取工号'
+    return HttpResponse(json.dumps(ajax_result))
+
+
+
+

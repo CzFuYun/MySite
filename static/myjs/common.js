@@ -165,3 +165,25 @@ function getMousePageLocation(e){
     var y = ev.pageY || ev.clientY + scrollY;
     return [x, y];
 }
+
+function addDate(daysNum, dateStr, returnMode){
+    var d = dateStr ? new Date(dateStr) : new Date();
+    d.setDate(d.getDate() + daysNum);
+    if(!returnMode || returnMode === 'd'){
+        // 返回日期对象
+        return d;
+    }else if(returnMode === 's'){
+        // 返回日期字符串
+        return d.getFullYear() + '-' + d.getMonth() + 1 + '-' + d.getDate();
+    }else if(returnMode === 'n'){
+        // 返回时间戳
+        return Date.parse(d);
+    }
+}
+
+function dateDif(dateStr1, dateStr2){
+    var d1 = new Date(dateStr1),
+        d2 = dateStr2 ? new Date(dateStr2) : new Date();
+    var deltaMS = d1 - d2;
+    return parseInt(deltaMS / (1000 * 3600 * 24));
+}

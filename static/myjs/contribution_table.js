@@ -69,7 +69,7 @@ function batchCalculate(formulaStrings, obj){
     // formulaStrings   ['<last_yd_avg>', '<yd_avg>']
     let ret = [];
     for(let i=0; i<formulaStrings.length; i++){
-        ret.push(calculate(formulaStrings[i], obj))
+        ret.push(calculate(formulaStrings[i], obj));
     }
     return ret;
 }

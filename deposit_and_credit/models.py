@@ -4,36 +4,36 @@ from root_db import models as m
 from django.db.models import Sum
 
 
-class DepartmentDeposit(models.Model):
-    data_date = models.DateField(null=True, blank=True)
-    sub_department = models.ForeignKey(m.SubDepartment, to_field='sd_code', on_delete=models.PROTECT)
-    amount = models.BigIntegerField(default=0, verbose_name='余额（万元）')
-    md_avg = models.BigIntegerField(default=0, verbose_name='月日均（万元）')
-    sd_avg = models.BigIntegerField(default=0, verbose_name='季日均（万元）')
-    yd_avg = models.BigIntegerField(default=0, verbose_name='年日均（万元）')
-
-    class Meta:
-        unique_together = ('data_date', 'sub_department', )
+# class DepartmentDeposit(models.Model):
+#     data_date = models.DateField(null=True, blank=True)
+#     sub_department = models.ForeignKey(m.SubDepartment, to_field='sd_code', on_delete=models.PROTECT)
+#     amount = models.BigIntegerField(default=0, verbose_name='余额（万元）')
+#     md_avg = models.BigIntegerField(default=0, verbose_name='月日均（万元）')
+#     sd_avg = models.BigIntegerField(default=0, verbose_name='季日均（万元）')
+#     yd_avg = models.BigIntegerField(default=0, verbose_name='年日均（万元）')
+#
+#     class Meta:
+#         unique_together = ('data_date', 'sub_department', )
 
 
 ########################################################################################################################
-class IndustryDeposit(models.Model):
-    data_date = models.DateField(null=True, blank=True)
-    industry = models.ForeignKey(m.Industry, to_field='code', default=1, on_delete=models.PROTECT)
-    amount = models.BigIntegerField(default=0, verbose_name='余额（万元）')
-    md_avg = models.BigIntegerField(default=0, verbose_name='月日均（万元）')
-    sd_avg = models.BigIntegerField(default=0, verbose_name='季日均（万元）')
-    yd_avg = models.BigIntegerField(default=0, verbose_name='年日均（万元）')
-
-    class Meta:
-        unique_together = ('data_date', 'industry', )
+# class IndustryDeposit(models.Model):
+#     data_date = models.DateField(null=True, blank=True)
+#     industry = models.ForeignKey(m.Industry, to_field='code', default=1, on_delete=models.PROTECT)
+#     amount = models.BigIntegerField(default=0, verbose_name='余额（万元）')
+#     md_avg = models.BigIntegerField(default=0, verbose_name='月日均（万元）')
+#     sd_avg = models.BigIntegerField(default=0, verbose_name='季日均（万元）')
+#     yd_avg = models.BigIntegerField(default=0, verbose_name='年日均（万元）')
+#
+#     class Meta:
+#         unique_together = ('data_date', 'industry', )
 
 
 class Contributor(models.Model):
     customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
     department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='经营部门')
     approve_line = models.CharField(max_length=8, default='', verbose_name='审批条线')
-    staff = models.ForeignKey(m.Staff, null=True, blank=True, on_delete=models.PROTECT)
+    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT)
     loan_rate = models.DecimalField(max_digits=8, decimal_places=4, default=0, verbose_name='加权利率（%）')
     loan_interest = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款年息（万元）')
     loan = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款含ABS余额（万元）')
@@ -65,14 +65,16 @@ class ContributionTrees(models.Model):
 
 
 class ExpirePrompt(models.Model):
-    customer = models.ForeignKey(m.AccountedCompany, on_delete=models.PROTECT)
-    staff_id = models.ForeignKey(m.Staff, blank=True, null=True, on_delete=models.PROTECT)
+    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT)
+    staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT)
     expire_date = models.DateField(auto_now_add=False, null=True, blank=True)
     remark = models.CharField(max_length=512, default='')
     explain = models.CharField(max_length=256, blank=True, null=True)
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
     created_at = models.DateField(auto_now_add=True, null=True, blank=True)
+    # jiandang = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name='系统建档')
+    # chushen = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name='初审')
 
     def toDict(self):
         fields = []

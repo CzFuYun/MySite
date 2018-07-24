@@ -17,5 +17,6 @@ urlpatterns = [
     url(r'expireprompttable\.view', views.viewExpirePromptTable, name='viewExpirePromptTable'),
     url(r'expireprompt\.edit', views.editExpirePrompt, name='editExpirePrompt'),
     url(r'expireprompt\.finish', views.finishExpirePrompt, name='finishExpirePrompt'),
-    url(r'expireexplain\.view', views.viewExpireExplain, name='viewExpireExplain')
+    url(r'expireexplain\.view', views.viewExpireExplain, name='viewExpireExplain'),
+    url(r'redcard\.reset', views.resetRedCard, name='resetRedCard'),
 ]

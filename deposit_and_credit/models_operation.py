@@ -44,6 +44,13 @@ class DateOperation():
     def strToDate(self, s):
         return datetime.strptime(s, '%Y-%m-%d').date()
 
+    def date_dif(self, date1, date2=None):
+        # 两日期相差天数
+        d1 = self.strToDate(date1) if type(date1) == str else date1
+        d2 = self.today if date2 == None else (self.strToDate(date2) if type(date2) == str else date2)
+        date_dif = d1 - d2
+        return date_dif.days
+
     def delta_date(self, days, date=''):
         if date:
             if type(date) == str:
