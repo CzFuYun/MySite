@@ -71,13 +71,14 @@ class ProjectRepository(models.Model):
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True)
     whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True)
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
-    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='初审')
+    pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='pre_approver', verbose_name='初审')
+    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='专审')
 
     def __str__(self):
         return self.customer.name
 
     def judge_is_focus(self):
-        self.is_focus = True if self.total_net > 8000 or self.is_pure_credit or self.business.id >= 15 else False
+        self.is_focus = True if self.total_net > 8000 or self.business.superior.caption.index('一般授信') < 0 else False
 
     def calculate_acc_num(self):
         base = 1
@@ -125,7 +126,7 @@ class ProjectRepository(models.Model):
             ProjectExecution.takePhoto(pr)
 
     @classmethod
-    def getProject(cls, start_date, end_date, include_close):
+    def listProject(cls, start_date, end_date, include_close):
 
         pass
 
@@ -269,6 +270,8 @@ class Business(models.Model):
     caption = models.CharField(max_length=32)
     display_order = models.IntegerField(default=0)
 
+    def __str__(self):
+        return self.caption
 
 class SubBusiness(models.Model):
     caption = models.CharField(max_length=32)
@@ -291,8 +294,8 @@ class TargetTask(models.Model):
 
     '''
     target_type_choices = (
-        (10, '户数'),
-        (20, '金额'),
+        (10, '计划户数'),
+        (20, '计划金额'),
     )
     department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.PROTECT)
     business = models.ForeignKey('Business', blank=True, null=True, on_delete=models.PROTECT)
@@ -302,7 +305,7 @@ class TargetTask(models.Model):
     end_date = models.DateField(blank=True, null=True)
 
     @classmethod
-    def calculate_target(cls, sd='', ed='', business_obj=None):
+    def calculate_target(cls, sd='', ed='', business_obj=None, returnType='dict'):
         imp_date = models_operation.DateOperation()
         start_date = imp_date.strToDate(sd) if sd else imp_date.this_year_start_date
         end_date = imp_date.strToDate(ed) if ed else imp_date.this_year_end_date
@@ -315,41 +318,30 @@ class TargetTask(models.Model):
                 q_start_date = Q(start_date__gte=start_date)
                 q_end_date = Q(end_date__lte=end_date)
                 filter_condition = (q_start_date & q_end_date & q_business)
-            qs = cls.objects.filter(filter_condition).values(
+            qs = cls.objects.filter(filter_condition)
+            if returnType == 'qs':
+                return qs.order_by('department__display_order', 'business_id', 'target_type', 'start_date')
+            elif returnType == 'dict':
+                qs = qs.values(
                 'department',
                 'business',
                 'target_type',
-            ).annotate(Sum('target_amount')).order_by('department__display_order')
-            dept_target = {}
-            for i in qs:
-                department = i['department']
-                business = i['business']
-                target_type = i['target_type']
-                target_amount__sum = i['target_amount__sum']
-                if not dept_target.get(department):
-                    dept_target[department] = {}
-                if not dept_target[department].get(business):
-                    dept_target[department][business] = {}
-                if not dept_target[department][business].get(target_type):
-                    dept_target[department][business][target_type] = 0
-                dept_target[department][business][target_type] = target_amount__sum
-            return dept_target
+            ).annotate(Sum('target_amount')).order_by('department__display_order').order_by('department__display_order')
+                dept_target = {}
+                for i in qs:
+                    department = i['department']
+                    business = i['business']
+                    target_type = i['target_type']
+                    target_amount__sum = i['target_amount__sum']
+                    if not dept_target.get(department):
+                        dept_target[department] = {}
+                    if not dept_target[department].get(business):
+                        dept_target[department][business] = {}
+                    if not dept_target[department][business].get(target_type):
+                        dept_target[department][business][target_type] = 0
+                    dept_target[department][business][target_type] = target_amount__sum
+                return dept_target
+            return
 
 
-# Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
-# SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')
-# ProjectRepository.objects.filter().prefetch_related('customer__customer__contributor_set')
-
-# CustomerRepository.objects.prefetch_related(
-#     'customer__contributor_set', 'projectrepository_set', 'projectrepository_set__projectexecution_set'
-# ).filter(
-#     customer__contributor__data_date='2018-07-18', projectrepository__projectexecution__photo_date='2018-07-18',
-# ).values(
-#     'name',
-#     'is_strategy',
-#     'customer__contributor__net_total',
-#     'projectrepository__business__caption',
-#     'projectrepository__projectexecution__total_used',
-#     'projectrepository__projectexecution__new_net_used'
-# )
 

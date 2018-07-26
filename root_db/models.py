@@ -15,7 +15,7 @@ class Staff(models.Model):
     cellphone_number = models.CharField(max_length=16, null=True, blank=True)
     oa = models.CharField(max_length=8, null=True, blank=True)
     yellow_red_card = models.IntegerField(default=0, verbose_name='授信到期黄红牌')
-    red_card_start_date = models.DateField(blank=True, null=True, verbose_name='红牌起始日')
+    red_card_expire_date = models.DateField(blank=True, null=True, verbose_name='红牌到期日')
 
     def __str__(self):
         return '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
@@ -28,12 +28,12 @@ class Staff(models.Model):
         yellow_red_card = self.yellow_red_card
         self.yellow_red_card = yellow_red_card + 1
         if yellow_red_card:     # 之前已经是黄牌或红牌
-            self.red_card_start_date = models_operation.DateOperation().today
+            self.red_card_expire_date = models_operation.DateOperation().delta_date(90)
         self.save()
 
     def resetRedCard(self):
         # 禁赛3个月后设置为0
-        self.red_card_start_date = None
+        self.red_card_expire_date = None
         self.yellow_red_card = 0
         self.save()
 

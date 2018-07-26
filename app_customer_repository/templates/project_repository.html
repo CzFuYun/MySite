@@ -38,6 +38,9 @@
                         </div>
                     </form>
                 </div>
+                <div id="project_overview" class="card-body">
+
+                </div>
             </div>
         </div>
     </div>
@@ -51,9 +54,9 @@
 <script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
 <script>
-
+    var DEPT;
     $(function(){
-
+        DEPT = getOrderedDeptDict();
 
 
     });
@@ -61,9 +64,9 @@
     function buildProjectTable(){
         var start_date = document.getElementById('start_date').value,
             end_date = document.getElementById('end_date').value;
-        target = getTarget(start_date, end_date);
+        {#target = getTarget(start_date, end_date);#}
 
-        {#getProjectOverview(start_date, end_date);#}
+        getProjectOverview(start_date, end_date);
     }
 
     function getTarget(start_date, end_date){
@@ -91,9 +94,9 @@
                 end_date: end_date
             },
             async: false,
-            dataType:'json',
+            dataType:'text',
             success: function(response){
-                console.log(response);
+                $('#project_overview').html(response);
             }
         });
     }

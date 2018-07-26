@@ -69,8 +69,12 @@ class DateOperation():
     def first_data_date_str(self, model_class, field='data_date'):
         return getNeighbourDate(model_class, 1, '1900-01-01', field)
 
-    def last_data_date_str(self, model_class, field='data_date'):
-        return getNeighbourDate(model_class, -1, self.today_str, field)
+    def last_data_date_str(self, model_class, field='data_date', returnMode='s'):
+        d = getNeighbourDate(model_class, -1, self.today_str, field)
+        if returnMode == 's':
+            return d
+        elif returnMode == 'd':
+            return self.strToDate(d)
 
 
 def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date'):

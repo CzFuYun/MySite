@@ -252,7 +252,7 @@ def viewExpirePromptTable(request):
             'finish_date',
             'expire_date',
             'staff_id__yellow_red_card',
-            'staff_id__red_card_start_date',
+            'staff_id__red_card_expire_date',
         )
         expire_customers = []
         customer_expire_data_dict = {}
@@ -308,7 +308,7 @@ def viewExpirePromptTable(request):
                 'punishment': customer_expire_data_dict[customer_id][2],
                 'finish_date': str(customer_expire_data_dict[customer_id][4]),
                 'yellow_red_card': customer_expire_data_dict[customer_id][6],
-                'red_card_start_date': str(customer_expire_data_dict[customer_id][7]),
+                'red_card_expire_date': str(customer_expire_data_dict[customer_id][7]),
             }
             ret.append(tmp)
         return HttpResponse(json.dumps(ret))
@@ -396,8 +396,8 @@ def resetRedCard(request):
     if staff_id:
         staff = rd_models.Staff.objects.filter(staff_id=staff_id)
         if staff.exists():
-            red_card_start_date = staff.values('red_card_start_date')[0]['red_card_start_date']
-            if models_operation.DateOperation().date_dif(red_card_start_date) < -90:
+            red_card_expire_date = staff.values('red_card_expire_date')[0]['red_card_expire_date']
+            if red_card_expire_date < models_operation.DateOperation().today:
                 staff[0].resetRedCard()
                 ajax_result['success'] = True
             else:

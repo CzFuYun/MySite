@@ -1,4 +1,4 @@
-
+from . import models
 
 def field_choices_to_dict(field_choices):
     dic = {}
@@ -65,3 +65,6 @@ class batchOperation:
         main_body_count = main_bodies.count()
         return self.model.objects.all().order_by(main_field, ('-' if method == 'last' else '') + time_field)[:main_body_count]
 
+def getTarget(start_date, end_date):
+    ret = models.TargetTask.calculate_target(start_date, end_date)
+    return ret

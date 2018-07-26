@@ -154,7 +154,7 @@
             tableCol('#', '3%', '【display_num】', {id: '【expire_prompt_id】'}),
             tableCol('客户名称', '18%', '【customer_name】', {customer_id: '【customer_id】'}),
             tableCol('经营部门', '5%', '【dept_caption】', {dept_id: '【dept_id】'}),
-            tableCol('经办人员', '5%', [renderStaffName, '【red_card_start_date】', '【yellow_red_card】', '【staff_id】', '【staff_name】'], {staff_id: '【staff_id】'}),
+            tableCol('经办人员', '5%', [renderStaffName, '【red_card_expire_date】', '【yellow_red_card】', '【staff_id】', '【staff_name】'], {staff_id: '【staff_id】'}),
             tableCol('到期日', '6%', '【expire_date】'),
             FILTER.is_finished.includes("0") ? tableCol('剩余天数', '5%', [colorDays, '【days_remain】']) : tableCol('办结日', '6%',  '【finish_date】'),
             tableCol('备注', '40%', '【remark】'),
@@ -264,6 +264,10 @@
         }
 
         function setFinish(elem, e){
+            if(FILTER.is_finished.includes('1')){
+                alert('不可重复办结');
+                return;
+            }
             MOUSE_PAGE_LOCATION = getMousePageLocation(e);
             MOUSE_WINDOW_LOCATION = getMouseWindowLocation(e);
             if(confirm('确认办结')){
@@ -286,13 +290,13 @@
         }
 
         function renderStaffName(args_list){
-            // args_list = [red_card_start_date, yellow_red_card, staff_id, staff_name]
+            // args_list = [red_card_expire_date, yellow_red_card, staff_id, staff_name]
             let color = '',
                 yellow_red_card = Number(args_list[1]);
             if(yellow_red_card > 1){
                 // 红牌
-                if(dateDif(args_list[0]) < -90){
-                    // 持有红牌超过90天
+                if(dateDif(args_list[0]) < 0){
+                    // 红牌已经失效
                     resetRedCard(args_list[2]);
                 }else{
                     color = 'text-danger text-semibold';
