@@ -16,24 +16,24 @@
                     <h4 class="m-b-0 text-white">项目储备</h4>
                 </div>
                 <div class="card-body">
-                    <form id="expire_filter" action="{% url 'viewExpirePromptTable' %}" target="_blank" method="post">
+                    <form id="expire_filter" action="{% url 'viewProjectSummary' %}" target="_blank" method="post">
                         <div class="form-group row">
                             <div class="col-md-1">
                             </div>
                             <label for="start_date" class="col-md-1 col-form-label">起始日期</label>
                             <div class="col-md-2">
-                                <input class="form-control" type="date" value="{{ start_date }}" id="start_date">
+                                <input class="form-control" type="date" value="{{ start_date }}" id="start_date" name="start_date">
                             </div>
                             <div class="col-md-1">
                             </div>
                             <label for="end_date" class="col-md-1 col-form-label">截至日期</label>
                             <div class="col-md-2">
-                                <input class="form-control" type="date" value="{{ end_date }}" id="end_date">
+                                <input class="form-control" type="date" value="{{ end_date }}" id="end_date" name="end_date">
                             </div>
                             <div class="col-md-1">
                             </div>
                             <div class="col-md-1">
-                                <button type="button" class="btn btn-success" onclick="buildProjectTable()"><i class="fa fa-check"></i>确认</button>
+                                <button type="submit" class="btn btn-success"><i class="fa fa-check"></i>确认</button>
                             </div>
                         </div>
                     </form>
@@ -53,52 +53,4 @@
 {% block extra_js %}
 <script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
-<script>
-    var DEPT;
-    $(function(){
-        DEPT = getOrderedDeptDict();
-
-
-    });
-
-    function buildProjectTable(){
-        var start_date = document.getElementById('start_date').value,
-            end_date = document.getElementById('end_date').value;
-        {#target = getTarget(start_date, end_date);#}
-
-        getProjectOverview(start_date, end_date);
-    }
-
-    function getTarget(start_date, end_date){
-        var target;
-        $.post({
-            url: '{% url "ajaxTarget" %}',
-            data: {
-                start_date: start_date,
-                end_date: end_date
-            },
-            async: false,
-            dataType:'json',
-            success: function(response){
-                target = response;
-            }
-        });
-        return target
-    }
-
-    function getProjectOverview(start_date, end_date){
-        $.post({
-            url: '{% url "viewProjectRepository" %}',
-            data: {
-                start_date: start_date,
-                end_date: end_date
-            },
-            async: false,
-            dataType:'text',
-            success: function(response){
-                $('#project_overview').html(response);
-            }
-        });
-    }
-</script>
 {% endblock %}

@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q, F, Sum, Max
+from . import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
 
 
@@ -323,15 +324,16 @@ class TargetTask(models.Model):
                 return qs.order_by('department__display_order', 'business_id', 'target_type', 'start_date')
             elif returnType == 'dict':
                 qs = qs.values(
-                'department',
-                'business',
+                'department__caption',
+                'business__caption',
                 'target_type',
             ).annotate(Sum('target_amount')).order_by('department__display_order').order_by('department__display_order')
                 dept_target = {}
+                target_type_sr = mo.field_choices_to_dict(cls.target_type_choices, False)
                 for i in qs:
-                    department = i['department']
-                    business = i['business']
-                    target_type = i['target_type']
+                    department = i['department__caption']
+                    business = i['business__caption']
+                    target_type = target_type_sr.get(str(i['target_type']))
                     target_amount__sum = i['target_amount__sum']
                     if not dept_target.get(department):
                         dept_target[department] = {}

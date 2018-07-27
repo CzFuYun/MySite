@@ -1,6 +1,6 @@
 import json
 from django.shortcuts import render, HttpResponse, render_to_response
-from django.db.models import Q, Sum
+from django.db.models import Q, F, Sum
 from . import models
 from . import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
@@ -42,63 +42,72 @@ def test(request):
     return
 
 def viewProjectRepository(request):
-    imp_date = models_operation.DateOperation()
     if request.method == 'GET':
+        imp_date = models_operation.DateOperation()
         start_date = imp_date.this_year_start_date_str
         end_date = imp_date.this_year_end_date_str
         return render(request, 'project_repository.html', locals())
-    elif request.method == 'POST':
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        include_completed = request.POST.get('include_completed')
-        target = models.TargetTask.calculate_target(start_date, end_date, None, 'qs')
-        last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
-        exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
-        # project_qs = models.ProjectRepository.objects.filter(
-        #     create_date__gte=start_date,
-        #     create_date__lte=end_date,
-        # ).values(
-        #     'id',
-        #     'staff__sub_department__superior_id',
-        #     'business__superior_id',
-        #     'business__superior__caption',
-        #     'account_num',
-        #     'total_net',
-        #     'existing_net',
-        # )
-        # p_exe_qs = models.ProjectExecution.objects.filter(
-        #     photo_date=exe_date
-        # ).values(
-        #     'project_id',
-        #     'new_net_used',
-        #     'current_progress',
-        #     'project__customer__customer_id',
-        #     'project__business_id',
-        # )
-        # customer_id_list = []
-        # for i in p_exe_qs:
-        #     customer_id_list.append(i['project__customer__customer_id'])
-        # data_date = models_operation.getNeighbourDate(dac_m.Contributor, 0, exe_date)
-        # contribution = dac_m.Contributor.objects.filter(
-        #     data_date=data_date,
-        #     customer_id__in=customer_id_list,
-        #     customer__dividedcompanyaccount__data_date=data_date,
-        # ).values(
-        #     'customer_id',
-        if include_completed:
-            Q(id__gte=0)
-        else:
-            Q(close_date__isnull=True)
-        project_qs = models.ProjectRepository.objects.filter(
-            Q(reply_date__isnull=True) |
-            (Q(reply_date__gte=start_date) & Q(reply_date__lte=end_date)) |
-            (Q(create_date__gte=start_date) & Q(create_date__lte=end_date))
-        )
 
-        #     # 'customer__dividedcompanyaccount__divided_yd_avg',
-        # ).annotate(Sum('customer__dividedcompanyaccount__divided_yd_avg'), Sum('net_total'))
 
-        return render_to_response('ajax_project_table.html', locals())
+def viewProjectSummary(request):
+    imp_date = models_operation.DateOperation()
+    start_date = request.POST.get('start_date')
+    end_date = request.POST.get('end_date')
+    # customer_id_list = []
+    # for i in p_exe_qs:
+    #     customer_id_list.append(i['project__customer__customer_id'])
+    # data_date = models_operation.getNeighbourDate(dac_m.Contributor, 0, exe_date)
+    # contribution = dac_m.Contributor.objects.filter(
+    #     data_date=data_date,
+    #     customer_id__in=customer_id_list,
+    #     customer__dividedcompanyaccount__data_date=data_date,
+    # ).values(
+    #     'customer_id',
+    #     'customer__dividedcompanyaccount__divided_yd_avg',
+    # ).annotate(Sum('customer__dividedcompanyaccount__divided_yd_avg'), Sum('net_total'))
+    last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
+    exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
+    exe_data = models.ProjectExecution.objects.filter(
+        photo_date=exe_date
+    ).values(
+        'project_id',
+        'project__business__superior__caption',
+        'current_progress',
+        'new_net_used',
+    ).order_by(
+        'project__staff__sub_department__superior__display_order',
+        'project__business__superior__display_order',
+        'current_progress__display_order',
+    )
+    project_exe = {}
+    for e in exe_data:
+        project_exe[e['project_id']] = {'current_progress': e['current_progress'], 'new_net_used': e['new_net_used']}
+    project_data = models.ProjectRepository.objects.filter(
+        (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
+        & Q(create_date__lte=end_date)
+    ).order_by(
+        # 'staff__sub_department__superior__display_order',
+        # 'staff_id',
+        # 'business__superior__display_order',
+        # '-create_date',
+    ).values(
+            'id',
+            'staff__sub_department__superior__caption',
+            # 'business__superior_id',
+            'business__superior__caption',
+            'account_num',
+            'total_net',
+            'existing_net',
+    ).annotate(new_net=Sum(F('total_net') - F('existing_net')))
+    target_task = models.TargetTask.calculate_target(start_date, end_date, None, 'dict')
+    for p in project_data:
+
+        pass
+
+
+
+
+    return render(request, 'project_summary.html', locals())
 
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')

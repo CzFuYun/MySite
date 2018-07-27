@@ -1,9 +1,16 @@
 from . import models
 
-def field_choices_to_dict(field_choices):
+
+def field_choices_to_dict(field_choices, reverse=True):
     dic = {}
+    if reverse:
+        k = 1
+        v = 0
+    else:
+        k = 0
+        v = 1
     for i in field_choices:
-        dic[str(i[1])] = i[0]
+        dic[str(i[k])] = i[v]
     return dic
 
 def model_object(request, model_cls):
