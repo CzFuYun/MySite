@@ -213,6 +213,8 @@ def viewDepartmentContributionHistory(request):
 # @checkPermission
 def viewExpirePrompt(request):
     if request.method == 'GET':
+        # imp_date = models_operation.DateOperation()
+        # expire_before = imp_date.delta_date(60)
         return render(request, 'deposit_and_credit/expire.html')
 
 

@@ -76,6 +76,9 @@ class DateOperation():
         elif returnMode == 'd':
             return self.strToDate(d)
 
+    def neighbour_date_date_str(self, model_class, date_str, field='data_date'):
+        return getNeighbourDate(model_class, 0, date_str, field)
+
 
 def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date'):
     '''

@@ -224,7 +224,7 @@ class ProjectExecution(models.Model):
         self.remark = new_remark
 
     @classmethod
-    def takePhoto(cls, project_obj=None):
+    def takePhoto(cls, project_obj=None, photo_date=None):
         # from app_customer_repository.models import ProjectExecution
         imp_date = models_operation.DateOperation()
         if project_obj:
@@ -232,9 +232,9 @@ class ProjectExecution(models.Model):
                 project=project_obj,
                 photo_date=imp_date.today,
             ).save()
+            return
         else:
-            # photo_date_str = input('photo date?>>>')
-            photo_date_str = str(imp_date.today)
+            photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
                 return
             if photo_date_str:
@@ -242,7 +242,30 @@ class ProjectExecution(models.Model):
             else:
                 return
             exclude_fields = ['id', 'photo_date']
+            # ↓临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(tmp_close_date__lte=imp_date.delta_date(-180, photo_date)).update(close_date=imp_date.today)
+            # ↓流程中项目的客户号、总敞口
+            project_customer = cls.objects.filter(
+                project__close_date__isnull=True,
+                project__business_id=11,
+            ).values(
+                'project__customer__customer_id',
+                'project__total_net',
+            )
+            # customer_id_list = []
+            # for c in project_customer:
+            #     customer_id_list.append(c['project__customer__customer_id'])
+            customer_id_list = {}
+            for c in project_customer:
+                customer_id_list[c['project__customer__customer_id']] = c['project__total_net']
+            # ↓查找一般授信用信金额
+            used_net_data = dac_m.Contributor.objects.filter(
+                customer_id__in=customer_id_list,
+                data_date=imp_date.neighbour_date_date_str(dac_m.Contributor, photo_date_str)
+            ).values(
+                'customer_id',
+                'net_total'
+            )
             pe_on_the_way = cls.objects.filter(project__close_date__isnull=True)
             fields = cls._meta.get_fields()
             pe_photo_list = []

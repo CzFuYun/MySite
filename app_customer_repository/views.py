@@ -38,7 +38,7 @@ def test(request):
     #     'business__superior__caption',
     #     'account_num',
     # )
-
+    models.ProjectExecution.takePhoto()
     return
 
 def viewProjectRepository(request):
