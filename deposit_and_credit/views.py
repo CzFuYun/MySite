@@ -295,6 +295,9 @@ def viewExpirePromptTable(request):
             if staff_id_in_expire_prompt != staff_id and staff_id_in_expire_prompt:
                 staff_id = staff_id_in_expire_prompt
                 staff_name = rd_models.Staff.objects.filter(staff_id=staff_id_in_expire_prompt)[0].name
+            # print(customer_id)
+            # if customer_id == '0000000001581675':
+            #     print('')
             tmp = {
                 'display_num': display_num,
                 'expire_prompt_id': customer_expire_data_dict[customer_id][0],
@@ -305,7 +308,7 @@ def viewExpirePromptTable(request):
                 'staff_id': staff_id,
                 'staff_name': staff_name,
                 'expire_date': str(expire_date) if expire_date else str(i[6]),
-                'days_remain': (i[6] - today).days,
+                'days_remain': ((i[6] if i[6] else expire_date) - today).days,
                 'remark': customer_expire_data_dict[customer_id][1],
                 'punishment': customer_expire_data_dict[customer_id][2],
                 'finish_date': str(customer_expire_data_dict[customer_id][4]),
