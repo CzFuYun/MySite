@@ -76,7 +76,7 @@ class ProjectRepository(models.Model):
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='专审')
 
     def __str__(self):
-        return self.customer.name
+        return self.project_name
 
     def judge_is_focus(self):
         self.is_focus = True if self.total_net > 8000 or self.business.superior.caption.index('一般授信') < 0 else False
@@ -235,13 +235,13 @@ class ProjectExecution(models.Model):
             return
         else:
             photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
+            last_photo_date = imp_date.last_data_date_str(cls, 'photo_date')
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
                 return
             if photo_date_str:
                 photo_date = imp_date.strToDate(photo_date_str)
             else:
                 return
-            exclude_fields = ['id', 'photo_date']
             # ↓临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(tmp_close_date__lte=imp_date.delta_date(-180, photo_date)).update(close_date=imp_date.today)
             # ↓流程中项目的客户号、总敞口
@@ -251,36 +251,61 @@ class ProjectExecution(models.Model):
             ).values(
                 'project__customer__customer_id',
                 'project__total_net',
+                'project__existing_net',
             )
-            # customer_id_list = []
-            # for c in project_customer:
-            #     customer_id_list.append(c['project__customer__customer_id'])
-            customer_id_list = {}
+            customer_project_amount = {}
             for c in project_customer:
-                customer_id_list[c['project__customer__customer_id']] = c['project__total_net']
-            # ↓查找一般授信用信金额
+                customer_project_amount[c['project__customer__customer_id']] = {
+                    'project__total_net': c['project__total_net'],
+                    'project__existing_net': c['project__existing_net'],
+                }
+            # ↓查找一般授信已用信金额
             used_net_data = dac_m.Contributor.objects.filter(
-                customer_id__in=customer_id_list,
+                customer_id__in=customer_project_amount,
                 data_date=imp_date.neighbour_date_date_str(dac_m.Contributor, photo_date_str)
             ).values(
                 'customer_id',
-                'net_total'
+                'net_total',
             )
-            pe_on_the_way = cls.objects.filter(project__close_date__isnull=True)
+            customer_used_net = {}
+            for un in used_net_data:
+                customer_used_net[un['customer_id']] = un['net_total']
+            pe_on_the_way = cls.objects.filter(project__close_date__isnull=True, photo_date=last_photo_date)
             fields = cls._meta.get_fields()
+            exclude_fields = ['id', 'photo_date',]
             pe_photo_list = []
+            attention = []
             for pe in pe_on_the_way:
                 tmp = {}
                 for field in fields:
                     field_name = field.name
                     if field_name in exclude_fields:
                         continue
-                    tmp[field_name] = getattr(pe, field_name)
+                    try:
+                        field_data = getattr(pe, field_name)
+                        tmp[field_name] = field_data
+                    except:
+                        field_data = getattr(pe, field_name + '_id')
+                        tmp[field_name + '_id'] = field_data
+                customer_id = pe.project.customer.customer_id
                 tmp['photo_date'] = photo_date
+                # ↓为一般授信填充已投放净额
+                if pe.project.business.id < 15:
+                    tmp['total_used'] = customer_used_net.get(customer_id, 0)
+                    # ↓若已投净额小于项目的净额
+                    if tmp['total_used'] <= customer_project_amount[customer_id]['project__total_net']:
+                        tmp['new_net_used'] = tmp['total_used'] - customer_project_amount[customer_id]['project__existing_net']
+                    # ↓若已投净额大项目的净额，则可能有两种情况：1、存在质押贷款；2、同时有多笔业务（例如既有项目贷又有流贷）
+                    else:
+                        attention.append(pe.project.customer.customer)
                 pe_photo_list.append(cls(**tmp))
             if pe_photo_list:
                 cls.objects.bulk_create(pe_photo_list)
-
+                print('success')
+            if attention:
+                print('请核实以下客户的真实用信情况：')
+                for a in attention:
+                    print(a)
 
 class Progress(models.Model):
     caption = models.CharField(max_length=32)

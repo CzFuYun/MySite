@@ -4,12 +4,14 @@ from django.db.models import Q, F, Sum
 from . import models
 from . import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
+from root_db import models as rd_m
 # Create your views here.
 
 ALLOW_EDIT = False
 
 def test(request):
     # http://139.17.1.35:8000/cr/test
+    # http://127.0.0.1:8000/cr/test
     # c = models.CustomerRepository.objects.filter(name__contains='经济发展')[0]
     # b = models.SubBusiness.objects.filter(caption='承销')[0]
     # new_p_dict = {}
@@ -38,14 +40,20 @@ def test(request):
     #     'business__superior__caption',
     #     'account_num',
     # )
-    models.ProjectExecution.takePhoto()
+    models.ProjectExecution.takePhoto(None, '2018-07-19')
     return
 
 def viewProjectRepository(request):
     if request.method == 'GET':
         imp_date = models_operation.DateOperation()
-        start_date = imp_date.this_year_start_date_str
-        end_date = imp_date.this_year_end_date_str
+        wangji_start = str(imp_date.today.year) + '-10-01'
+        wangji_end = str(imp_date.today.year + 1) + '-03-31'
+        if imp_date.date_dif(imp_date.today, wangji_start) >= 0 and imp_date.date_dif(imp_date.today, wangji_end) <= 0:
+            start_date = wangji_start
+            end_date = wangji_end
+        else:
+            start_date = imp_date.this_year_start_date_str
+            end_date = imp_date.this_year_end_date_str
         return render(request, 'project_repository.html', locals())
 
 
@@ -70,6 +78,7 @@ def viewProjectSummary(request):
     exe_data = models.ProjectExecution.objects.filter(
         photo_date=exe_date
     ).values(
+        'project__project_name',
         'project_id',
         'project__business__superior__caption',
         'current_progress',
@@ -77,11 +86,16 @@ def viewProjectSummary(request):
     ).order_by(
         'project__staff__sub_department__superior__display_order',
         'project__business__superior__display_order',
+        # 'project__staff__staff_id',
         'current_progress__display_order',
     )
     project_exe = {}
-    for e in exe_data:
-        project_exe[e['project_id']] = {'current_progress': e['current_progress'], 'new_net_used': e['new_net_used']}
+    for exe in exe_data:
+        project_exe[exe['project_id']] = {
+            'project_name': exe['project__project_name'],
+            'current_progress': exe['current_progress'],
+            'new_net_used': exe['new_net_used'],
+        }
     project_data = models.ProjectRepository.objects.filter(
         (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
         & Q(create_date__lte=end_date)
@@ -91,6 +105,7 @@ def viewProjectSummary(request):
         # 'business__superior__display_order',
         # '-create_date',
     ).values(
+            'project_name',
             'id',
             'staff__sub_department__superior__caption',
             # 'business__superior_id',
@@ -100,7 +115,10 @@ def viewProjectSummary(request):
             'existing_net',
     ).annotate(new_net=Sum(F('total_net') - F('existing_net')))
     target_task = models.TargetTask.calculate_target(start_date, end_date, None, 'dict')
+    # dept = rd_m.Department.getBusinessDept()
+    
     for p in project_data:
+
 
         pass
 

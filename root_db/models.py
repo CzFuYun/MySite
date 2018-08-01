@@ -45,13 +45,39 @@ class Department(models.Model):
     caption = models.CharField(max_length=32, unique=True, verbose_name='部门名称')
     display_order = models.SmallIntegerField(unique=True, verbose_name='排序先后')      # 连续不可间断，可按需更改，无耦合
 
-    def __str__(self):
-        return self.caption
-
     class Meta:
         verbose_name_plural = '部门（综合）'
 
+    def __str__(self):
+        return self.caption
 
+    @classmethod
+    def getDepartments(cls, return_mode='l'):
+        dept = cls.objects.values('code', 'caption').order_by('display_order')
+        if return_mode == 'l':
+            l = []
+            for d in dept:
+                l.append((d['code'], d['caption']))
+            return l
+        elif return_mode == 'd':
+            dic = {}
+            for d in dept:
+                dic[d['code']] = d['caption']
+            return dic
+
+    @classmethod
+    def getBusinessDept(cls, return_mode='l'):
+        dept = cls.objects.exclude(code__in=['JGBS' , 'NONE']).values('code', 'caption').order_by('display_order')
+        if return_mode == 'l':
+            l = []
+            for d in dept:
+                l.append((d['code'], d['caption']))
+            return l
+        elif return_mode == 'd':
+            dic = {}
+            for d in dept:
+                dic[d['code']] = d['caption']
+            return dic
 ########################################################################################################################
 class SubDepartment(models.Model):
     sd_code = models.CharField(primary_key=True, max_length=8, verbose_name='部门编号')
