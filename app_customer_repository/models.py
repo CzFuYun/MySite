@@ -79,18 +79,17 @@ class ProjectRepository(models.Model):
         return self.project_name
 
     def judge_is_focus(self):
-        self.is_focus = True if self.total_net > 8000 or self.business.superior.caption.index('一般授信') < 0 else False
+        self.is_focus = True if self.total_net > 8000 or self.business.is_focus else False
 
     def calculate_acc_num(self):
-        base = 1
+        base = 1        # 基数
         factor = 1      # 系数
         b_id = self.business.id
-        if b_id in range(20, 30):      # 投行项目
-            factor = 2
-        elif b_id in range(10, 20):    # 一般授信
+        if b_id in range(10, 15):  # 一般授信的讲究比较多
             industry = self.customer.industry_id
-            factor = 2 if b_id == 15 else industry_factor_rule.get(industry, 1)     # 项目贷系数2，制造业1.5，其他1
-            factor = max(factor, 2 if self.customer.type_of_3311.id >= 10 else 1)   # 3311系数2
+            factor_industry = industry_factor_rule.get(industry, 1)     # 行业带来的系数，目前仅有制造业有额外加成系数1.5
+            factor_3311 = 2 if self.customer.type_of_3311.id >= 10 else 1       # 3311客户加成系数2
+            factor = max(factor_industry, factor_3311)
             imp_d = models_operation.DateOperation()
             if self.existing_net:
                 base = 0.5
@@ -101,7 +100,7 @@ class ProjectRepository(models.Model):
                 ).values_list('net_total').aggregate(Sum('net_total'))['net_total__sum']
                 base = 0.5 if int(history_sum_net) else 1       # 一年内用过信或直接声明有存量敞口的，基数为0.5户
         else:
-            base = 0        # 投行和一般授信以外的业务，不折算户数
+            factor = self.business.acc_factor
         self.account_num = base * factor
 
     @classmethod
@@ -322,10 +321,13 @@ class Business(models.Model):
     def __str__(self):
         return self.caption
 
+
 class SubBusiness(models.Model):
     caption = models.CharField(max_length=32)
     superior = models.ForeignKey('Business', on_delete=models.PROTECT)
     display_order = models.IntegerField(default=0)
+    is_focus = models.BooleanField(default=False, verbose_name='是否重点产品')
+    acc_factor = models.FloatField(default=0, verbose_name='折算户数系数')
 
 
 class Stars(models.Model):

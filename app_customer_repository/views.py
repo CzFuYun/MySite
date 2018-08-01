@@ -40,7 +40,9 @@ def test(request):
     #     'business__superior__caption',
     #     'account_num',
     # )
-    models.ProjectExecution.takePhoto(None, '2018-07-19')
+
+    # models.ProjectExecution.takePhoto(None, '2018-07-19')
+
     return
 
 def viewProjectRepository(request):
@@ -116,7 +118,7 @@ def viewProjectSummary(request):
     ).annotate(new_net=Sum(F('total_net') - F('existing_net')))
     target_task = models.TargetTask.calculate_target(start_date, end_date, None, 'dict')
     # dept = rd_m.Department.getBusinessDept()
-    
+
     for p in project_data:
 
 
