@@ -1,7 +1,7 @@
 import json, os
 import datetime as python_datetime
 from decimal import Decimal
-from django.shortcuts import render, HttpResponse, redirect, reverse
+from django.shortcuts import render, HttpResponse, redirect, reverse, render_to_response
 from django.db.models import Q, Sum, F
 from django.forms.models import model_to_dict
 from django.utils.timezone import datetime, timedelta
@@ -71,15 +71,19 @@ def ajaxAnnotateDeposit(request):
 
 @checkPermission
 def viewContribution(request):
-    method = request.method
-    if method == 'GET':
-        return render(request, 'deposit_and_credit/contribution.html', {'department': request.user_dep})
-    elif method == 'POST':
+    print('')
+    return render_to_response('deposit_and_credit/contribution_ajax_body.html', {'department': request.user_dep})
+
+
+# @checkPermission
+def viewContributionTable(request):
+    if request.method == 'POST':
         opener_params = {}
         for k, v in request.POST.items():
             opener_params[k] = v
-        opener_params['department'] = request.department
-        opener_params['data_date'] = models_operation.getNeighbourDate(dac_models.Contributor, date_str=opener_params.get('data_date'))
+        # opener_params['department'] = request.department
+        opener_params['data_date'] = models_operation.getNeighbourDate(dac_models.Contributor,
+                                                                       date_str=opener_params.get('data_date'))
         customer_types = []
         if opener_params.get('gov'):
             customer_types.append('平台')
@@ -94,7 +98,6 @@ def viewContribution(request):
             'opener_params': json.dumps(opener_params),
             'data_date': opener_params['data_date'],
         })
-
 
 
 def ajaxContribution(request):
@@ -114,6 +117,7 @@ def ajaxDeptOrder(request):
     for i in depts:
         ordered_depts[i[0]] = i[1]
     return HttpResponse(json.dumps(ordered_depts))
+
 
 def ajaxStaff(request):
     dept_code = request.POST.get('dept_code')

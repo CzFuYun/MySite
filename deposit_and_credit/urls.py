@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'overviewbranch\.ajax', views.ajaxOverViewBranch, name='ajaxOverViewBranch'),
     url(r'annotatedeposit\.ajax', views.ajaxAnnotateDeposit, name='ajaxAnnotateDeposit'),
     url(r'contribution\.view', views.viewContribution, name='viewContribution'),
+    url(r'contributiontable\.view', views.viewContributionTable, name='viewContributionTable'),
     url(r'contribution\.ajax', views.ajaxContribution, name='ajaxContribution'),
     url(r'deptorder\.ajax', views.ajaxDeptOrder, name='ajaxDeptOrder'),
     url(r'staff\.ajax', views.ajaxStaff, name='ajaxStaff'),

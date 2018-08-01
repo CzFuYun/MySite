@@ -372,7 +372,7 @@ function buildContribTable(filter_condict, ordered_dept){
         depts_sum = {},
         branch_sum = {},
         req_dept = filter_condict['department'];
-    if(req_dept === 'all'){
+    if(req_dept === 'JGBS' || req_dept === 'all'){
         contrib_tree = whole_contrib_tree;
         dept_selector = document.createElement('div');
         dept_selector.id = 'dept_selector';

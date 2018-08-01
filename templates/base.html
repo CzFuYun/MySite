@@ -299,9 +299,13 @@
                 </div>
             </nav>
         </header>
+
+
         {% buildMenu request %}
+
+
         <div class="page-wrapper">
-            <div class="row page-titles">
+            <div id="content_body" class="row page-titles">
             </div>
 
             {% block body %}
@@ -331,6 +335,56 @@
 {#    <script src="/static/assets/plugins/sparkline/jquery.sparkline.min.js"></script>#}
     <!--Custom JavaScript -->
 {#    <script src="/static/js/custom.min.js"></script>#}
+    <script>
+        function clickMenu(url) {
+            {#getExtraCss(url);#}
+            getBody(url);
+            {#getExtraJs(url);#}
+        }
+
+        function getBody(url){
+            $.post({
+                url: url,
+                data: 'body',
+                dataType: 'text',
+                success: function(response){
+                    console.log(response);
+                    $('#content_body').html(response);
+                }
+            });
+        }
+
+        function getExtraCss(url){
+            return;
+            $.post({
+                url: url,
+                data: 'css',
+                dataType: 'text',
+                success: function(response){
+                    if(response){
+                        console.log(response);
+                        $('#content_body').html(response);
+                    }
+
+                }
+            });
+        }
+
+        function getExtraJs(url){
+            return;
+            $.post({
+                url: url,
+                dataType: 'text',
+                data: 'js',
+                success: function(response){
+                    if(response){
+                        console.log(response);
+                        $('#content_body').html(response);
+                    }
+                }
+            });
+        }
+    </script>
     {% block extra_js %}
 
     {% endblock %}

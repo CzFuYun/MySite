@@ -79,8 +79,8 @@ def buildMenu(request):
                 <span class="hide-menu">{display}</span>
             </a>
         '''
-    menu_item_model = '<li><a href="{href}">{display}</a></li>'
-    menu_item_has_child_model = '<li><a class="has-arrow" href="{href}">{display}</a></li>'
+    menu_item_model = '<li><a href="javascript:clickMenu({href});">{display}</a></li>'
+    menu_item_has_child_model = '<li><a class="has-arrow" href="javascript:clickMenu({href});">{display}</a></li>'
     for mt in menu_tree:
         menu_html += menu_bar_item_model.format(
             href=mt['url'],
@@ -97,11 +97,11 @@ def buildMenu(request):
                                                                   display=mi_lv1[settings.PERMISSION_DISPLAY_CAPTION])
                     menu_html += '<ul aria-expanded="false" class="collapse">'
                     for mi_lv2 in menu_item_lv2:
-                        menu_html += menu_item_model.format(href=mi_lv2['url'],
+                        menu_html += menu_item_model.format(href="'" + mi_lv2['url'] + "'",
                                                             display=mi_lv2[settings.PERMISSION_DISPLAY_CAPTION])
                     menu_html += '</ul>'  # 二级子菜单的闭合标签
                 else:
-                    menu_html += menu_item_model.format(href=mi_lv1['url'],
+                    menu_html += menu_item_model.format(href="'" + mi_lv1['url'] + "'",
                                                         display=mi_lv1[settings.PERMISSION_DISPLAY_CAPTION])
             menu_html += '</ul>'  # 一级子菜单的闭合标签
         menu_html += '</li>'  # 根菜单项的闭合标签
