@@ -32,11 +32,26 @@ class ExtraAuth:
 # ↑static ##############################################################################################################
 
 class viewContribution(ExtraAuth):
-    def _get(self):
+    def _post(self):
         user_dep = self.user_obj.user_id.sub_department.superior_id
         self.request.user_dep = user_dep
         return True
 
+
+    # def _post(self):
+    #     user_sdep = self.user_obj.user_id.sub_department.sd_code
+    #     req_dep = self.request.POST.get('department')
+    #     self.request.req_dep = req_dep
+    #     req_staff = self.request.POST.get('staff')
+    #     self.request.req_staff = req_staff
+    #     if user_sdep not in settings.BRANCH_VIEWERS:
+    #         self.request.department = req_dep
+    #     else:
+    #         self.request.department = 'all'
+    #     return True
+
+
+class viewContributionTable(ExtraAuth):
     def _post(self):
         user_sdep = self.user_obj.user_id.sub_department.sd_code
         req_dep = self.request.POST.get('department')
@@ -50,7 +65,6 @@ class viewContribution(ExtraAuth):
         return True
 
 class viewCustomerContributionHistory(ExtraAuth):
-
     def _post(self):
         user_sdep = self.user_obj.user_id.sub_department.sd_code
         if user_sdep in settings.BRANCH_VIEWERS:

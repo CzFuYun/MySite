@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
-<<<<<<< HEAD
-    <file url="file://$PROJECT_DIR$/.gitignore" charset="GBK" />
-=======
-    <file url="file://$PROJECT_DIR$/.gitignore" charset="UTF-8" />
->>>>>>> bf10e3dc1c69782d3a6368abca103257fa7c0f56
+    <file url="file://$PROJECT_DIR$/static/myjs/ajax.txt" charset="UTF-8" />
   </component>
 </project>

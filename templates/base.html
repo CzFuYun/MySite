@@ -339,31 +339,31 @@
         function clickMenu(url) {
             {#getExtraCss(url);#}
             getBody(url);
-            {#getExtraJs(url);#}
+            getExtraJs(url);
         }
 
         function getBody(url){
             $.post({
                 url: url,
-                data: 'body',
+                data: {block: 'body'},
                 dataType: 'text',
+                async: false,
                 success: function(response){
-                    console.log(response);
                     $('#content_body').html(response);
                 }
             });
         }
 
         function getExtraCss(url){
-            return;
             $.post({
                 url: url,
-                data: 'css',
+                data: {block: 'css'},
                 dataType: 'text',
+                async: false,
                 success: function(response){
+                    $('.extra_css').remove();
                     if(response){
-                        console.log(response);
-                        $('#content_body').html(response);
+                        $('link:last').append($(response));
                     }
 
                 }
@@ -371,15 +371,15 @@
         }
 
         function getExtraJs(url){
-            return;
             $.post({
                 url: url,
                 dataType: 'text',
-                data: 'js',
+                data: {block: 'js'},
+                async: false,
                 success: function(response){
+                    $('.extra_js').remove();
                     if(response){
-                        console.log(response);
-                        $('#content_body').html(response);
+                        $('script:last').append($(response));
                     }
                 }
             });

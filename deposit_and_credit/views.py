@@ -15,9 +15,8 @@ from app_permission.views import checkPermission
 
 @checkPermission
 def viewOverViewBranch(request):
-    if request.method == 'GET':
         strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
-        return render(request, 'deposit_and_credit/dcindex.html', {'data_date': strDataDate})
+        return render_to_response(request, 'deposit_and_credit/dcindex.html', {'data_date': strDataDate})
 
 
 def ajaxOverViewBranch(request, *args):
@@ -71,11 +70,14 @@ def ajaxAnnotateDeposit(request):
 
 @checkPermission
 def viewContribution(request):
-    print('')
-    return render_to_response('deposit_and_credit/contribution_ajax_body.html', {'department': request.user_dep})
+    if request.POST.get('block') == 'css':
+        return HttpResponse('')
+    if request.POST.get('block') == 'body':
+        return render_to_response('deposit_and_credit/contribution_ajax_body.html', {'department': request.user_dep})
+    if request.POST.get('block') == 'js':
+        return render_to_response('deposit_and_credit/contribution_ajax_js.html')
 
 
-# @checkPermission
 def viewContributionTable(request):
     if request.method == 'POST':
         opener_params = {}
@@ -216,37 +218,43 @@ def viewDepartmentContributionHistory(request):
 
 # @checkPermission
 def viewExpirePrompt(request):
-    if request.method == 'GET':
-        # imp_date = models_operation.DateOperation()
-        # expire_before = imp_date.delta_date(60)
-        return render(request, 'deposit_and_credit/expire.html')
-
+    # imp_date = models_operation.DateOperation()
+    # expire_before = imp_date.delta_date(60)
+    if request.POST.get('block') == 'body':
+        return render_to_response('deposit_and_credit/expire_ajax_body.html')
+    if request.POST.get('block') == 'js':
+        return render_to_response('deposit_and_credit/expire_ajax_js.html')
 
 def viewExpirePromptTable(request):
     if request.method == 'GET':
-        return render(request, 'deposit_and_credit/expire_table.html')
+        filter_dict = request.GET
+        filter_condition = '{'
+        for f in filter_dict:
+            filter_condition += ('"' + f + '":"' + filter_dict[f] + '",')
+        filter_condition += '}'
+        return render(request, 'deposit_and_credit/expire_table.html', {'filter': filter_condition})
     elif request.method == 'POST':
         imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
         expire_id = Q(id=request.POST.get('expire_id')) if request.POST.get('expire_id') else Q(id__gt=0)
-        is_finished = True if request.POST.get('is_finished[]') == '1' else False
+        is_finished = True if request.POST.get('is_finished') == '1' else False
         if is_finished:
             finish_after = Q(
-                finish_date__gte=request.POST.get('finish_after[]') if request.POST.get('finish_after[]') else '1990-01-01')
+                finish_date__gte=request.POST.get('finish_after') if request.POST.get('finish_after') else '1990-01-01')
             finish_before = Q(
-                finish_date__lte=request.POST.get('finish_before[]') if request.POST.get('finish_before[]') else str(today))
+                finish_date__lte=request.POST.get('finish_before') if request.POST.get('finish_before') else str(today))
         else:
             finish_after = Q(finish_date__isnull=True)
             finish_before = Q(finish_date__isnull=True)
-        expire_after = Q(expire_date__gte=request.POST.get('expire_after[]') if request.POST.get('expire_after[]') else str(
+        expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
             data_date - timedelta(days=100)))
         expire_before = Q(
-            expire_date__lte=request.POST.get('expire_before[]') if request.POST.get('expire_before[]') else str(
+            expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
                 today + timedelta(days=180)))
-        has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment[]') else Q(punishment=0)
-        non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment[]') else Q(punishment__gt=0)
+        has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment') else Q(punishment=0)
+        non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment') else Q(punishment__gt=0)
         expire_qs = dac_models.ExpirePrompt.objects.filter(
             expire_id, expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
         ).values_list(
