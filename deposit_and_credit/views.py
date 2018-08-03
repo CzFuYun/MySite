@@ -16,7 +16,7 @@ from app_permission.views import checkPermission
 @checkPermission
 def viewOverViewBranch(request):
         strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
-        return render_to_response(request, 'deposit_and_credit/dcindex.html', {'data_date': strDataDate})
+        return render_to_response('dcindex.html', {'data_date': strDataDate})
 
 
 def ajaxOverViewBranch(request, *args):
@@ -73,9 +73,9 @@ def viewContribution(request):
     if request.POST.get('block') == 'css':
         return HttpResponse('')
     if request.POST.get('block') == 'body':
-        return render_to_response('deposit_and_credit/contribution_ajax_body.html', {'department': request.user_dep})
+        return render_to_response('contrib/contribution_ajax_body.html', {'department': request.user_dep})
     if request.POST.get('block') == 'js':
-        return render_to_response('deposit_and_credit/contribution_ajax_js.html')
+        return render_to_response('contrib/contribution_ajax_js.html')
 
 
 def viewContributionTable(request):
@@ -93,7 +93,7 @@ def viewContributionTable(request):
             customer_types.append('非平台')
         # if opener_params.get('no_gov_sme'):
         #     customer_types.append('实体企业（小微）')
-        return render(request, 'deposit_and_credit/contribution_table.html', {
+        return render(request, 'contrib/contribution_table.html', {
             'content_title': '{customer_type}  贡献度一览（数据日期：{data_date}）'.format(
                 customer_type='+'.join(customer_types),
                 data_date=opener_params['data_date']),
@@ -136,7 +136,7 @@ def ajaxStaff(request):
 @checkPermission
 def viewCustomerContributionHistory(request):
     if request.method == 'GET':
-        return render(request, 'deposit_and_credit/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
+        return render(request, 'contrib/customer_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         customer_id = request.POST.get('customer_id')
         daily_deposit_amounts = models_operation.getCustomerDailyDataForHighChartsLine([customer_id], rd_models.DividedCompanyAccount, 'divided_amount', 'deposit_type__caption')
@@ -148,7 +148,7 @@ def viewCustomerContributionHistory(request):
 @checkPermission
 def viewSeriesContributionHistory(request):
     if request.method == 'GET':
-        return render(request, 'deposit_and_credit/series_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
+        return render(request, 'contrib/series_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         series_code = request.POST.get('series_code')
         series_caption = request.POST.get('series_caption')
@@ -182,7 +182,7 @@ def ajaxCustomerCreditHistory(request):
 
 def viewDepartmentContributionHistory(request):
     if request.method == 'GET':
-        return  render(request, 'deposit_and_credit/department_contribution_history.html')
+        return  render(request, 'contrib/department_contribution_history.html')
     elif request.method == 'POST':
         dept_code = request.POST.get('dept_code')
         customers_qs = dac_models.Contributor.objects.filter(
@@ -221,9 +221,9 @@ def viewExpirePrompt(request):
     # imp_date = models_operation.DateOperation()
     # expire_before = imp_date.delta_date(60)
     if request.POST.get('block') == 'body':
-        return render_to_response('deposit_and_credit/expire_ajax_body.html')
+        return render_to_response('expire/expire_ajax_body.html')
     if request.POST.get('block') == 'js':
-        return render_to_response('deposit_and_credit/expire_ajax_js.html')
+        return render_to_response('expire/expire_ajax_js.html')
 
 def viewExpirePromptTable(request):
     if request.method == 'GET':
@@ -232,7 +232,7 @@ def viewExpirePromptTable(request):
         for f in filter_dict:
             filter_condition += ('"' + f + '":"' + filter_dict[f] + '",')
         filter_condition += '}'
-        return render(request, 'deposit_and_credit/expire_table.html', {'filter': filter_condition})
+        return render(request, 'expire/expire_table.html', {'filter': filter_condition})
     elif request.method == 'POST':
         imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)

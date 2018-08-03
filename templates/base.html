@@ -305,9 +305,9 @@
 
 
         <div class="page-wrapper">
-            <div id="content_body" class="row page-titles">
+            <div class="row page-titles">
             </div>
-
+            <div id="content_body" class="container-fluid"></div>
             {% block body %}
 
 
@@ -354,6 +354,10 @@
             });
         }
 
+        function getCssFile(url){
+
+        }
+
         function getExtraCss(url){
             $.post({
                 url: url,
@@ -368,6 +372,10 @@
 
                 }
             });
+        }
+
+        function getJsFile(url){
+
         }
 
         function getExtraJs(url){
