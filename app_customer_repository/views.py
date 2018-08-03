@@ -45,8 +45,10 @@ def test(request):
 
     return
 
+
 def viewProjectRepository(request):
-    if request.method == 'GET':
+    block = request.POST.get('block')
+    if block == 'body':
         imp_date = models_operation.DateOperation()
         wangji_start = str(imp_date.today.year) + '-10-01'
         wangji_end = str(imp_date.today.year + 1) + '-03-31'
@@ -56,7 +58,9 @@ def viewProjectRepository(request):
         else:
             start_date = imp_date.this_year_start_date_str
             end_date = imp_date.this_year_end_date_str
-        return render(request, 'project_repository.html', locals())
+        return render_to_response('proj_rep/project_ajax_body.html', locals())
+    if block == 'js':
+        return render_to_response('proj_rep/project_ajax_js.html')
 
 
 def viewProjectSummary(request):
@@ -127,7 +131,7 @@ def viewProjectSummary(request):
 
 
 
-    return render(request, 'project_summary.html', locals())
+    return render(request, 'proj_rep/project_summary.html', locals())
 
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')

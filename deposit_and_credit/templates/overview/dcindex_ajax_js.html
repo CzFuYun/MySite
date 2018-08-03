@@ -1,0 +1,70 @@
+
+{#    <script src="/static/assets/plugins/chartist-js/dist/chartist.min.js"></script>#}
+{#    <script src="/static/assets/plugins/chartist-plugin-tooltip-master/dist/chartist-plugin-tooltip.min.js"></script>#}
+{#    <!--morris JavaScript -->#}
+{#    <script src="/static/assets/plugins/raphael/raphael-min.js"></script>#}
+{#    <script src="/static/assets/plugins/morrisjs/morris.min.js"></script><!--无关-->#}
+{#    <!-- Vector map JavaScript -->#}
+{#    <script src="/static/assets/plugins/vectormap/jquery-jvectormap-2.0.2.min.js"></script><!--无关-->#}
+{#    <script src="/static/assets/plugins/vectormap/jquery-jvectormap-world-mill-en.js"></script><!--无关-->#}
+{#    <script src="/static/js/dashboard2.js"></script><!--疑似自动绘图-->#}
+    <script class="extra_js" src="/static/assets/plugins/Chart.js/Chart.min.js" type="text/javascript"></script>
+    <script class="extra_js" src="/static/myjs/drawCharts.js" type="text/javascript"></script>
+    <script class="extra_js" type="text/javascript">
+        GROUP_BY = {
+            department: 'department__caption',
+            industry: 'customer__industry__caption',
+            customer_type: 'customer__customer_type__caption',
+            deposit_type: 'deposit_type__caption',
+            has_credit: 'customer__has_credit'
+        };
+        function drawBranch(element){        {#获取时间段内的存款余额及日均数据，按日期聚合，并在$('#deposit_lines')中绘制折线图#}
+            nDays = $(element).attr('days');
+            $.ajax(
+                {
+                    url: '{% url "ajaxOverViewBranch" %}',
+                    type: 'POST',
+                    async: true,
+                    data: {
+                        days: nDays
+                    },
+                    dataType: 'json',
+                    success: function(data, status, xhr){
+                        $('#branch_overview_days_selector').children().attr('class', 'btn btn-secondary');
+                        $(element).attr('class', 'btn btn-info');
+                        drawLines('deposit_lines', data, true);
+                    },
+                    error:function(xhr,status){
+                        alert(status);
+                    }
+                }
+            )
+        }
+        function drawAnnotation(group_by, strCanvasId){
+            $.ajax(
+                {
+                    url: '{% url "ajaxAnnotateDeposit" %}',
+                    type: 'POST',
+                    async: true,
+                    data: {
+                        group_by: group_by
+                    },
+                    dataType: 'json',
+                    success: function (data, status, xhr) {
+                        drawPie(strCanvasId, data, false)
+                    },
+                    error:function(xhr,status){
+                        alert(status);
+                    }
+                }
+            )
+        }
+
+        $(function(){
+            drawBranch($('#branch_overview_days_selector').children()[2]);
+            drawAnnotation(GROUP_BY.department, 'department_deposit');
+            drawAnnotation(GROUP_BY.industry, 'industry_deposit');
+            drawAnnotation(GROUP_BY.customer_type, 'customer_type_deposit');
+            drawAnnotation(GROUP_BY.deposit_type, 'deposit_type_deposit');
+        });
+    </script>

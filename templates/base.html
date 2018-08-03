@@ -307,7 +307,7 @@
         <div class="page-wrapper">
             <div class="row page-titles">
             </div>
-            <div id="content_body" class="container-fluid"></div>
+            <div id="content_body" class="container-fluid"></div><!--container-fluid的作用貌似是将包裹的内容设置一个外边距，并将他们居中在页面上-->
             {% block body %}
 
 
@@ -337,7 +337,15 @@
 {#    <script src="/static/js/custom.min.js"></script>#}
     <script>
         function clickMenu(url) {
-            {#getExtraCss(url);#}
+            $('#sidebarnav a').removeClass('active');
+            $('#sidebarnav li').removeClass('active');
+            let a = $(':focus');
+            a.addClass('active');
+            a.parents('li[root_item]').addClass('active');
+            $('.extra_js').remove();
+            $('#content_body').html('');
+            $('.extra_css').remove();
+            getExtraCss(url);
             getBody(url);
             getExtraJs(url);
         }
@@ -354,18 +362,6 @@
             });
         }
 
-        function getCssFile(url){
-            $.post({
-                url: url,
-                data: {block: 'css_file'},
-                dataType: 'json',
-                async: false,
-                success: function(response){
-
-                }
-            });
-        }
-
         function getExtraCss(url){
             $.post({
                 url: url,
@@ -373,18 +369,13 @@
                 dataType: 'text',
                 async: false,
                 success: function(response){
-                    $('.extra_css').remove();
                     if(response){
-                        $('link:last').append($(response));
+                        $('link:last').after($(response));
                     }
-
                 }
             });
         }
 
-        function getJsFile(url){
-
-        }
 
         function getExtraJs(url){
             $.post({
@@ -393,9 +384,8 @@
                 data: {block: 'js'},
                 async: false,
                 success: function(response){
-                    $('.extra_js').remove();
                     if(response){
-                        $('script:last').append($(response));
+                        $('script:last').after($(response));
                     }
                 }
             });

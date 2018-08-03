@@ -15,11 +15,14 @@ from app_permission.views import checkPermission
 
 @checkPermission
 def viewOverViewBranch(request):
-    if request.POST.get('block') == 'body':
+    block = request.POST.get('block')
+    if block == 'body':
         strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
-        # return render_to_response('overview/dcindex.html', {'data_date': strDataDate})
-        return rende(request, 'overview/dcindex.html', {'data_date': strDataDate})
-
+        return render_to_response('overview/dcindex_ajax_body.html', {'data_date': strDataDate})
+    if block == 'js':
+        return render_to_response('overview/dcindex_ajax_js.html')
+    if block == 'css':
+        return render_to_response('overview/dcindex_ajax_css.html')
 
 def ajaxOverViewBranch(request, *args):
     if request.method == 'POST':
@@ -59,7 +62,7 @@ def ajaxAnnotateDeposit(request):
         if strGroupBy.count('department'):
             qs = rd_models.DividedCompanyAccount.objects.filter(
                 Q(data_date=strDataDate) & ~Q(department__caption='NONE')
-            ).values_list(strGroupBy).annotate(Sum('divided_yd_avg')).order_by('department__built_order')
+            ).values_list(strGroupBy).annotate(Sum('divided_yd_avg')).order_by('department__display_order')
         elif strGroupBy.count('industry') or strGroupBy.count('has_credit') or strGroupBy.count('customer_type') or\
                 strGroupBy.count('deposit_type'):
             qs = rd_models.DividedCompanyAccount.objects.filter(
@@ -72,11 +75,12 @@ def ajaxAnnotateDeposit(request):
 
 @checkPermission
 def viewContribution(request):
-    if request.POST.get('block') == 'css':
+    block = request.POST.get('block')
+    if block == 'css':
         return HttpResponse('')
-    if request.POST.get('block') == 'body':
+    if block == 'body':
         return render_to_response('contrib/contribution_ajax_body.html', {'department': request.user_dep})
-    if request.POST.get('block') == 'js':
+    if block == 'js':
         return render_to_response('contrib/contribution_ajax_js.html')
 
 
@@ -222,9 +226,10 @@ def viewDepartmentContributionHistory(request):
 def viewExpirePrompt(request):
     # imp_date = models_operation.DateOperation()
     # expire_before = imp_date.delta_date(60)
-    if request.POST.get('block') == 'body':
+    block = request.POST.get('block')
+    if block == 'body':
         return render_to_response('expire/expire_ajax_body.html')
-    if request.POST.get('block') == 'js':
+    if block == 'js':
         return render_to_response('expire/expire_ajax_js.html')
 
 def viewExpirePromptTable(request):

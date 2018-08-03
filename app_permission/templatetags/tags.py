@@ -73,7 +73,7 @@ def buildMenu(request):
         '''
     # ↓菜单栏上的“根菜单”项
     menu_bar_item_model = '''
-        <li>
+        <li root_item>
             <a class="has-arrow waves-effect waves-dark" href="{href}" aria-expanded="false">
                 <i class="{icon}"></i>
                 <span class="hide-menu">{display}</span>

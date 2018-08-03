@@ -50,7 +50,9 @@ HOME_PAGE = 'home.html'
 # 主菜单图标,key:权限描述 value:前端样式的class
 MENU_ICONS = {
     'root_显示主页': 'mdi mdi-home',
-    'root_存款及用信': ''
+    'root_信息交流': 'mdi mdi-message',
+    'root_存款及用信': 'mdi mdi-coin',
+
 }
 
 

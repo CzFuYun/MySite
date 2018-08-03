@@ -3,8 +3,8 @@
     <script class="extra_js" type="text/javascript">
         function turnFinishedBetween(elem){
             if(elem.id === 'is_finished_yes')
-                document.getElementById('finished_between').style.display = '';
+                $('#finished_between').slideDown(500);
             else if(elem.id === 'is_finished_no')
-                document.getElementById('finished_between').style.display = 'none';
+                $('#finished_between').slideUp(500);
         }
     </script>
