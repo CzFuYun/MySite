@@ -1,11 +1,11 @@
 import json, os
-import datetime as python_datetime
+# import datetime as python_datetime
 from decimal import Decimal
 from django.shortcuts import render, HttpResponse, redirect, reverse, render_to_response
 from django.db.models import Q, Sum, F
-from django.forms.models import model_to_dict
+# from django.forms.models import model_to_dict
 from django.utils.timezone import datetime, timedelta
-from MySite import utilities
+# from MySite import utilities
 from root_db import models as rd_models
 from deposit_and_credit import models as dac_models, models_operation, settings
 from app_permission.views import checkPermission
@@ -15,8 +15,10 @@ from app_permission.views import checkPermission
 
 @checkPermission
 def viewOverViewBranch(request):
+    if request.POST.get('block') == 'body':
         strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
-        return render_to_response('dcindex.html', {'data_date': strDataDate})
+        # return render_to_response('overview/dcindex.html', {'data_date': strDataDate})
+        return rende(request, 'overview/dcindex.html', {'data_date': strDataDate})
 
 
 def ajaxOverViewBranch(request, *args):

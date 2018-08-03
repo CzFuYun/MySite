@@ -355,7 +355,15 @@
         }
 
         function getCssFile(url){
+            $.post({
+                url: url,
+                data: {block: 'css_file'},
+                dataType: 'json',
+                async: false,
+                success: function(response){
 
+                }
+            });
         }
 
         function getExtraCss(url){
