@@ -41,7 +41,7 @@ def test(request):
     #     'account_num',
     # )
 
-    # models.ProjectExecution.takePhoto(None, '2018-07-19')
+    models.ProjectExecution.takePhoto(None, '2018-08-01')
 
     return
 
@@ -90,10 +90,10 @@ def viewProjectSummary(request):
         'current_progress',
         'new_net_used',
     ).order_by(
-        'project__staff__sub_department__superior__display_order',
-        'project__business__superior__display_order',
-        # 'project__staff__staff_id',
-        'current_progress__display_order',
+        # 'project__staff__sub_department__superior__display_order',
+        # 'project__business__superior__display_order',
+        # # 'project__staff__staff_id',
+        # 'current_progress__display_order',
     )
     project_exe = {}
     for exe in exe_data:
@@ -122,11 +122,25 @@ def viewProjectSummary(request):
     ).annotate(new_net=Sum(F('total_net') - F('existing_net')))
     target_task = models.TargetTask.calculate_target(start_date, end_date, None, 'dict')
     # dept = rd_m.Department.getBusinessDept()
-
+    ret = {}
     for p in project_data:
+        dept_caption = p['staff__sub_department__superior__caption']
+        business_caption = p['business__superior__caption']
+        p_id = p['id']
+        if dept_caption not in ret:
+            ret[dept_caption] = {}
+        if business_caption not in ret[dept_caption]:
+            ret[dept_caption][business_caption] = {}
+            # target = target_task[dept_caption].get(business_caption)
+            ret[dept_caption][business_caption]['target'] = target_task[dept_caption].get(business_caption)
+            ret[dept_caption][business_caption]['projects'] = []
+        try:
+            project = {**p, **project_exe[p_id]}
+        except:
+            print(p_id)
+        else:
+            ret[dept_caption][business_caption]['projects'].append(project)
 
-
-        pass
 
 
 

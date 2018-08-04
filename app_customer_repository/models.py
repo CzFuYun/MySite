@@ -234,7 +234,6 @@ class ProjectExecution(models.Model):
             return
         else:
             photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
-            last_photo_date = imp_date.last_data_date_str(cls, 'photo_date')
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
                 return
             if photo_date_str:
@@ -269,7 +268,11 @@ class ProjectExecution(models.Model):
             customer_used_net = {}
             for un in used_net_data:
                 customer_used_net[un['customer_id']] = un['net_total']
-            pe_on_the_way = cls.objects.filter(project__close_date__isnull=True, photo_date=last_photo_date)
+            last_photo_date = imp_date.last_data_date_str(cls, 'photo_date')
+            pe_on_the_way = cls.objects.filter(
+                project__close_date__isnull=True,
+                photo_date=last_photo_date
+            )
             fields = cls._meta.get_fields()
             exclude_fields = ['id', 'photo_date',]
             pe_photo_list = []
