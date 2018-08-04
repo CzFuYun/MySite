@@ -79,7 +79,8 @@ def viewContribution(request):
     if block == 'css':
         return HttpResponse('')
     if block == 'body':
-        return render_to_response('contrib/contribution_ajax_body.html', {'department': request.user_dep})
+        data_date = models_operation.DateOperation().last_data_date_str(dac_models.Contributor)
+        return render_to_response('contrib/contribution_ajax_body.html', {'department': request.user_dep, 'data_date': data_date})
     if block == 'js':
         return render_to_response('contrib/contribution_ajax_js.html')
 
