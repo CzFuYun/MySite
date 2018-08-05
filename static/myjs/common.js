@@ -182,8 +182,102 @@ function addDate(daysNum, dateStr, returnMode){
 }
 
 function dateDif(dateStr1, dateStr2){
-    var d1 = new Date(dateStr1),
+    let d1 = new Date(dateStr1),
         d2 = dateStr2 ? new Date(dateStr2) : new Date();
-    var deltaMS = d1 - d2;
+    let deltaMS = d1 - d2;
     return parseInt(deltaMS / (1000 * 3600 * 24));
+}
+
+function buildTableStructure(tableHeadStructure, rowLabel,
+    tableId, tableClass, tablePropertyDict, needTableFoot) {
+    // tablePropertyDict: {'th': '', 'td': ''}
+    $('#' + tableId).remove();
+    let table = document.createElement('table');
+    let thead = document.createElement('thead');
+    let tbody = document.createElement('tbody');
+    let theadRow1 = document.createElement('tr');
+    let theadRow2;
+    let colNum = 0;
+    if(tableClass){
+        table.className = tableClass;
+    }
+    if(tableId){
+        table.id = tableId;
+    }
+    for(let i in tableHeadStructure){
+        let th = document.createElement('th');
+        th.style = tablePropertyDict.th ? tablePropertyDict.th : '';
+        if(tableHeadStructure[i].length){
+            if(!theadRow2){
+                theadRow2 = document.createElement('tr');
+            }
+            let colSpan = tableHeadStructure[i].length;
+            th.setAttribute('colspan', colSpan);
+            for(let j=0; j<tableHeadStructure[i].length; j++){
+                let th = document.createElement('th');
+                th.style = tablePropertyDict.th ? tablePropertyDict.th : '';
+                let tmp = tableHeadStructure[i][j];
+                th.innerText = typeof tmp === 'object' ? tmp[0] : tmp;
+                theadRow2.appendChild(th);
+                colNum ++;
+            }
+        }else{
+            th.setAttribute('rowspan', 2);
+            colNum ++;
+        }
+        th.innerText = i;
+        theadRow1.appendChild(th);
+    }
+    thead.appendChild(theadRow1);
+    if(theadRow2){
+        thead.appendChild(theadRow2);
+    }
+    table.appendChild(thead);
+    if(rowLabel){
+        for(let i=0; i<rowLabel.length; i++){
+            let tr = document.createElement('tr');
+            for(let j=0; j<colNum; j++){
+                let td = document.createElement('td');
+                td.style = tablePropertyDict.td ? tablePropertyDict.td : '';
+                if(j){
+                    td.className = 'value_td';
+                }else{
+                    td.innerText = rowLabel[i];
+                }
+                tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+        }
+    }
+    table.appendChild(tbody);
+    if(needTableFoot){
+        let thead = document.createElement('thead');
+        let tr = document.createElement('tr');
+        for(let j=0; j<colNum; j++){
+            let th = document.createElement('th');
+            th.style = tablePropertyDict.th ? tablePropertyDict.th : '';
+            if(j){
+                th.className = 'value_td';
+            }else{
+                th.innerText = '汇总';
+            }
+            tr.appendChild(th);
+        }
+        thead.appendChild(tr);
+        table.appendChild(thead);
+    }
+    return [table, colNum];
+}
+
+function fillTable(tableId, valuesListByRow){
+    console.log(valuesListByRow);
+    let table = document.getElementById(tableId);
+    let td = document.getElementById(tableId).getElementsByClassName('value_td'),
+        n = 0;
+    for(let i=0; i<valuesListByRow.length; i++){
+        for (let j=0; j<valuesListByRow[i].length; j++){
+            td[n].innerText = valuesListByRow[i][j];
+            n++;
+        }
+    }
 }

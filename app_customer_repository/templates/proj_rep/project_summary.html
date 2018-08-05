@@ -17,25 +17,9 @@
 
 
 {% block extra_js %}
+    <script type="text/javascript" src="/static/myjs/common.js"></script>
     <script type="text/javascript">
-        DATA = [];
-        TABLE_STRUCTURE = {
-            '授信': [tableColRule('目标户数', ''), ]
-        };
-
-        function tableColRule(colName, value, sumRule){
-
-        }
-
-
-
-        function foo() {
-
-            for(let i=0; i<DATA[1].length; i++){
-                TABLE_STRUCTURE[DATA[1][i]] = [];
-                let columns = DATA[2][DATA[0][0][1]][b];
-            }
-        }
+        DATA = {};
 
         function getProjectSummaryData(){
             $.post({
@@ -50,20 +34,40 @@
         }
 
         function buildProjectSummaryTable(){
-            let dept = DATA.department,
-                business = DATA.business,
-                table_col = DATA.table_col,
-                rows = DATA.rows,
-                detail = DATA.detail;
-            
-
-
+            let dept = [];
+            for(let i in DATA.department){
+                dept.push(DATA.department[i][1]);
+            }
+            $('#project_summary_table').remove();
+            let fragment = document.createDocumentFragment();
+            let t = buildTableStructure(
+                $.extend({}, {'部门': []}, DATA.table_col), dept, 'project_summary',
+                'table full-color-table full-dark-table table-sm table-hover table-bordered',
+                {'th': 'border: 1px solid white; text-align: center; vertical-align: middle;', 'td': 'border: 1px solid white; text-align: center;'},
+                true
+            );
+            let table = t[0],
+                colNum = t[1];
+            let summaryRowValue = [];
+            for(let i=0; i<colNum-1; i++){
+                summaryRowValue.push(0);
+            }
+            for(let i=0; i<DATA.rows.length; i++){
+                for(let j=0; j<DATA.rows[i].length; j++){
+                    summaryRowValue[j] += DATA.rows[i][j];
+                }
+            }
+            fragment.appendChild(table);
+            document.getElementById('main_content').appendChild(fragment);
+            DATA.rows.push(summaryRowValue);
+            fillTable('project_summary', DATA.rows);
         }
 
 
 
         $(function () {
             getProjectSummaryData();
+            buildProjectSummaryTable();
         });
     </script>
 {% endblock %}
