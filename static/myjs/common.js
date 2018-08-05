@@ -188,8 +188,7 @@ function dateDif(dateStr1, dateStr2){
     return parseInt(deltaMS / (1000 * 3600 * 24));
 }
 
-function buildTableStructure(tableHeadStructure, rowLabel,
-    tableId, tableClass, tablePropertyDict, needTableFoot) {
+function buildTableStructure(tableHeadStructure, rowLabel, tableId, tableClass, tablePropertyDict, needTableFoot) {
     // tablePropertyDict: {'th': '', 'td': ''}
     $('#' + tableId).remove();
     let table = document.createElement('table');
@@ -206,7 +205,11 @@ function buildTableStructure(tableHeadStructure, rowLabel,
     }
     for(let i in tableHeadStructure){
         let th = document.createElement('th');
-        th.style = tablePropertyDict.th ? tablePropertyDict.th : '';
+        if(tablePropertyDict.th){
+            for(let p in tablePropertyDict.th){
+                th.setAttribute(p, tablePropertyDict.th[p]);
+            }
+        }
         if(tableHeadStructure[i].length){
             if(!theadRow2){
                 theadRow2 = document.createElement('tr');
@@ -214,11 +217,15 @@ function buildTableStructure(tableHeadStructure, rowLabel,
             let colSpan = tableHeadStructure[i].length;
             th.setAttribute('colspan', colSpan);
             for(let j=0; j<tableHeadStructure[i].length; j++){
-                let th = document.createElement('th');
-                th.style = tablePropertyDict.th ? tablePropertyDict.th : '';
+                let th2 = document.createElement('th');
+                if(tablePropertyDict.th){
+                    for(let p in tablePropertyDict.th){
+                        th2.setAttribute(p, tablePropertyDict.th[p]);
+                    }
+                }
                 let tmp = tableHeadStructure[i][j];
-                th.innerText = typeof tmp === 'object' ? tmp[0] : tmp;
-                theadRow2.appendChild(th);
+                th2.innerText = typeof tmp === 'object' ? tmp[0] : tmp;
+                theadRow2.appendChild(th2);
                 colNum ++;
             }
         }else{
@@ -238,7 +245,11 @@ function buildTableStructure(tableHeadStructure, rowLabel,
             let tr = document.createElement('tr');
             for(let j=0; j<colNum; j++){
                 let td = document.createElement('td');
-                td.style = tablePropertyDict.td ? tablePropertyDict.td : '';
+                if(tablePropertyDict.td){
+                    for(let p in tablePropertyDict.td){
+                        td.setAttribute(p, tablePropertyDict.td[p]);
+                    }
+                }
                 if(j){
                     td.className = 'value_td';
                 }else{
@@ -255,7 +266,11 @@ function buildTableStructure(tableHeadStructure, rowLabel,
         let tr = document.createElement('tr');
         for(let j=0; j<colNum; j++){
             let th = document.createElement('th');
-            th.style = tablePropertyDict.th ? tablePropertyDict.th : '';
+            if(tablePropertyDict.th){
+                for(let p in tablePropertyDict.th){
+                    th.setAttribute(p, tablePropertyDict.th[p]);
+                }
+            }
             if(j){
                 th.className = 'value_td';
             }else{

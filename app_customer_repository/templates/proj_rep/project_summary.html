@@ -42,8 +42,19 @@
             let fragment = document.createDocumentFragment();
             let t = buildTableStructure(
                 $.extend({}, {'部门': []}, DATA.table_col), dept, 'project_summary',
-                'table full-color-table full-dark-table table-sm table-hover table-bordered',
-                {'th': 'border: 1px solid white; text-align: center; vertical-align: middle;', 'td': 'border: 1px solid white; text-align: center;'},
+                'table full-color-table full-dark-table hover-table',
+                {
+                    'th':
+                        {
+                            'style': 'border: 1px solid white; text-align: center; vertical-align: middle; cursor:pointer;',
+                            'onclick': 'clickTableArea(event, this)'
+                        },
+                    'td':
+                        {
+                            'style': 'border: 1px solid white; text-align: center; cursor:pointer;',
+                            'onclick': 'clickTableArea(event, this)'
+                    }
+                },
                 true
             );
             let table = t[0],
@@ -59,11 +70,28 @@
             }
             fragment.appendChild(table);
             document.getElementById('main_content').appendChild(fragment);
+            let thCells = document.getElementById('project_summary').getElementsByTagName('thead')[0].getElementsByTagName('tr')[1].getElementsByTagName('th');
+            for(let i in thCells){
+                thCells[i].width = '5%';
+            }
             DATA.rows.push(summaryRowValue);
             fillTable('project_summary', DATA.rows);
+
+
+            {#let help_btn = document.createElement('button');#}
+            {#help_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';#}
+            {#help_btn.type = 'button';#}
+            {#help_btn.setAttribute('onclick', 'showHelp()');#}
+            {#help_btn.innerHTML = '<i class="fa fa-question">数据日期：{{ data_date }}</i>';#}
+            {#$('#topbar .navbar-expand-md')[0].appendChild(help_btn);#}
+
+
         }
 
-
+        function clickTableArea(eve,ele){
+            console.log(eve);
+            console.log(ele);
+        }
 
         $(function () {
             getProjectSummaryData();
