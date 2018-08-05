@@ -226,14 +226,15 @@ class ProjectExecution(models.Model):
     def takePhoto(cls, project_obj=None, photo_date=None):
         # from app_customer_repository.models import ProjectExecution
         imp_date = models_operation.DateOperation()
+        photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
         if project_obj:
             ProjectExecution(
                 project=project_obj,
-                photo_date=imp_date.today,
+                photo_date=photo_date_str,
+                current_progress_id=0,
             ).save()
             return
         else:
-            photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
                 return
             if photo_date_str:
@@ -241,11 +242,14 @@ class ProjectExecution(models.Model):
             else:
                 return
             # ↓临关超过半年的项目正式关闭
-            ProjectRepository.objects.filter(tmp_close_date__lte=imp_date.delta_date(-180, photo_date)).update(close_date=imp_date.today)
+            ProjectRepository.objects.filter(
+                tmp_close_date__isnull=False,
+                tmp_close_date__lte=imp_date.delta_date(-180, photo_date),
+            ).update(close_date=imp_date.today)
             # ↓流程中项目的客户号、总敞口
             project_customer = cls.objects.filter(
                 project__close_date__isnull=True,
-                project__business_id=11,
+                # project__business_id=11,
             ).values(
                 'project__customer__customer_id',
                 'project__total_net',
@@ -311,7 +315,7 @@ class ProjectExecution(models.Model):
 
 class Progress(models.Model):
     caption = models.CharField(max_length=32)
-    status_num = models.DecimalField(default=0, max_digits=2, decimal_places=1)
+    status_num = models.IntegerField(default=0)
     display_order = models.IntegerField(default=0)
     star = models.ForeignKey('Stars', blank=True, null=True, on_delete=models.PROTECT)
     suit_for_business = models.ManyToManyField('SubBusiness')
@@ -323,6 +327,14 @@ class Business(models.Model):
 
     def __str__(self):
         return self.caption
+
+    @classmethod
+    def getAllBusiness(cls):
+        businesses = cls.objects.values('caption').order_by('display_order')
+        business_list = []
+        for b in businesses:
+            business_list.append(b['caption'])
+        return business_list
 
 
 class SubBusiness(models.Model):

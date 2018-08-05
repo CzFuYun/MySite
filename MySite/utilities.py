@@ -1,4 +1,4 @@
-import os
+import os, json, datetime, decimal
 from django.http import StreamingHttpResponse, FileResponse
 from django.shortcuts import HttpResponse
 
@@ -24,3 +24,23 @@ def fileDownload(file_full_name):
     response['Content-Type'] = 'application/octet-stream'
     response['Content-Disposition'] = 'attachment;filename="{0}"'.format(file_name)
     return response
+
+
+class JsonEncoderExtend(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.strftime('%Y-%m-%d %H:%M:%S')
+        elif isinstance(o, datetime.date):
+            return o.strftime('%Y-%m-%d')
+        elif isinstance(o, decimal.Decimal):
+            f = float(o)
+            i = int(o)
+            if f - i:
+                return f
+            else:
+                return i
+        else:
+            return json.JSONEncoder.default(self, o)
+
+
+

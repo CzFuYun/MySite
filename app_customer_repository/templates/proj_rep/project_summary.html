@@ -11,10 +11,59 @@
 
 {% block content %}
 
+
 {% endblock %}
 
 
 
 {% block extra_js %}
+    <script type="text/javascript">
+        DATA = [];
+        TABLE_STRUCTURE = {
+            '授信': [tableColRule('目标户数', ''), ]
+        };
 
+        function tableColRule(colName, value, sumRule){
+
+        }
+
+
+
+        function foo() {
+
+            for(let i=0; i<DATA[1].length; i++){
+                TABLE_STRUCTURE[DATA[1][i]] = [];
+                let columns = DATA[2][DATA[0][0][1]][b];
+            }
+        }
+
+        function getProjectSummaryData(){
+            $.post({
+                url: "{% url 'viewProjectSummary' %}",
+                data: JSON.parse($('#opener_params')[0].value),
+                async: false,
+                dataType: 'JSON',
+                success: function(response) {
+                    DATA = response;
+                }
+            });
+        }
+
+        function buildProjectSummaryTable(){
+            let dept = DATA.department,
+                business = DATA.business,
+                table_col = DATA.table_col,
+                rows = DATA.rows,
+                detail = DATA.detail;
+            
+
+
+        }
+
+
+
+        $(function () {
+            getProjectSummaryData();
+        });
+    </script>
 {% endblock %}

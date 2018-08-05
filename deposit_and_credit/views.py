@@ -18,11 +18,11 @@ def viewOverViewBranch(request):
     block = request.POST.get('block')
     if block == 'body':
         strDataDate = models_operation.getNeighbourDate(rd_models.DividedCompanyAccount)
-        return render_to_response('overview/dcindex_ajax_body.html', {'data_date': strDataDate})
+        return render_to_response('overview/dcindex_body.html', {'data_date': strDataDate})
     if block == 'js':
-        return render_to_response('overview/dcindex_ajax_js.html')
+        return render_to_response('overview/dcindex_js.html')
     if block == 'css':
-        return render_to_response('overview/dcindex_ajax_css.html')
+        return render_to_response('overview/dcindex_css.html')
 
 def ajaxOverViewBranch(request, *args):
     if request.method == 'POST':
@@ -80,9 +80,9 @@ def viewContribution(request):
         return HttpResponse('')
     if block == 'body':
         data_date = models_operation.DateOperation().last_data_date_str(dac_models.Contributor)
-        return render_to_response('contrib/contribution_ajax_body.html', {'department': request.user_dep, 'data_date': data_date})
+        return render_to_response('contrib/contribution_body.html', {'department': request.user_dep, 'data_date': data_date})
     if block == 'js':
-        return render_to_response('contrib/contribution_ajax_js.html')
+        return render_to_response('contrib/contribution_js.html')
 
 
 def viewContributionTable(request):
@@ -229,9 +229,9 @@ def viewExpirePrompt(request):
     # expire_before = imp_date.delta_date(60)
     block = request.POST.get('block')
     if block == 'body':
-        return render_to_response('expire/expire_ajax_body.html')
+        return render_to_response('expire/expire_body.html')
     if block == 'js':
-        return render_to_response('expire/expire_ajax_js.html')
+        return render_to_response('expire/expire_js.html')
 
 def viewExpirePromptTable(request):
     if request.method == 'GET':
