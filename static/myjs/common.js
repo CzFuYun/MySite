@@ -327,8 +327,7 @@ function scrollHandle() {
 }
 
 function lockThead(tableDivId, tableId){
-    $('#' + tableDivId).addClass('table-responsive');
-    $('#' + tableDivId).addClass('section-scroll');
+    $('#' + tableDivId).addClass('table-responsive section-scroll').attr('style', 'height:' + screen.availHeight * 0.68 + 'px');
     $('#' + tableId + ' thead:first th').addClass('table-th-css');
     window.tableCont = $('.section-scroll tr th');
     window.tableCont_child = $('.section-scroll tr th div');
