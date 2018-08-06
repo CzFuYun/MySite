@@ -133,29 +133,29 @@ def viewProjectSummary(request):
             projects_structure_data[dept_caption][business_caption]['projects'].append(project)
         table_col = {     # 项目储备汇总表的列
             business_list[0]: (     # 授信
-                ('计划户数',   ['{target}["计划户数"]']),
-                ('已预审', ['{project}["current_progress__status_num"] in range(20,100)', '{project}["account_num"]', '0'], ),
+                ('计划户数',   ['{target}["计划户数"]'], ),
+                ('已预审',     ['{project}["current_progress__status_num"] in range(20,100)', '{project}["account_num"]', '0'], ),
                 ('实绩户数',   ['{project}["current_progress__status_num"]>=100', '{project}["account_num"]', '0'], ),
                 ('计划金额',   ['{target}["计划金额"]'], ),
-                ('待投放', ['{project}["current_progress__status_num"] in range(100,200)', '{project}["new_net"]-{project}["new_net_used"]', '0'], ),
+                ('待投放',     ['{project}["current_progress__status_num"] in range(100,200)', '{project}["new_net"]-{project}["new_net_used"]', '0'], ),
                 ('实绩金额',   ['{project}["current_progress__status_num"]>100', '{project}["new_net_used"]', '0'], ),
             ),
             business_list[1]: (     # 投行业务
                 ('计划金额', ['{target}["计划金额"]'], ),
                 ('分行',     ['{project}["current_progress__status_num"] in range(20,85)', '{project}["new_net"]', '0'], ),
                 ('总行',     ['{project}["current_progress__status_num"] in range(85,100)', '{project}["new_net"]', '0'], ),
-                ('待投放',     ['{project}["current_progress__status_num"] in range(100,200)', '{project}["new_net"]-{project}["new_net_used"]', '0'], ),
+                ('待投放',   ['{project}["current_progress__status_num"] in range(100,200)', '{project}["new_net"]-{project}["new_net_used"]', '0'], ),
                 ('实绩',     ['{project}["current_progress__status_num"]>100', '{project}["new_net_used"]', '0'], ),
             ),
             business_list[2]: (     # 直融
                 ('计划金额', ['{target}["计划金额"]'], ),
                 ('储备',     ['{project}["current_progress__status_num"] in range(20,100)', '{project}["new_net"]', '0'], ),
                 ('待投放',   ['{project}["current_progress__status_num"]>=100', '{project}["new_net"]-{project}["new_net_used"]', '0'], ),
-                ('实绩',     ['{project}["current_progress__status_num"]>100', '{project}["new_net_used"]', '0'],),
+                ('实绩',     ['{project}["current_progress__status_num"]>100', '{project}["new_net_used"]', '0'], ),
             ),
             business_list[3]: (     # 监管
                 ('计划金额', ['{target}["计划金额"]'], ),
-                ('储备',     ['{project}["current_progress__status_num"] in range(20,100)', '{project}["new_net"]', '0'],) ,
+                ('储备',     ['{project}["current_progress__status_num"] in range(20,100)', '{project}["new_net"]', '0'], ) ,
                 ('已签协议', ['{project}["current_progress__status_num"]>=100', '{project}["new_net"]-{project}["new_net_used"]', '0'] ),
             ),
         }

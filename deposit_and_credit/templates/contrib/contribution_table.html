@@ -43,18 +43,18 @@
     }
 
     $(function () {
+        let help_btn = document.createElement('button');
+        help_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';
+        help_btn.type = 'button';
+        help_btn.setAttribute('onclick', 'showHelp()');
+        help_btn.innerHTML = '<i class="fa fa-question">数据日期：{{ data_date }}</i>';
+        $('#topbar nav div:first').before(help_btn);
         let filter_condict = OPENER_PARAMS,
             ordered_dept_dict = getOrderedDeptDict(),
             ordered_dept = [];
         for(let i in ordered_dept_dict)
             ordered_dept.push(i);
         buildContribTable(filter_condict, ordered_dept);
-        let help_btn = document.createElement('button');
-        help_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';
-        help_btn.type = 'button';
-        help_btn.setAttribute('onclick', 'showHelp()');
-        help_btn.innerHTML = '<i class="fa fa-question">数据日期：{{ data_date }}</i>';
-        $('#topbar .navbar-expand-md')[0].appendChild(help_btn);
     });
 
     function showHelp(){

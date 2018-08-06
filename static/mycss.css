@@ -1,0 +1,13 @@
+/*固定表头*/
+    .table-responsive {
+        overflow: auto !important;
+    }
+    .table-th-css {
+        /*background: #EFEFF4 !important;*/
+        position: relative !important;
+        text-align: center;
+        top: 0;
+    }
+    .section-scroll{
+        height:500px;
+    }

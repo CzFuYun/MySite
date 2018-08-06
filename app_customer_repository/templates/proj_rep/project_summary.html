@@ -4,7 +4,7 @@
 
 
 {% block extra_css %}
-
+    <link href="/static/mycss.css" rel="stylesheet">
 {% endblock %}
 
 
@@ -46,19 +46,20 @@
                 {
                     'th':
                         {
-                            'style': 'border: 1px solid white; text-align: center; vertical-align: middle; cursor:pointer;',
-                            'onclick': 'clickTableArea(event, this)'
+                            'style': 'border: 1px solid gray; text-align: center; vertical-align: middle; cursor:pointer;',
+                            'onclick': 'clickTableArea(event, this)',
+                            'width': '5%'
                         },
                     'td':
                         {
-                            'style': 'border: 1px solid white; text-align: center; cursor:pointer;',
+                            'style': 'border: 1px solid gray; text-align: center; vertical-align: middle; cursor:pointer;',
                             'onclick': 'clickTableArea(event, this)'
                     }
                 },
                 true
             );
-            let table = t[0],
-                colNum = t[1];
+            let table = t.table,
+                colNum = t.colNum;
             let summaryRowValue = [];
             for(let i=0; i<colNum-1; i++){
                 summaryRowValue.push(0);
@@ -70,22 +71,16 @@
             }
             fragment.appendChild(table);
             document.getElementById('main_content').appendChild(fragment);
-            let thCells = document.getElementById('project_summary').getElementsByTagName('thead')[0].getElementsByTagName('tr')[1].getElementsByTagName('th');
-            for(let i in thCells){
-                thCells[i].width = '5%';
-            }
+            {#let thCells = document.getElementById('project_summary').getElementsByTagName('thead')[0].getElementsByTagName('tr')[1].getElementsByTagName('th');#}
             DATA.rows.push(summaryRowValue);
             fillTable('project_summary', DATA.rows);
-
-
-            {#let help_btn = document.createElement('button');#}
-            {#help_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';#}
-            {#help_btn.type = 'button';#}
-            {#help_btn.setAttribute('onclick', 'showHelp()');#}
-            {#help_btn.innerHTML = '<i class="fa fa-question">数据日期：{{ data_date }}</i>';#}
-            {#$('#topbar .navbar-expand-md')[0].appendChild(help_btn);#}
-
-
+            let date_btn = document.createElement('button');
+            date_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';
+            date_btn.type = 'button';
+            {#date_btn.setAttribute('onclick', 'showHelp()');#}
+            date = JSON.parse($('#opener_params')[0].value);
+            date_btn.innerHTML = date.start_date + '→' + date.end_date;
+            $('#topbar nav div:first').before(date_btn);
         }
 
         function clickTableArea(eve,ele){
@@ -96,6 +91,8 @@
         $(function () {
             getProjectSummaryData();
             buildProjectSummaryTable();
+            lockThead('main_content', 'project_summary');
+
         });
     </script>
 {% endblock %}

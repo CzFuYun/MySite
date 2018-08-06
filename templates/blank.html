@@ -7,7 +7,7 @@
     <link href="/static/css/style.css" rel="stylesheet">
 {#    <link href="/static/assets/plugins/sweetalert/sweetalert.css" rel="stylesheet">#}
 {#    <link href="/static/css/colors/blue.css" id="theme" rel="stylesheet">#}
-
+    <link href="/static/mycss.css" rel="stylesheet">
     {% block extra_css %}
 
     {% endblock %}
@@ -15,10 +15,11 @@
 </head>
 <body>
     <header id="topbar" class="topbar" style="position:fixed;top:0;width:100%;background-color:rgba(0,0,0,0.75);color:white">
-        <nav class="navbar top-navbar navbar-expand-md navbar-light">
+        <nav class="navbar navbar-expand-md navbar-light">
+
             <div class="navbar-collapse">
                 <ul class="navbar-nav mr-auto mt-md-0">
-
+                    <li style="width: 100px;"></li>
                 </ul>
             </div>
         </nav>
@@ -59,7 +60,6 @@
     <script src="/static/assets/plugins/sticky-kit-master/dist/sticky-kit.min.js"></script>
     <script src="/static/js/custom.min.js"></script>
 
-
     <script type="text/javascript">
         try{
             OPENER_PARAMS = JSON.parse($('#opener_params').attr('value'));
@@ -80,5 +80,6 @@
     {% block extra_js %}
 
     {% endblock %}
+
 </body>
 </html>

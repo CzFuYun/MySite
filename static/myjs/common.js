@@ -281,7 +281,7 @@ function buildTableStructure(tableHeadStructure, rowLabel, tableId, tableClass, 
         thead.appendChild(tr);
         table.appendChild(thead);
     }
-    return [table, colNum];
+    return {table: table, colNum: colNum};
 }
 
 function fillTable(tableId, valuesListByRow){
@@ -296,3 +296,43 @@ function fillTable(tableId, valuesListByRow){
         }
     }
 }
+
+function scrollHandle() {
+    var scrollTop = window.tableScroll.scrollTop();
+    // 当滚动距离大于0时设置top及相应的样式
+    if (scrollTop > 0) {
+        window.tableCont.css({
+            "top": scrollTop + 'px',
+            "marginTop": "-1px",
+            "padding": 0
+        });
+        window.tableCont_child.css({
+            "borderTop": "1px solid gainsboro",
+            "borderBottom": "1px solid gainsboro",
+            "marginTop": "-1px",
+            "padding": "8px"
+        })
+    } else {
+    // 当滚动距离小于0时设置top及相应的样式
+        window.tableCont.css({
+            "top": scrollTop + 'px',
+            "marginTop": "0",
+        });
+        window.tableCont_child.css({
+            "border": "none",
+            "marginTop": 0,
+            "marginBottom": 0,
+        })
+    }
+}
+
+function lockThead(tableDivId, tableId){
+    $('#' + tableDivId).addClass('table-responsive');
+    $('#' + tableDivId).addClass('section-scroll');
+    $('#' + tableId + ' thead:first th').addClass('table-th-css');
+    window.tableCont = $('.section-scroll tr th');
+    window.tableCont_child = $('.section-scroll tr th div');
+    window.tableScroll = $('.section-scroll');
+    window.tableScroll.on('scroll', scrollHandle);
+}
+
