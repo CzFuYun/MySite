@@ -2,11 +2,17 @@
 <script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
 <script type="text/javascript">
-    function turnDateSelector(elem){
+    function turnExtraOption(elem){
         let v = elem.value;
         if(v === '4')
             $('#date_between').slideUp(500);
         else
             $('#date_between').slideDown(500);
+        if(v === '2')
+            $('#detail_aggregate_method').slideDown(500);
+        else
+            $('#detail_aggregate_method').slideUp(500);
+
     }
+
 </script>

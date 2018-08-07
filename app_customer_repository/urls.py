@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     url('test', views.test),
     url(r'pr\.view', views.viewProjectRepository, name='viewProjectRepository'),
-    url(r'target\.ajax', views.ajaxTarget, name='ajaxTarget'),
+    # url(r'target\.ajax', views.ajaxTarget, name='ajaxTarget'),
+    url(r'projectaction\.select', views.selectProjectAction, name='selectProjectAction'),
     url(r'projectsummary\.view', views.viewProjectSummary, name='viewProjectSummary'),
 ]

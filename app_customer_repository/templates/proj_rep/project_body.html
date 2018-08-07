@@ -6,20 +6,20 @@
                     <h4 class="m-b-0 text-white">项目储备</h4>
                 </div>
                 <div class="card-body">
-                    <form id="expire_filter" action="{% url 'viewProjectSummary' %}" target="_blank" method="get">
+                    <form id="expire_filter" action="{% url 'selectProjectAction' %}" target="_blank" method="post">
                         <div class="form-body">
                             <h4 class="box-title">动作：</h4>
                             <div class="row">
                                 <div class="col-md-2"></div>
                                 <div class="col-md-9">
                                     <div class="demo-radio-button">
-                                        <input name="action" id="action_summary" type="radio" value="1" class="radio-col-light-blue" onchange="turnDateSelector(this)" checked>
+                                        <input name="action" id="action_summary" type="radio" value="1" class="radio-col-light-blue" onchange="turnExtraOption(this)" checked>
                                         <label for="action_summary">汇总</label>
-                                        <input name="action" id="action_detail" type="radio" value="2" class="radio-col-light-blue" onchange="turnDateSelector(this)">
+                                        <input name="action" id="action_detail" type="radio" value="2" class="radio-col-light-blue" onchange="turnExtraOption(this)">
                                         <label for="action_detail">详情</label>
-                                        <input name="action" id="action_download" type="radio" value="3" class="radio-col-light-blue" onchange="turnDateSelector(this)">
+                                        <input name="action" id="action_download" type="radio" value="3" class="radio-col-light-blue" onchange="turnExtraOption(this)">
                                         <label for="action_download">下载</label>
-                                        <input name="action" id="action_edit" type="radio" value="4" class="radio-col-light-blue" onchange="turnDateSelector(this)">
+                                        <input name="action" id="action_edit" type="radio" value="4" class="radio-col-light-blue" onchange="turnExtraOption(this)">
                                         <label for="action_edit">编辑</label>
                                     </div>
                                 </div>
@@ -27,7 +27,7 @@
                         </div>
                         <div id="date_between">
                             <h4 class="box-title">起止日期：</h4>
-                            <div class="row p-t-10" style="">
+                            <div class="row p-t-10">
                                 <div class="col-md-2"></div>
                                 <div class="col-md-2">
                                     <div class="form-group">
@@ -43,6 +43,23 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div id="detail_aggregate_method" style="display: none;">
+                            <hr>
+                            <h4 class="box-title">汇总方式：</h4>
+                            <div class="row p-t-10">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-9">
+                                    <div class="demo-radio-button">
+                                        <input name="detail_aggregate" id="detail_aggregate_business" type="radio" value="1" class="radio-col-light-blue" checked>
+                                        <label for="detail_aggregate_business">业务品种</label>
+                                        <input name="detail_aggregate" id="detail_aggregate_dept" type="radio" value="2" class="radio-col-light-blue">
+                                        <label for="detail_aggregate_dept">经营单位</label>
+                                    </div>
+                                </div>
+                        </div>
+
+                        <hr>
                         <div class="row p-t-10">
                             <div class="col-md-10"></div>
                             <div class="col-md-2">
