@@ -7,23 +7,48 @@
                 </div>
                 <div class="card-body">
                     <form id="expire_filter" action="{% url 'viewProjectSummary' %}" target="_blank" method="get">
-                        <div class="form-group row">
-                            <div class="col-md-1">
+                        <div class="form-body">
+                            <h4 class="box-title">动作：</h4>
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-9">
+                                    <div class="demo-radio-button">
+                                        <input name="action" id="action_summary" type="radio" value="1" class="radio-col-light-blue" onchange="turnDateSelector(this)" checked>
+                                        <label for="action_summary">汇总</label>
+                                        <input name="action" id="action_detail" type="radio" value="2" class="radio-col-light-blue" onchange="turnDateSelector(this)">
+                                        <label for="action_detail">详情</label>
+                                        <input name="action" id="action_download" type="radio" value="3" class="radio-col-light-blue" onchange="turnDateSelector(this)">
+                                        <label for="action_download">下载</label>
+                                        <input name="action" id="action_edit" type="radio" value="4" class="radio-col-light-blue" onchange="turnDateSelector(this)">
+                                        <label for="action_edit">编辑</label>
+                                    </div>
+                                </div>
                             </div>
-                            <label for="start_date" class="col-md-1 col-form-label">起始日期</label>
+                        </div>
+                        <div id="date_between">
+                            <h4 class="box-title">起止日期：</h4>
+                            <div class="row p-t-10" style="">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="control-label"></label>
+                                        <input type="date" class="form-control" placeholder="yyyy/mm/dd" name="start_date" value="{{ start_date }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        <label class="control-label"></label>
+                                        <input type="date" class="form-control" placeholder="yyyy/mm/dd" name="end_date" value="{{ end_date }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row p-t-10">
+                            <div class="col-md-10"></div>
                             <div class="col-md-2">
-                                <input class="form-control" type="date" value="{{ start_date }}" id="start_date" name="start_date">
-                            </div>
-                            <div class="col-md-1">
-                            </div>
-                            <label for="end_date" class="col-md-1 col-form-label">截至日期</label>
-                            <div class="col-md-2">
-                                <input class="form-control" type="date" value="{{ end_date }}" id="end_date" name="end_date">
-                            </div>
-                            <div class="col-md-1">
-                            </div>
-                            <div class="col-md-1">
-                                <button type="submit" class="btn btn-success"><i class="fa fa-check"></i>确认</button>
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-success"><i class="fa fa-check"></i>确认</button>
+                                </div>
                             </div>
                         </div>
                     </form>

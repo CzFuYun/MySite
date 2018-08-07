@@ -297,41 +297,70 @@ function fillTable(tableId, valuesListByRow){
     }
 }
 
-function scrollHandle() {
-    var scrollTop = window.tableScroll.scrollTop();
-    // 当滚动距离大于0时设置top及相应的样式
-    if (scrollTop > 0) {
-        window.tableCont.css({
-            "top": scrollTop + 'px',
-            "marginTop": "-1px",
-            "padding": 0
-        });
-        window.tableCont_child.css({
-            "borderTop": "1px solid gainsboro",
-            "borderBottom": "1px solid gainsboro",
-            "marginTop": "-1px",
-            "padding": "8px"
-        })
-    } else {
-    // 当滚动距离小于0时设置top及相应的样式
-        window.tableCont.css({
-            "top": scrollTop + 'px',
-            "marginTop": "0",
-        });
-        window.tableCont_child.css({
-            "border": "none",
-            "marginTop": 0,
-            "marginBottom": 0,
-        })
-    }
-}
+// function scrollHandle() {
+//     var scrollTop = window.tableScroll.scrollTop();
+//     // 当滚动距离大于0时设置top及相应的样式
+//     if (scrollTop > 0) {
+//         window.tableCont.css({
+//             "top": scrollTop + 'px',
+//             "marginTop": "-1px",
+//             "padding": 0
+//         });
+//         window.tableCont_child.css({
+//             "borderTop": "1px solid gainsboro",
+//             "borderBottom": "1px solid gainsboro",
+//             "marginTop": "-1px",
+//             "padding": "8px"
+//         })
+//     } else {
+//     // 当滚动距离小于0时设置top及相应的样式
+//         window.tableCont.css({
+//             "top": scrollTop + 'px',
+//             "marginTop": "0",
+//         });
+//         window.tableCont_child.css({
+//             "border": "none",
+//             "marginTop": 0,
+//             "marginBottom": 0,
+//         })
+//     }
+// }
 
 function lockThead(tableDivId, tableId){
-    $('#' + tableDivId).addClass('table-responsive section-scroll').attr('style', 'height:' + screen.availHeight * 0.68 + 'px');
+    var r = window.devicePixelRatio;        // 屏幕缩放比例
+    $('#' + tableDivId).addClass('table-responsive section-scroll').attr('style', 'height:' + String(screen.availHeight * 0.68 /r) + 'px');
     $('#' + tableId + ' thead:first th').addClass('table-th-css');
-    window.tableCont = $('.section-scroll tr th');
-    window.tableCont_child = $('.section-scroll tr th div');
-    window.tableScroll = $('.section-scroll');
-    window.tableScroll.on('scroll', scrollHandle);
+    tableCont = $('.section-scroll tr th');
+    tableCont_child = $('.section-scroll tr th div');
+    tableScroll = $('.section-scroll');
+    tableScroll.on('scroll', function(){
+        var scrollTop = tableScroll.scrollTop();
+        // 当滚动距离大于0时设置top及相应的样式
+        if (scrollTop > 0) {
+            tableCont.css({
+                "top": scrollTop + 'px',
+                "marginTop": "-1px",
+                "padding": 0
+            });
+            tableCont_child.css({
+                "borderTop": "1px solid gainsboro",
+                "borderBottom": "1px solid gainsboro",
+                "marginTop": "-1px",
+                "padding": "8px"
+            })
+        } else {
+        // 当滚动距离小于0时设置top及相应的样式
+            tableCont.css({
+                "top": scrollTop + 'px',
+                "marginTop": "0",
+            });
+            tableCont_child.css({
+                "border": "none",
+                "marginTop": 0,
+                "marginBottom": 0,
+            })
+        }
+
+    });
 }
 

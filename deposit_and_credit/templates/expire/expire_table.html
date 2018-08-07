@@ -2,6 +2,7 @@
 
 {% block extra_css %}
 <link href="/static/assets/plugins/dropify/dist/css/dropify.min.css" rel="stylesheet">
+<link href="/static/mycss.css" rel="stylesheet">
 {% endblock %}
 
 
@@ -403,6 +404,7 @@
                     table.appendChild(tbody);
                     fragment.appendChild(table);
                     document.getElementById('main_content').appendChild(fragment);
+                    lockThead('main_content', 'expire_table');
                 }
             });
         }

@@ -62,6 +62,7 @@ def viewProjectRepository(request):
         return render_to_response('proj_rep/project_js.html')
 
 
+
 def viewProjectSummary(request):
     imp_date = models_operation.DateOperation()
     if request.method == 'GET':
