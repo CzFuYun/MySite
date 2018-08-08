@@ -1,4 +1,5 @@
 {% extends 'blank.html' %}
+{% load tags %}
 
 
 
@@ -8,23 +9,82 @@
 
 
 
+{% block navbar_before_ul %}
+    <button class="btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2" type="button">{{ start_date }}→{{ end_date }}</button>
+
+{% endblock %}
+
+
+
+{% block navbar_after_ul %}
+    <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">业务品种</button>
+    <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
+        <a class="dropdown-item" href="#">Action</a>
+        <a class="dropdown-item" href="#">Another action</a>
+        <a class="dropdown-item" href="#">Something else here</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" href="#">Separated link</a>
+    </div>
+{% endblock %}
+
+
+
 {% block content %}
-    {% for datum in data %}
-{#        {% if datum.0 == 'summary' %}#}
-{#            #}
-{#        {% endif %}#}
-         {{ datum.0 }}
-    {% endfor %}
+{#    {% for d in data %}#}
+{##}
+{#        {{ d }}#}
+{#        <hr>#}
+{#    {% endfor %}#}
+        {% for d in data %}
+            {% if d.0 == 'summary' %}
+                {% if forloop.counter %}
+                        {{ '</tbody>'|safe }}
+                        {{ '</table>'|safe }}
+                        {{ '</div>'|safe }}
+                {% endif %}
+            <h1 id="business_{{ d.1.id }}_title" class="text-themecolor">{{ d.1.caption }}</h1>
+                <div class="card-body">
+                    <table id="business_{{ d.1.id }}_table" class="table full-color-table full-dark-table table-sm table-hover table-bordered">
+                        <thead>
+                            <tr>
+                            {% for col in table_col %}
+                                <th width="{{ col.width }}">{{ col.col_name }}</th>
+                            {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+            {% elif d.0 == 'project' %}
+                            <tr>
+                            {% for col in table_col %}
+                                <td
+                                {% for attr in col.td_attr %}
 
+                                        {{ attr }}="{% getValueValue d.1 col.td_attr attr %}"
 
-
+                                {% endfor %}
+                                >{% getValue d.1 col.index %}</td>
+                            {% endfor %}
+                            </tr>
+            {% endif %}
+        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 {% endblock %}
 
 
 
 {% block extra_js %}
     <script type="text/javascript">
-        {#DATA = JSON.parse('{{ data|safe }}');#}
-
+        $(function(){
+            $('td[yr_card]').each(function(index,elem){
+                let yr_card = Number(elem.getAttribute('yr_card'));
+                if(yr_card === 1){
+                    $(elem).addClass('text-warning text-semibold')
+                }else if(yr_card > 1){
+                    $(elem).addClass('text-danger text-semibold')
+                }
+            })
+        })
     </script>
 {% endblock %}

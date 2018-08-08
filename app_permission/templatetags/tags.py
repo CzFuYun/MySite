@@ -109,3 +109,11 @@ def buildMenu(request):
     return mark_safe(menu_html)
 # ↑static ##############################################################################################################
 
+@register.simple_tag
+def getValue(dic, key):
+    return dic.get(key)\
+
+
+@register.simple_tag
+def getValueValue(dic, keyDict, key):
+    return dic.get(keyDict.get(key))

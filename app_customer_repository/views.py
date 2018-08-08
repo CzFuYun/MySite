@@ -215,6 +215,7 @@ def viewProjectExeDetail(request):
         'customer__name',
         'staff_id',
         'staff__name',
+        'staff__yellow_red_card',
         'staff__sub_department__superior__code',
         'staff__sub_department__superior__caption',
         'business__superior_id',
@@ -235,20 +236,81 @@ def viewProjectExeDetail(request):
     buniness_summary = list(models.Business.objects.filter(
         subbusiness__projectrepository__in=project_qs,
         subbusiness__projectrepository__projectexecution__photo_date=exe_date
-    ).values('caption').annotate(
+    ).values('id', 'caption').annotate(
         new_net_sum=Sum('subbusiness__projectrepository__total_net')-Sum('subbusiness__projectrepository__existing_net'),
         new_net_used_sum=Sum('subbusiness__projectrepository__projectexecution__new_net_used'),
     ).order_by('display_order'))
-    ret_list = []
+    data = []
     i = 0
     business = ''
+    business_list = []
     for p in project_detail:
         if business != p['business__superior__caption']:
-            ret_list.append(('summary', buniness_summary[i]))
+            business_list.append({'id': buniness_summary[i]['id'], 'caption': buniness_summary[i]['caption']})
+            data.append(('summary', buniness_summary[i]))
             business = p['business__superior__caption']
             i += 1
-        ret_list.append(('project', p))
-    return render(request, 'proj_rep/project_detail.html', {'data': json.dumps(ret_list)})
+        data.append(('project', p))
+    table_col = [
+        {
+            'index': 'customer__name',
+            'col_name': '客户名称',
+            'width': '15%',
+            'td_attr': {}
+        },
+        {
+            'index': 'staff__sub_department__superior__caption',
+            'col_name': '经营单位',
+            'width': '6%',
+            'td_attr': {
+                'dept_code': 'staff__sub_department__superior__code',
+            }
+        },
+        {
+            'index': 'staff__name',
+            'col_name': '客户经理',
+            'width': '6%',
+            'td_attr': {
+                'staff': 'staff_id',
+                'yr_card': 'staff__yellow_red_card',
+            }
+        },
+        {
+            'index': 'business__superior__caption',
+            'col_name': '业务种类',
+            'width': '6%',
+            'td_attr': {
+                'sub_business': 'business_id'
+            }
+        },
+        {
+            'index': 'projectexecution__current_progress__caption',
+            'col_name': '目前进度',
+            'width': '6%',
+            'td_attr': {
+            'status_num': 'projectexecution__current_progress__status_num'
+            }
+        },
+        {
+            'index': 'total_net',
+            'col_name': '总敞口',
+            'width': '8%',
+            'td_attr': {}
+        },
+        {
+            'index': 'existing_net',
+            'col_name': '原有敞口',
+            'width': '8%',
+            'td_attr': {}
+        },
+        {
+            'index': 'projectexecution__new_net_used',
+            'col_name': '新增敞口已投',
+            'width': '8%',
+            'td_attr': {}
+        },
+    ]
+    return render(request, 'proj_rep/project_detail.html', locals())
 
 
 def getProjectDetails():

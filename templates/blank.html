@@ -17,11 +17,24 @@
     <header id="topbar" class="topbar" style="position:fixed;top:0;width:100%;background-color:rgba(0,0,0,0.75);color:white">
         <nav class="navbar navbar-expand-md navbar-light">
 
+            {% block navbar_before_ul %}
+
+            {% endblock %}
+
             <div class="navbar-collapse">
                 <ul class="navbar-nav mr-auto mt-md-0">
-                    <li style="width: 100px;"></li>
+                    <li style="width: 100px;">&nbsp;</li>
+
+                    {% block navbar_ul %}
+
+                    {% endblock %}
+
                 </ul>
             </div>
+
+            {% block navbar_after_ul %}
+
+            {% endblock %}
         </nav>
     </header>
 
