@@ -329,11 +329,11 @@ class Business(models.Model):
         return self.caption
 
     @classmethod
-    def getAllBusiness(cls):
-        businesses = cls.objects.values('caption').order_by('display_order')
+    def getAllBusiness(cls, value='caption'):
+        businesses = cls.objects.values(value).order_by('display_order')
         business_list = []
         for b in businesses:
-            business_list.append(b['caption'])
+            business_list.append(b[value])
         return business_list
 
 

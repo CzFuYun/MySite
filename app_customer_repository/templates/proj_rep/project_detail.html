@@ -1,0 +1,30 @@
+{% extends 'blank.html' %}
+
+
+
+{% block extra_css %}
+
+{% endblock %}
+
+
+
+{% block content %}
+    {% for datum in data %}
+{#        {% if datum.0 == 'summary' %}#}
+{#            #}
+{#        {% endif %}#}
+         {{ datum.0 }}
+    {% endfor %}
+
+
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+    <script type="text/javascript">
+        {#DATA = JSON.parse('{{ data|safe }}');#}
+
+    </script>
+{% endblock %}

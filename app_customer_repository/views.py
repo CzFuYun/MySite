@@ -68,7 +68,7 @@ def selectProjectAction(request):
         end_date = request.POST.get('end_date')
         return render(request, 'proj_rep/project_summary.html', {'opener_params': json.dumps({'start_date': start_date, 'end_date': end_date})})
     elif action == '2':
-        viewProjectExeDetail(request)
+        return viewProjectExeDetail(request)
     elif action == '3':
         pass
     elif action == '4':
@@ -202,17 +202,53 @@ def viewProjectSummary(request):
 
 
 def viewProjectExeDetail(request):
+    imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
-    detail_aggregate = request.POST.get('detail_aggregate')
-
-
-
-
-
-
-
-    return render(request, 'proj_rep/project_exe_detail.html', locals())
+    last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
+    exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
+    project_qs = models.ProjectRepository.objects.filter(
+        (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
+        & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date))
+    project_detail = project_qs.values(
+        'id',
+        'customer__name',
+        'staff_id',
+        'staff__name',
+        'staff__sub_department__superior__code',
+        'staff__sub_department__superior__caption',
+        'business__superior_id',
+        'business__superior__caption',
+        'business_id',
+        'business__caption',
+        'total_net',
+        'existing_net',
+        'projectexecution__new_net_used',
+        'projectexecution__current_progress__status_num',
+        'projectexecution__current_progress__caption',
+    ).order_by(
+        'business__superior__display_order',
+        'staff__sub_department__superior__display_order',
+        'staff_id',
+        '-projectexecution__current_progress__status_num'
+    )
+    buniness_summary = list(models.Business.objects.filter(
+        subbusiness__projectrepository__in=project_qs,
+        subbusiness__projectrepository__projectexecution__photo_date=exe_date
+    ).values('caption').annotate(
+        new_net_sum=Sum('subbusiness__projectrepository__total_net')-Sum('subbusiness__projectrepository__existing_net'),
+        new_net_used_sum=Sum('subbusiness__projectrepository__projectexecution__new_net_used'),
+    ).order_by('display_order'))
+    ret_list = []
+    i = 0
+    business = ''
+    for p in project_detail:
+        if business != p['business__superior__caption']:
+            ret_list.append(('summary', buniness_summary[i]))
+            business = p['business__superior__caption']
+            i += 1
+        ret_list.append(('project', p))
+    return render(request, 'proj_rep/project_detail.html', {'data': json.dumps(ret_list)})
 
 
 def getProjectDetails():
