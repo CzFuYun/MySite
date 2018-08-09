@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 
+
 {% endblock %}
 
 
@@ -17,13 +18,18 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">业务品种</button>
-    <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
-        <a class="dropdown-item" href="#">Action</a>
-        <a class="dropdown-item" href="#">Another action</a>
-        <a class="dropdown-item" href="#">Something else here</a>
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="#">Separated link</a>
+    <div class="btn-group">
+        <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">业务品种</button>
+        <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
+            {% for b in business_list %}
+                <a class="dropdown-item" href="#business_{{ b.id }}_title">{{ b.caption }}</a>
+            {% endfor %}
+{#            <a class="dropdown-item" href="#">Action</a>#}
+{#            <a class="dropdown-item" href="#">Another action</a>#}
+{#            <a class="dropdown-item" href="#">Something else here</a>#}
+{#            <div class="dropdown-divider"></div>#}
+{#            <a class="dropdown-item" href="#">Separated link</a>#}
+        </div>
     </div>
 {% endblock %}
 
@@ -77,14 +83,46 @@
 {% block extra_js %}
     <script type="text/javascript">
         $(function(){
-            $('td[yr_card]').each(function(index,elem){
+            $('td[yr_card]').each(function(index, elem){
                 let yr_card = Number(elem.getAttribute('yr_card'));
                 if(yr_card === 1){
                     $(elem).addClass('text-warning text-semibold')
                 }else if(yr_card > 1){
                     $(elem).addClass('text-danger text-semibold')
                 }
-            })
-        })
+            });
+            $('td[status_num]').each(function(index, elem){
+                let pro_text = elem.innerHTML;
+                elem.innerHTML = '';
+                let status_num = Number(elem.getAttribute('status_num'));
+                let container = document.createElement('div');
+                let textArea = document.createElement('div');
+                let text = document.createElement('h5');
+                let progressBar = document.createElement('div');
+                container.className = 'progress progressBar-xs margin-vertical-10';
+                textArea.style = 'position:absolute;';
+                text.style = 'color:black;';
+                let width;
+                if(status_num <= 100){
+                    width = status_num + '%';
+                    text.innerText = pro_text;
+                    progressBar.className = 'progressBar-bar bg-warning';
+                }else{
+                    let totalNet = Number($('td[total_net]')[index].getAttribute('total_net'));
+                    let existingNet = Number($('td[existing_net]')[index].getAttribute('existing_net'));
+                    let newNetUsed = Number($('td[new_net_used]')[index].getAttribute('new_net_used'));
+                    newNetUsed = newNetUsed >= 0 ? newNetUsed : 0;
+                    let newNet = totalNet - existingNet;
+                    width = String(Math.round(10000 * newNetUsed / newNet) / 100) + '%';
+                    progressBar.className = 'progress-bar bg-success';
+                    text.innerText = width;
+                }
+                progressBar.style = 'width:' + width + '; height:20px;';
+                textArea.appendChild(text);
+                container.appendChild(textArea);
+                container.appendChild(progressBar);
+                elem.appendChild(container);
+            });
+        });
     </script>
 {% endblock %}

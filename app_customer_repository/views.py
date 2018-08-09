@@ -61,6 +61,7 @@ def viewProjectRepository(request):
     if block == 'js':
         return render_to_response('proj_rep/project_js.html')
 
+
 def selectProjectAction(request):
     action = request.POST.get('action')
     if action == '1':
@@ -68,11 +69,12 @@ def selectProjectAction(request):
         end_date = request.POST.get('end_date')
         return render(request, 'proj_rep/project_summary.html', {'opener_params': json.dumps({'start_date': start_date, 'end_date': end_date})})
     elif action == '2':
-        return viewProjectExeDetail(request)
+        return viewProjectSimpleDetail(request)
     elif action == '3':
         pass
     elif action == '4':
-        pass
+        return editProjectExe(request)
+
 
 def viewProjectSummary(request):
     imp_date = models_operation.DateOperation()
@@ -201,7 +203,7 @@ def viewProjectSummary(request):
         }, cls=utilities.JsonEncoderExtend))
 
 
-def viewProjectExeDetail(request):
+def viewProjectSimpleDetail(request):
     imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
@@ -256,7 +258,9 @@ def viewProjectExeDetail(request):
             'index': 'customer__name',
             'col_name': '客户名称',
             'width': '15%',
-            'td_attr': {}
+            'td_attr': {
+                'project_id': 'id'
+            }
         },
         {
             'index': 'staff__sub_department__superior__caption',
@@ -276,7 +280,7 @@ def viewProjectExeDetail(request):
             }
         },
         {
-            'index': 'business__superior__caption',
+            'index': 'business__caption',
             'col_name': '业务种类',
             'width': '6%',
             'td_attr': {
@@ -295,25 +299,32 @@ def viewProjectExeDetail(request):
             'index': 'total_net',
             'col_name': '总敞口',
             'width': '8%',
-            'td_attr': {}
+            'td_attr': {
+                'total_net': 'total_net'
+            }
         },
         {
             'index': 'existing_net',
             'col_name': '原有敞口',
             'width': '8%',
-            'td_attr': {}
+            'td_attr': {
+                'existing_net': 'existing_net'
+            }
         },
         {
             'index': 'projectexecution__new_net_used',
             'col_name': '新增敞口已投',
             'width': '8%',
-            'td_attr': {}
+            'td_attr': {
+                'new_net_used': 'projectexecution__new_net_used'
+            }
         },
     ]
     return render(request, 'proj_rep/project_detail.html', locals())
 
 
-def getProjectDetails():
+def editProjectExe(request):
+
     pass
 
 
