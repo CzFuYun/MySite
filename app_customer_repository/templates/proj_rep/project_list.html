@@ -65,9 +65,9 @@
             $('td[yr_card]').each(function(index, elem){
                 let yr_card = Number(elem.getAttribute('yr_card'));
                 if(yr_card === 1){
-                    $(elem).addClass('text-warning text-semibold')
+                    $(elem).addClass('text-warning text-semibold');
                 }else if(yr_card > 1){
-                    $(elem).addClass('text-danger text-semibold')
+                    $(elem).addClass('text-danger text-semibold');
                 }
             });
             $('td[status_num]').each(function(index, elem){
