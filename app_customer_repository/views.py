@@ -69,7 +69,11 @@ def selectProjectAction(request):
     if action == '1':
         return render(request, 'proj_rep/project_summary.html', {'opener_params': json.dumps({'start_date': start_date, 'end_date': end_date})})
     elif action == '2':
+<<<<<<< HEAD
         return render(request, 'proj_rep/project_list.html', locals())
+=======
+        return viewProjectSimpleDetail(request)
+>>>>>>> 982ee61d8c88f117b2ff9f12663607d8f3fd69f2
     elif action == '3':
         pass
     elif action == '4':
@@ -203,7 +207,11 @@ def viewProjectSummary(request):
         }, cls=utilities.JsonEncoderExtend))
 
 
+<<<<<<< HEAD
 def viewProjectList(request):
+=======
+def viewProjectSimpleDetail(request):
+>>>>>>> 982ee61d8c88f117b2ff9f12663607d8f3fd69f2
     imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
@@ -268,7 +276,9 @@ def viewProjectList(request):
             'index': 'customer__name',
             'col_name': '客户名称',
             'width': '15%',
-            'td_attr': {}
+            'td_attr': {
+                'project_id': 'id'
+            }
         },
         {
             'index': 'staff__sub_department__superior__caption',
@@ -333,6 +343,11 @@ def viewProjectList(request):
 
 def editProjectExe(request):
 
+<<<<<<< HEAD
+=======
+def editProjectExe(request):
+
+>>>>>>> 982ee61d8c88f117b2ff9f12663607d8f3fd69f2
     pass
 
 
