@@ -285,8 +285,8 @@ function buildTableStructure(tableHeadStructure, rowLabel, tableId, tableClass, 
 }
 
 function fillTable(tableId, valuesListByRow){
-    console.log(valuesListByRow);
-    let table = document.getElementById(tableId);
+    // console.log(valuesListByRow);
+    // let table = document.getElementById(tableId);
     let td = document.getElementById(tableId).getElementsByClassName('value_td'),
         n = 0;
     for(let i=0; i<valuesListByRow.length; i++){

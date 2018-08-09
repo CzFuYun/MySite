@@ -52,7 +52,7 @@
                         },
                     'td':
                         {
-                            'style': 'border: 1px solid gray; text-align: center; vertical-align: middle; cursor:pointer;',
+                            'style': 'border: 1px solid gray; text-align: right; vertical-align: middle; cursor:pointer;',
                             'onclick': 'clickTableArea(event, this)'
                     }
                 },
@@ -74,6 +74,19 @@
             {#let thCells = document.getElementById('project_summary').getElementsByTagName('thead')[0].getElementsByTagName('tr')[1].getElementsByTagName('th');#}
             DATA.rows.push(summaryRowValue);
             fillTable('project_summary', DATA.rows);
+            $('th[class*=value_td]').each(function(index, elem){
+               let value = Number(elem.innerText);
+               if(value <= 100 && value){
+                   elem.innerText = value.toFixed(2);
+                   $('#project_summary tbody tr').each(function(i, e){
+                        let td = $('td[class*=value_td]', e)[index];
+                        let value = Number(td.innerText);
+                        td.innerText = value.toFixed(2);
+                   })
+               }
+            });
+
+
             let date_btn = document.createElement('button');
             date_btn.className = 'btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2';
             date_btn.type = 'button';

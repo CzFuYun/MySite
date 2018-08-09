@@ -1,40 +1,5 @@
-{% extends 'blank.html' %}
 {% load tags %}
 
-
-
-{% block extra_css %}
-
-{% endblock %}
-
-
-
-{% block navbar_before_ul %}
-    <button class="btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2" type="button">{{ start_date }}→{{ end_date }}</button>
-
-{% endblock %}
-
-
-
-{% block navbar_after_ul %}
-    <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">业务品种</button>
-    <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
-        <a class="dropdown-item" href="#">Action</a>
-        <a class="dropdown-item" href="#">Another action</a>
-        <a class="dropdown-item" href="#">Something else here</a>
-        <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="#">Separated link</a>
-    </div>
-{% endblock %}
-
-
-
-{% block content %}
-{#    {% for d in data %}#}
-{##}
-{#        {{ d }}#}
-{#        <hr>#}
-{#    {% endfor %}#}
         {% for d in data %}
             {% if d.0 == 'summary' %}
                 {% if forloop.counter %}
@@ -70,21 +35,3 @@
                     </tbody>
                 </table>
             </div>
-{% endblock %}
-
-
-
-{% block extra_js %}
-    <script type="text/javascript">
-        $(function(){
-            $('td[yr_card]').each(function(index,elem){
-                let yr_card = Number(elem.getAttribute('yr_card'));
-                if(yr_card === 1){
-                    $(elem).addClass('text-warning text-semibold')
-                }else if(yr_card > 1){
-                    $(elem).addClass('text-danger text-semibold')
-                }
-            })
-        })
-    </script>
-{% endblock %}

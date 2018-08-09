@@ -16,7 +16,7 @@ TABLE_STRUCTURE = {
     net_total:          tableCol('用信净额'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
     loan:               tableCol('贷款金额'   , 0     , TS_RULE.originally_value,TS_RULE.col_accumulation),
     loan_interest:      tableCol('贷款利息'   , 0     , TS_RULE.originally_value,TS_RULE.col_accumulation),
-    loan_rate:          tableCol('贷款利率'   , '6%'  , 'Math.round(10000*<loan_interest>/<loan>)/100','Math.round(10000*<loan_interest>/<loan>)/100', true),
+    loan_rate:          tableCol('贷款利率'   , '6%'  , '(100*<loan_interest>/<loan>).toFixed(2)','(100*<loan_interest>/<loan>).toFixed(2)', true),
     lr_BAB:             tableCol('全额银票'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
     invest_banking:     tableCol('投行项目'   , '6%'  , TS_RULE.originally_value,TS_RULE.col_accumulation, true),
     defuse_expire:      tableCol('化解到期'   , '8%'  , TS_RULE.originally_value,TS_RULE.no_need_sum),
@@ -321,7 +321,7 @@ function setDepoCompForTd(depoBefore, depoAfter){
         ? depoAfter  / depoBefore - 1
         : (depoAfter ? 1 : 0);
         compare = Math.max(compare, -1);        // 最多-100%
-        compare = Math.round(compare * 10000) / 100;
+        compare = (compare * 100).toFixed(2);
         let arrow, color;
         if(compare <= -20){
             arrow = '"fa fa-level-down"';
@@ -345,20 +345,20 @@ function setContribRatioForTd(interest, loan, base_rate, yd_avg, net_total){
     let depo_ratio = yd_avg / net_total,
         rate_float_ratio = interest / loan / base_rate - 1 || 0,
         combine_contrib_ratio = rate_float_ratio + depo_ratio,
-        display_depo_ratio = Math.round(depo_ratio * 10000) / 100,
-        display_combine_contrib_ratio = Math.round(combine_contrib_ratio * 10000) / 100,
+        display_depo_ratio = (depo_ratio * 100).toFixed(2),
+        display_combine_contrib_ratio = (combine_contrib_ratio * 100).toFixed(2),
         pro_bar_color;
     if(depo_ratio < 0.15 )
-        pro_bar_color = 'progress-bar bg-danger';
+        pro_bar_color = 'progress-bar bg-danger active progress-bar-striped';
     else if(depo_ratio < 0.30)
-        pro_bar_color = 'progress-bar bg-warning';
+        pro_bar_color = 'progress-bar bg-warning active progress-bar-striped';
     else if(depo_ratio < 0.45)
-        pro_bar_color = 'progress-bar bg-success';
+        pro_bar_color = 'progress-bar bg-success active progress-bar-striped';
     else if(depo_ratio < 0.60)
-        pro_bar_color = 'progress-bar bg-info';
+        pro_bar_color = 'progress-bar bg-info active progress-bar-striped';
     else
-        pro_bar_color = 'progress-bar bg-primary';
-    return '<div class="progress progress-xs margin-vertical-10 "><div style="position:absolute"><h5 style="color:black">' +
+        pro_bar_color = 'progress-bar bg-primary active progress-bar-striped';
+    return '<div class="progress progress-xs margin-vertical-10 "><div style="position: absolute"><h5 style="color: black; line-height: 20px;">' +
         display_depo_ratio + '%</h5></div><div class="' +
         pro_bar_color + '" style="width:' + display_combine_contrib_ratio +
         '%; height:20px;"></div></div>'

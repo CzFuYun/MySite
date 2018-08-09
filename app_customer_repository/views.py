@@ -61,18 +61,20 @@ def viewProjectRepository(request):
     if block == 'js':
         return render_to_response('proj_rep/project_js.html')
 
+
 def selectProjectAction(request):
     action = request.POST.get('action')
+    start_date = request.POST.get('start_date')
+    end_date = request.POST.get('end_date')
     if action == '1':
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
         return render(request, 'proj_rep/project_summary.html', {'opener_params': json.dumps({'start_date': start_date, 'end_date': end_date})})
     elif action == '2':
-        return viewProjectExeDetail(request)
+        return render(request, 'proj_rep/project_list.html', locals())
     elif action == '3':
         pass
     elif action == '4':
-        pass
+        return editProjectExe(request)
+
 
 def viewProjectSummary(request):
     imp_date = models_operation.DateOperation()
@@ -141,8 +143,8 @@ def viewProjectSummary(request):
     table_col = {     # 项目储备汇总表的列
         business_list[0]: (     # 授信
             ('计划户数',   ['{target}["计划户数"]'], ),
-            ('已预审',     ['{project}["current_progress__status_num"] in range(20,100)', '{project}["account_num"]', '0'], ),
-            ('实绩户数',   ['{project}["current_progress__status_num"]>=100', '{project}["account_num"]', '0'], ),
+            ('已预审',     ['{project}["current_progress__status_num"] in range(20,100)', 'round({project}["account_num"],2)', '0'], ),
+            ('实绩户数',   ['{project}["current_progress__status_num"]>=100', 'round({project}["account_num"],2)', '0'], ),
             ('计划金额',   ['{target}["计划金额"]'], ),
             ('待投放',     ['{project}["current_progress__status_num"] in range(100,200)', '{project}["new_net"]-{project}["new_net_used"]', '0'], ),
             ('实绩金额',   ['{project}["current_progress__status_num"]>100', '{project}["new_net_used"]', '0'], ),
@@ -201,7 +203,7 @@ def viewProjectSummary(request):
         }, cls=utilities.JsonEncoderExtend))
 
 
-def viewProjectExeDetail(request):
+def viewProjectList(request):
     imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
@@ -242,16 +244,26 @@ def viewProjectExeDetail(request):
     ).order_by('display_order'))
     data = []
     i = 0
+    sn = 0
     business = ''
     business_list = []
     for p in project_detail:
+        sn += 1
         if business != p['business__superior__caption']:
             business_list.append({'id': buniness_summary[i]['id'], 'caption': buniness_summary[i]['caption']})
             data.append(('summary', buniness_summary[i]))
             business = p['business__superior__caption']
             i += 1
-        data.append(('project', p))
+        data.append(('project', {**p, **{'sn': sn}}))
     table_col = [
+        {
+            'index': 'sn',
+            'col_name': '序号',
+            'width': '2%',
+            'td_attr': {
+                'project_id': 'id'
+            }
+        },
         {
             'index': 'customer__name',
             'col_name': '客户名称',
@@ -276,7 +288,7 @@ def viewProjectExeDetail(request):
             }
         },
         {
-            'index': 'business__superior__caption',
+            'index': 'business__caption',
             'col_name': '业务种类',
             'width': '6%',
             'td_attr': {
@@ -295,25 +307,32 @@ def viewProjectExeDetail(request):
             'index': 'total_net',
             'col_name': '总敞口',
             'width': '8%',
-            'td_attr': {}
+            'td_attr': {
+                'total_net': 'total_net'
+            }
         },
         {
             'index': 'existing_net',
             'col_name': '原有敞口',
             'width': '8%',
-            'td_attr': {}
+            'td_attr': {
+                'existing_net': 'existing_net'
+            }
         },
         {
             'index': 'projectexecution__new_net_used',
             'col_name': '新增敞口已投',
             'width': '8%',
-            'td_attr': {}
+            'td_attr': {
+                'new_net_used': 'projectexecution__new_net_used'
+            }
         },
     ]
-    return render(request, 'proj_rep/project_detail.html', locals())
+    return render_to_response('proj_rep/project_list_content.html', locals())
 
 
-def getProjectDetails():
+def editProjectExe(request):
+
     pass
 
 
