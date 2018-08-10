@@ -106,6 +106,7 @@ def viewContributionTable(request):
                 data_date=opener_params['data_date']),
             'opener_params': json.dumps(opener_params),
             'data_date': opener_params['data_date'],
+            'department_list': rd_models.Department.getBusinessDept('l'),
         })
 
 
@@ -233,12 +234,16 @@ def viewExpirePrompt(request):
     if block == 'js':
         return render_to_response('expire/expire_js.html')
 
+
 def viewExpirePromptTable(request):
     if request.method == 'GET':
         filter_dict = request.GET
         filter_condition = '{'
         for f in filter_dict:
-            filter_condition += ('"' + f + '":"' + filter_dict[f] + '",')
+            if len(filter_dict.getlist(f)) <= 1:
+                filter_condition += ('"' + f + '":"' + filter_dict[f] + '",')
+            else:
+                filter_condition += ('"' + f + '":"' + str(filter_dict.getlist(f)) + '",')
         filter_condition += '}'
         return render(request, 'expire/expire_table.html', {'filter': filter_condition})
     elif request.method == 'POST':
@@ -338,6 +343,7 @@ def viewExpirePromptTable(request):
             ret.append(tmp)
         return HttpResponse(json.dumps(ret))
 
+
 def editExpirePrompt(request):
     ajax_result = {
         'success': False,
@@ -373,6 +379,7 @@ def editExpirePrompt(request):
             ajax_result['success'] = True and (ajax_result['success'] or not file_obj)
     return HttpResponse(json.dumps(ajax_result))
 
+
 def viewExpireExplain(request):
     ajax_result = {
         'success': False,
@@ -391,6 +398,7 @@ def viewExpireExplain(request):
     else:
         ajax_result['error'] = '记录不存在'
     return HttpResponse(json.dumps(ajax_result))
+
 
 def finishExpirePrompt(request):
     ajax_result = {
@@ -411,6 +419,7 @@ def finishExpirePrompt(request):
     else:
         ajax_result['error'] = '不可重复办结'
         return HttpResponse(json.dumps(ajax_result))
+
 
 def resetRedCard(request):
     ajax_result = {

@@ -374,10 +374,10 @@ function buildContribTable(filter_condict, ordered_dept){
         req_dept = filter_condict['department'];
     if(req_dept === 'JGBS' || req_dept === 'all'){
         contrib_tree = whole_contrib_tree;
-        dept_selector = document.createElement('div');
-        dept_selector.id = 'dept_selector';
-        dept_selector.className = 'card-body';
-        dept_selector.innerHTML = '<h4>经营部门：</h4>';
+        // dept_selector = document.createElement('div');
+        // dept_selector.id = 'dept_selector';
+        // dept_selector.className = 'card-body';
+        // dept_selector.innerHTML = '<h4>经营部门：</h4>';
         $('#right_sidebar_body').append(dept_selector);
     }else{
         contrib_tree[req_dept] = whole_contrib_tree[req_dept];
@@ -389,11 +389,11 @@ function buildContribTable(filter_condict, ordered_dept){
             continue;
         // {#console.log(dept_sum);#}
         // {# 添加部门选择器中的标签 #}
-        let dept_button = document.createElement('a');
-        dept_button.className = 'btn btn-rounded btn-block btn-outline-info';
-        dept_button.setAttribute('href', '#' + dept_code);
-        dept_button.innerText = dept_sum.cust_name.split('—')[0];
-        dept_selector.appendChild(dept_button);
+        // let dept_button = document.createElement('a');
+        // dept_button.className = 'btn btn-rounded btn-block btn-outline-info';
+        // dept_button.setAttribute('href', '#' + dept_code);
+        // dept_button.innerText = dept_sum.cust_name.split('—')[0];
+        // dept_selector.appendChild(dept_button);
         // {# end添加部门选择器中的标签 #}
         depts_sum[dept_code] = dept_sum;
         for(let col in dept_sum){

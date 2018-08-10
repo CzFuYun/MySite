@@ -22,7 +22,7 @@
 
             {% endblock %}
 
-            <div class="navbar-collapse">
+            <div id="nav_ul_area" class="navbar-collapse">
                 <ul class="navbar-nav mr-auto mt-md-0">
                     <li style="width: 100px;">&nbsp;</li>
 
@@ -31,20 +31,25 @@
                     {% endblock %}
 
                 </ul>
+
+                <div id="extra_function" class="button-group">
+                {% block navbar_after_ul %}
+
+                {% endblock %}
+                </div>
+
             </div>
 
-            {% block navbar_after_ul %}
 
-            {% endblock %}
         </nav>
     </header>
 
 
     <div class="page-wrapper">
         <div class="col-lg-12">
-            <button class="right-side-toggle waves-effect waves-light btn-inverse btn btn-circle btn-sm pull-right m-l-10">
-                <i class="ti-settings text-white"></i>
-            </button>
+{#            <button class="right-side-toggle waves-effect waves-light btn-inverse btn btn-circle btn-sm pull-right m-l-10">#}
+{#                <i class="ti-settings text-white"></i>#}
+{#            </button>#}
             <input id="opener_params" type="text" value="{{ opener_params }}" style="display: none">
             <div class="col-12" id="main_content">
                 {% block content %}

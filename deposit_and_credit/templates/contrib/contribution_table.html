@@ -4,6 +4,17 @@
 <link href="/static/assets/plugins/css-chart/css-chart.css" rel="stylesheet">
 {% endblock %}
 
+{% block navbar_after_ul %}
+    <div id="dept_selector" class="btn-group">
+        <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">支行</button>
+        <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
+            {% for d in department_list %}
+                <a class="dropdown-item" href="#{{ d.0 }}">{{ d.1 }}</a>
+            {% endfor %}
+
+        </div>
+    </div>
+{% endblock %}
 
 {% block content %}
 
@@ -55,6 +66,7 @@
         for(let i in ordered_dept_dict)
             ordered_dept.push(i);
         buildContribTable(filter_condict, ordered_dept);
+        extraSortRule();
     });
 
     function showHelp(){
@@ -69,6 +81,10 @@
             '2、进度条长度表征综合回报率：\n' +
             '   综合回报率 = 存款沉淀率 + 利率上浮比例\n' +
             '   进度条长度封顶为100')
+    }
+
+    function extraSortRule(){
+        $('[series_code=钟楼经开区]').parent().before($('[series_code=钟楼新城]').parent());
     }
 
 </script>
