@@ -116,8 +116,8 @@ class ProjectRepository(models.Model):
         if pr_dict.get('id'):       # 修改
             pr = ProjectRepository.objects.get(id=pr_dict['id'])
         else:       # 创建
-            pr = ProjectRepository(**pr_dict)
-            pr.create_date = imp_date.today
+            pr = ProjectRepository({**pr_dict, **{'create_date': imp_date.today}})
+            # pr.create_date = imp_date.today
             need_photo = True
         pr.judge_is_focus()
         pr.calculate_acc_num()

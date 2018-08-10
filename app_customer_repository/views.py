@@ -333,6 +333,10 @@ def viewProjectList(request):
     return render_to_response('proj_rep/project_list_content.html', locals())
 
 
+def addProject(request):
+    pass
+
+
 def editProjectExe(request):
 
     pass

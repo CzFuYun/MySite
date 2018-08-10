@@ -9,4 +9,5 @@ urlpatterns = [
     url(r'projectaction\.select', views.selectProjectAction, name='selectProjectAction'),
     url(r'projectsummary\.view', views.viewProjectSummary, name='viewProjectSummary'),
     url(r'projectlist\.view', views.viewProjectList, name='viewProjectList'),
+    url(r'project\.add', views.addProject, name='addProject'),
 ]

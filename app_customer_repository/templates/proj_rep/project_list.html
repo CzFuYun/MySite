@@ -18,7 +18,7 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-success"><a href="{% url '' %}" target="_blank" style="color: white;">增加项目</a></button>
+    <button class="btn waves-effect waves-light btn-success" onclick="addProject()">创建项目</button>
 
 {% endblock %}
 
@@ -100,6 +100,10 @@
                 container.appendChild(progressBar);
                 elem.appendChild(container);
             });
+        }
+
+        function addProject() {
+
         }
     </script>
 {% endblock %}
