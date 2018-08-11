@@ -146,3 +146,49 @@ function submitByAjax(url, formId){
     return requestSuccess;
 }
 
+function makeForm(urlName, data, sizeX, sizeY, formId){
+    $('#'+ formId + '_container').remove();
+    $.get({
+        url: parseUrl(urlName),
+        async: false,
+        data: $.extend({}, data, {
+            sizeX: sizeX,
+            sizeY: sizeY,
+            screenX: screen.availWidth,
+            screenY: screen.availHeight,
+            formId: formId
+        }),
+        dataType: 'text',
+        success: function(response){
+            $('script:first').before($(response));
+        }
+    });
+}
+
+// function makeFormContainer(sizeX, sizeY, formId){
+//     $('#' + formId + '_container').remove();
+//     let marginX, marginY;
+//     let scrollH, scrollV;
+//     if(sizeX <= screen.availWidth){
+//         marginX = (screen.availWidth - sizeX) / 2;
+//     }else {
+//         marginX = 0;
+//
+//     }
+//     if(sizeY <= screen.availHeight){
+//         marginY = (screen.availHeight - sizeY) / 2;
+//     }else {
+//         marginY = 0;
+//
+//     }
+//
+//
+//     let form = $('<div id="' + formId + '_container" class="card" ' +
+//         'style="position: fixed; display: none; z-index: 101; margin: auto; ' +
+//         'left: ' + marginX + 'px; right: '+ marginX + 'px; top: ' + marginY + 'px; bottom: ' + marginY + 'px">' +
+//         '<div class="card-body"><div class="">' +
+//         '<div class="" id="' + formId + '_box">' +
+//         '</div></div></div></div>');
+//     document.body.appendChild(form[0]);
+// }
+/**/

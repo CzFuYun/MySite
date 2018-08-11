@@ -43,4 +43,10 @@ class JsonEncoderExtend(json.JSONEncoder):
             return json.JSONEncoder.default(self, o)
 
 
-
+def calHtmlFormMargin(sizeX, sizeY, screenX, screenY):
+    marginX = (int(screenX) - int(sizeX)) / 2
+    marginY = (int(screenY) - int(sizeY)) / 2
+    return {
+        'marginX': marginX,
+        'marginY': marginY
+    }

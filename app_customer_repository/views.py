@@ -258,7 +258,7 @@ def viewProjectList(request):
     table_col = [
         {
             'index': 'sn',
-            'col_name': '序号',
+            'col_name': '#',
             'width': '2%',
             'td_attr': {
                 'project_id': 'id'
@@ -268,9 +268,7 @@ def viewProjectList(request):
             'index': 'customer__name',
             'col_name': '客户名称',
             'width': '15%',
-            'td_attr': {
-                'project_id': 'id'
-            }
+            'td_attr': {}
         },
         {
             'index': 'staff__sub_department__superior__caption',
@@ -334,7 +332,39 @@ def viewProjectList(request):
 
 
 def addProject(request):
-    pass
+    if request.method == 'GET':
+        form_id = request.GET.get('formId', 'myForm')
+        form_margin = utilities.calHtmlFormMargin(request.GET['sizeX'], request.GET['sizeY'], request.GET['screenX'], request.GET['screenY'],)
+        marginX = form_margin['marginX']
+        marginY = form_margin['marginY']
+        form_content = [
+            {
+                'label': '客户名称',
+                'tag': 'input',
+                'property': {
+                    'id': 'customer_name',
+                    'name': 'customer_name',
+                    'type': 'text',
+                    'class': 'form-control',
+                    'oninput': 'getCustomerName(this)'
+                }
+            },
+            {
+                'label': '客户经理',
+                'tag': 'input',
+                'property': {
+                    'id': 'staff',
+                    'name': 'staff',
+                    'type': 'text',
+                    'class': 'form-control',
+                    'oninput': 'getStaff(this)'
+                }
+            }
+        ]
+        return render_to_response('proj_rep/one_project_detail_form.html', locals())
+    elif request.method == 'POST':
+
+        pass
 
 
 def editProjectExe(request):

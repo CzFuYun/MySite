@@ -1,0 +1,35 @@
+
+
+
+<div id="{{ form_id }}_container" class="card" style="position: fixed; display: block; z-index: 101; margin: auto; top: {{ marginY }}px; bottom: {{ marginY }}px; left: {{ marginX }}px; right: {{ marginX }}px;">
+    <div class="card-body">
+        <h4 class="card-title">{{ formTitle }}</h4>
+        <h6 class="card-subtitle">{{ formSubTitle }}</h6>
+    </div>
+
+    {% block form_tag %}{% endblock %}
+
+    <div class="card-body">
+
+        {% block form_content %}{% endblock %}
+
+    </div>
+
+    <div class="card-body b-t">
+        <div class="row">
+            <div class="col-6 text-right">
+
+                {% block form_button %}{% endblock %}
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+    {% block form_close_tag %}{% endblock %}
+
+
+</div>
+

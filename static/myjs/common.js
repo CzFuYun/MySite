@@ -297,34 +297,6 @@ function fillTable(tableId, valuesListByRow){
     }
 }
 
-// function scrollHandle() {
-//     var scrollTop = window.tableScroll.scrollTop();
-//     // 当滚动距离大于0时设置top及相应的样式
-//     if (scrollTop > 0) {
-//         window.tableCont.css({
-//             "top": scrollTop + 'px',
-//             "marginTop": "-1px",
-//             "padding": 0
-//         });
-//         window.tableCont_child.css({
-//             "borderTop": "1px solid gainsboro",
-//             "borderBottom": "1px solid gainsboro",
-//             "marginTop": "-1px",
-//             "padding": "8px"
-//         })
-//     } else {
-//     // 当滚动距离小于0时设置top及相应的样式
-//         window.tableCont.css({
-//             "top": scrollTop + 'px',
-//             "marginTop": "0",
-//         });
-//         window.tableCont_child.css({
-//             "border": "none",
-//             "marginTop": 0,
-//             "marginBottom": 0,
-//         })
-//     }
-// }
 
 function lockThead(tableDivId, tableId){
     var r = window.devicePixelRatio;        // 屏幕缩放比例
@@ -360,7 +332,6 @@ function lockThead(tableDivId, tableId){
                 "marginBottom": 0,
             })
         }
-
     });
 }
 

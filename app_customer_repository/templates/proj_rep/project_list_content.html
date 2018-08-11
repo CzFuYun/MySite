@@ -2,16 +2,11 @@
 
 {% block navbar_after_ul %}
     <div id="business_selector" class="btn-group">
-        <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">业务品种</button>
+        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="mdi mdi-content-duplicate"></i>前往</button>
         <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
             {% for b in business_list %}
                 <a class="dropdown-item" href="#business_{{ b.id }}_title">{{ b.caption }}</a>
             {% endfor %}
-{#            <a class="dropdown-item" href="#">Action</a>#}
-{#            <a class="dropdown-item" href="#">Another action</a>#}
-{#            <a class="dropdown-item" href="#">Something else here</a>#}
-{#            <div class="dropdown-divider"></div>#}
-{#            <a class="dropdown-item" href="#">Separated link</a>#}
         </div>
     </div>
 {% endblock %}

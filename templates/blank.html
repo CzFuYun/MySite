@@ -72,7 +72,7 @@
         </div>
     </div>
 
-    <div id="mask" style="position: fixed; background-color: black; opacity: 0.5; display: none; top: 0; bottom: 0; left: 0; right: 0;"></div>
+    <div id="mask" style="position: fixed; background-color: black; opacity: 0.5; display: none; top: 0; bottom: 0; left: 0; right: 0; z-index: 100"></div>
 
     <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
     <script src="/static/assets/plugins/bootstrap/js/popper.min.js"></script>
@@ -80,7 +80,6 @@
     <script src="/static/js/custom.min.js"></script>
     <script src="/static/assets/plugins/bootstrap/js/bootstrap.min.js"></script>
     <script src="/static/assets/plugins/styleswitcher/jQuery.style.switcher.js"></script>
-
     <script type="text/javascript">
         try{
             OPENER_PARAMS = JSON.parse($('#opener_params').attr('value'));
@@ -91,7 +90,7 @@
         function showMask(status){
             if(!document.getElementById('mask')){
                 let mask = document.createElement('div');
-                mask.style = 'position: fixed; background-color: black; opacity: 0.5; display: none; top: 0px; bottom: 0px; left: 0px; right: 0px;'
+                mask.style = 'position: fixed; background-color: black; opacity: 0.5; display: none; top: 0px; bottom: 0px; left: 0px; right: 0px;';
                 document.appendChild(mask);
             }
             document.getElementById('mask').style.display = status ? 'block' : 'none';

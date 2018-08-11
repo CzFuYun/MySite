@@ -18,7 +18,10 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-success" onclick="addProject()">创建项目</button>
+    <button class="btn waves-effect waves-light btn-success" onclick="addProject()"><i class="mdi mdi-target"></i>新增</button>
+    <button class="btn waves-effect waves-light btn-danger" onclick=""><i class="mdi mdi-bomb"></i>删除</button>
+    <button class="btn waves-effect waves-light btn-warning" onclick="editProject()"><i class="mdi mdi-grease-pencil"></i>修改</button>
+    <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>
 
 {% endblock %}
 
@@ -32,6 +35,9 @@
 
 
 {% block extra_js %}
+    <script src="/static/js/jquery.slimscroll.js"></script>
+    <script src="/static/myjs/formOperation.js"></script>
+    <script src="/static/myjs/common.js"></script>
     <script type="text/javascript">
         $(function(){
             buildProjectList();
@@ -46,7 +52,6 @@
                 data: {start_date: '{{ start_date }}', end_date: '{{ end_date }}'},
                 dataType: 'text',
                 success: function(response){
-                    console.log(response);
                     $('#main_content').html(response);
                 }
             });
@@ -61,6 +66,19 @@
                     $(elem).addClass('text-danger text-semibold');
                 }
             });
+
+            $('td[project_id]').each(function(index, elem){
+                let projectId = elem.getAttribute('project_id');
+                let $radio = $(
+                    '<div style="width: 0; height: 0;">' +
+                        '<input type="radio" id="project_' + projectId + '" project_id="' + projectId + '" name="project_id">' +
+                        '<label for="project_' + projectId + '" class=""></label>' +
+                    '</div>'
+                );
+                elem.innerText = '';
+                elem.append($radio[0]);
+            });
+
             $('td[status_num]').each(function(index, elem){
                 let pro_text = elem.innerHTML;
                 elem.innerHTML = '';
@@ -102,8 +120,32 @@
             });
         }
 
-        function addProject() {
+        function judgeSelectedProject(){
+            let input = $('input[project_id]');
+            for(let i=0; i<input.length; i++){
+                if(input[i].checked){
+                    return input[i].getAttribute('project_id');
+                }
+            }
+        }
+
+        function editProject(){
 
         }
+
+        function closeProject(){
+            let projectId = judgeSelectedProject();
+            if(!projectId){
+                alert('请选择项目');
+                return false;
+            }
+
+        }
+
+        function addProject() {
+            makeForm('addProject', {}, 500, 1000, 'project_adder');
+        }
+
+
     </script>
 {% endblock %}
