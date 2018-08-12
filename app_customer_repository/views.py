@@ -1,8 +1,7 @@
 import json, pickle
 from django.shortcuts import render, HttpResponse, render_to_response
 from django.db.models import Q, F, Sum
-from . import models
-from . import models_operation as mo
+from . import models, models_operation as mo, html_forms
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
 from root_db import models as rd_m
@@ -41,8 +40,13 @@ def test(request):
     #     'business__superior__caption',
     #     'account_num',
     # )
-    models.ProjectExecution.takePhoto(None, '2018-08-01')
-    return
+    # models.ProjectExecution.takePhoto(None, '2018-08-01')
+    print('start test')
+    form = html_forms.Project()
+
+
+
+    return render(request, 'forms/form_test.html', locals())
 
 
 def viewProjectRepository(request):

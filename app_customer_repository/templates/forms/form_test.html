@@ -1,0 +1,23 @@
+{% extends 'blank.html' %}
+
+
+
+{% block content %}
+    <div class="card" style="">
+        <div class="card-body">
+            <form action="/" method="POST" enctype="multipart/form-data">
+                {{ form.as_p }}
+                <button type="button" class="btn btn-success"><i class="fa fa-check"></i>确认</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="/static/myjs/formOperation.js"></script>
+    <script>
+        $(function(){
+            modifyForm();
+        })
+    </script>
+{% endblock %}

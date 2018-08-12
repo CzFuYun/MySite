@@ -174,6 +174,20 @@ function fillForm2(formId, dataDic){
     );
 }
 
+function modifyForm(formId){
+    let selector = formId ? '#' + formId : 'form';
+    $(selector + ' li label input').each(
+        function(index, elem){
+            $(elem).parent().before($(elem));
+        }
+    );
+    $(selector + ' ul').each(
+        function(index, elem){
+            $(elem).addClass('list-unstyled list-inline');
+        }
+    );
+}
+
 function showForm(formId, status){
     showMask(status);
     document.getElementById(formId).style.display = status ? 'block' : 'none';
