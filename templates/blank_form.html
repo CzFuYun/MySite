@@ -1,22 +1,65 @@
 
+{% load tags %}
 
-
-<div id="{{ form_id }}_container" class="card" style="position: fixed; display: block; z-index: 101; margin: auto; top: {{ marginY }}px; bottom: {{ marginY }}px; left: {{ marginX }}px; right: {{ marginX }}px;">
+<div id="{{ form.form_id }}_container" class="card" style="position: fixed; display: none; z-index: 101; margin: auto; top: {{ form.marginY }}px; bottom: {{ form.marginY }}px; left: {{ form.marginX }}px; right: {{ form.marginX }}px;">
     <div class="card-body">
-        <h4 class="card-title">{{ formTitle }}</h4>
-        <h6 class="card-subtitle">{{ formSubTitle }}</h6>
+        <h4 class="card-title">{{ form.form_title }}</h4>
+        <h6 class="card-subtitle">{{ form.form_subtitle }}</h6>
     </div>
 
-    {% block form_tag %}{% endblock %}
+    <form id="{{ form.form_id }}" method="{{ form.submit_method }}" action="{% url form.action_url_name %}" enctype="{{ form.enc_type }}">
 
-    <div class="card-body">
+    <div class="card-body" id="{{ form.form_id }}_body">
+{#        {% setFormHere form %}#}
 
-        {% block form_content %}{% endblock %}
+{#        {% block mian_inputs %}#}
+            {% for mi in form.main_inputs %}
+            <div class="form-group">
+                <label for="{% getValue mi.attribute id %}">{{ mi.label }}</label>
+                <div class="input-group">
+                    <{{ mi.tag }}
+                        {% for p in mi.attribute %}
+                            {{ p }}="{% getValue mi.attribute p %}"
+                        {% endfor %}>
+                        {% if mi.sub_elems %}
+                            {% for se in mi.sub_elems %}
+                                <{{ se.tag }}
+                                    {% for p in se.attribute %}
+                                        {{ p }}="{% getValue se.attribute p %}"
+                                    {% endfor %}
+                                >{{ se.text }}
+                                </{{ se.tag }}>
+                            {% endfor %}
+                        {% endif %}
+                    </{{ mi.tag }}>
+{#                    {% if mi.tag != 'input' %}</{{ mi.tag }}>{% endif %}#}
+                    {% if mi.satellite %}
+                        <div class="btn-group">
+                        {% for s in mi.satellite %}
+                            <{{ s.tag }}
+                                {% for p in s.attribute %}
+                                    {{ p }}="{% getValue s.attribute p %}"
+                                {% endfor %}>
+                                <i class="{{ s.icon }}"></i>
+                            </{{ s.tag }}>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+
+
+
+            </div>
+            {% endfor %}
+{#        {% endblock %}#}
 
     </div>
 
     <div class="card-body b-t">
         <div class="row">
+            <div class="col-6 text-right">
+            </div>
             <div class="col-6 text-right">
 
                 {% block form_button %}{% endblock %}
@@ -28,7 +71,7 @@
 
 
 
-    {% block form_close_tag %}{% endblock %}
+
 
 
 </div>

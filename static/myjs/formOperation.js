@@ -165,30 +165,25 @@ function makeForm(urlName, data, sizeX, sizeY, formId){
     });
 }
 
-// function makeFormContainer(sizeX, sizeY, formId){
-//     $('#' + formId + '_container').remove();
-//     let marginX, marginY;
-//     let scrollH, scrollV;
-//     if(sizeX <= screen.availWidth){
-//         marginX = (screen.availWidth - sizeX) / 2;
-//     }else {
-//         marginX = 0;
-//
-//     }
-//     if(sizeY <= screen.availHeight){
-//         marginY = (screen.availHeight - sizeY) / 2;
-//     }else {
-//         marginY = 0;
-//
-//     }
-//
-//
-//     let form = $('<div id="' + formId + '_container" class="card" ' +
-//         'style="position: fixed; display: none; z-index: 101; margin: auto; ' +
-//         'left: ' + marginX + 'px; right: '+ marginX + 'px; top: ' + marginY + 'px; bottom: ' + marginY + 'px">' +
-//         '<div class="card-body"><div class="">' +
-//         '<div class="" id="' + formId + '_box">' +
-//         '</div></div></div></div>');
-//     document.body.appendChild(form[0]);
-// }
-/**/
+function fillForm2(formId, dataDic){
+    $('[name]', '#' + formId).each(
+        function(index, elem){
+            let name = elem.name;
+            elem.value = dataDic[name];
+        }
+    );
+}
+
+function showForm(formId, status){
+    showMask(status);
+    document.getElementById(formId).style.display = status ? 'block' : 'none';
+}
+
+function showMask(status){
+    if(!document.getElementById('mask')){
+        let mask = document.createElement('div');
+        mask.style = 'position: fixed; background-color: black; opacity: 0.5; display: none; top: 0px; bottom: 0px; left: 0px; right: 0px;';
+        document.appendChild(mask);
+    }
+    document.getElementById('mask').style.display = status ? 'block' : 'none';
+}

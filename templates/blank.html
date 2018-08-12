@@ -87,14 +87,7 @@
             ;
         }
 
-        function showMask(status){
-            if(!document.getElementById('mask')){
-                let mask = document.createElement('div');
-                mask.style = 'position: fixed; background-color: black; opacity: 0.5; display: none; top: 0px; bottom: 0px; left: 0px; right: 0px;';
-                document.appendChild(mask);
-            }
-            document.getElementById('mask').style.display = status ? 'block' : 'none';
-        }
+
 
     </script>
     {% block extra_js %}

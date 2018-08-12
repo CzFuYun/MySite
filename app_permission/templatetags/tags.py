@@ -108,12 +108,16 @@ def buildMenu(request):
     menu_html += '</ul></nav></div></aside>'  # 菜单栏的闭合标签
     return mark_safe(menu_html)
 # ↑static ##############################################################################################################
+# ↓common ##############################################################################################################
 
 @register.simple_tag
 def getValue(dic, key):
-    return dic.get(key)\
+    return dic.get(key)
 
 
 @register.simple_tag
 def getValueValue(dic, keyDict, key):
     return dic.get(keyDict.get(key))
+
+
+# ↑common ##############################################################################################################
