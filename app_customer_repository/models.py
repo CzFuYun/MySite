@@ -46,9 +46,9 @@ class ProjectRepository(models.Model):
         (20, '监管原因'),
         (30, '客户原因'),
     )
-    customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT)
+    customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT, verbose_name='客户名称')
     project_name = models.CharField(max_length=64, blank=True, null=True, verbose_name='项目名称')
-    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT)
+    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='客户经理')
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
     is_green = models.BooleanField(default=False, verbose_name='绿色金融')
     is_focus = models.BooleanField(default=False, verbose_name='重点项目')
@@ -60,7 +60,7 @@ class ProjectRepository(models.Model):
     plan_xinshen =  models.DateField(blank=True, null=True, verbose_name='计划信审')
     plan_reply =  models.DateField(blank=True, null=True, verbose_name='计划批复')
     plan_luodi =  models.DateField(blank=True, null=True, verbose_name='计划投放')
-    business = models.ForeignKey('SubBusiness', on_delete=models.PROTECT)
+    business = models.ForeignKey('SubBusiness', on_delete=models.PROTECT, verbose_name='业务品种')
     total_net = models.IntegerField(default=0, verbose_name='总敞口')
     existing_net = models.IntegerField(default=0, verbose_name='存量敞口')
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
@@ -69,8 +69,8 @@ class ProjectRepository(models.Model):
     is_pure_credit = models.BooleanField(default=False, verbose_name='纯信用')
     close_date = models.DateField(blank=True, null=True, verbose_name='关闭日期')
     tmp_close_date = models.DateField(blank=True, null=True, verbose_name='临时关闭日期')
-    close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True)
-    whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True)
+    close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True, verbose_name='关闭理由')
+    whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True, verbose_name='责任方')
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='专审')
@@ -344,6 +344,13 @@ class SubBusiness(models.Model):
     is_focus = models.BooleanField(default=False, verbose_name='是否重点产品')
     acc_factor = models.FloatField(default=0, verbose_name='折算户数系数')
 
+    @classmethod
+    def getAllBusiness(cls):
+        sub_bus_qs = cls.objects.values('id', 'caption', 'superior__caption').order_by('display_order')
+        bus_list = []
+        for b in sub_bus_qs:
+            bus_list.append((b['id'], b['superior__caption'] + ' — ' + b['caption']))
+        return bus_list
 
 class Stars(models.Model):
     caption = models.CharField(max_length=32, blank=True, null=True)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from deposit_and_credit import models_operation
 
 class Staff(models.Model):
@@ -22,6 +23,7 @@ class Staff(models.Model):
 
     class Meta:
         verbose_name_plural = '员工信息'
+        # ordering = 'sub_department'
 
     def setYellowRedCard(self):
         # 计算红黄牌，yellow_red_card  =0，未被警告；  =1，黄牌；  >1，红牌
@@ -37,6 +39,17 @@ class Staff(models.Model):
         self.yellow_red_card = 0
         self.save()
 
+    @classmethod
+    def getBusinessDeptStaff(cls, dept_code=''):
+        dept_q = Q(sub_department__superior__code=dept_code) if dept_code else Q(sub_department__superior__code__in=['NONE', 'JGBS'])
+        staff_qs = Staff.objects.exclude(dept_q).order_by(
+                'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
+        staff_list = []
+        for s in staff_qs:
+            if len(s['name']) > 4:
+                continue
+            staff_list.append((s['staff_id'], s['sub_department__superior__caption']+ ' — ' + s['name']))
+        return staff_list
 
 
 ########################################################################################################################

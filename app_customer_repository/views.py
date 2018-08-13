@@ -12,6 +12,7 @@ ALLOW_EDIT = False
 def test(request):
     # http://139.17.1.35:8000/cr/test
     # http://127.0.0.1:8000/cr/test
+    print('start test')
     # c = models.CustomerRepository.objects.filter(name__contains='经济发展')[0]
     # b = models.SubBusiness.objects.filter(caption='承销')[0]
     # new_p_dict = {}
@@ -41,10 +42,10 @@ def test(request):
     #     'account_num',
     # )
     # models.ProjectExecution.takePhoto(None, '2018-08-01')
-    print('start test')
-    project = models.ProjectRepository.objects.get(id=17)
-    form = html_forms.Project()
-
+    p = models.ProjectRepository.objects.get(id=47)
+    form = html_forms.ProjectModelForm(instance=p)
+    # form = html_forms.ProjectModelForm()
+    # form = html_forms.ProjectForm()
 
 
     return render(request, 'forms/form_test.html', locals())
