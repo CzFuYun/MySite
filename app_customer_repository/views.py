@@ -42,6 +42,7 @@ def test(request):
     # )
     # models.ProjectExecution.takePhoto(None, '2018-08-01')
     print('start test')
+    project = models.ProjectRepository.objects.get(id=17)
     form = html_forms.Project()
 
 

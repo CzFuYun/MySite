@@ -6,7 +6,11 @@
     <div class="card" style="">
         <div class="card-body">
             <form action="/" method="POST" enctype="multipart/form-data">
-                {{ form.as_p }}
+                {% for field in form %}
+                    <div class="form-group">
+                        {{ field }}
+                    </div>
+                {% endfor %}
                 <button type="button" class="btn btn-success"><i class="fa fa-check"></i>确认</button>
             </form>
         </div>
