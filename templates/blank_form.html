@@ -1,78 +1,51 @@
+{% extends "real_blank.html" %}
+{% include "proj_rep/project_form.html" %}
 
-{% load tags %}
+{% block extra_css %}
+    <link href="/static/css/style.css" rel="stylesheet">
+{% endblock %}
 
-<div id="{{ form.form_id }}_container" class="card" style="position: fixed; display: none; z-index: 101; margin: auto; top: {{ form.marginY }}px; bottom: {{ form.marginY }}px; left: {{ form.marginX }}px; right: {{ form.marginX }}px;">
-    <div class="card-body">
-        <h4 class="card-title">{{ form.form_title }}</h4>
-        <h6 class="card-subtitle">{{ form.form_subtitle }}</h6>
-    </div>
+{% block content %}
 
-    <form id="{{ form.form_id }}" method="{{ form.submit_method }}" action="{% url form.action_url_name %}" enctype="{{ form.enc_type }}">
 
-    <div class="card-body" id="{{ form.form_id }}_body">
-{#        {% setFormHere form %}#}
+    <div id="{{ form_id }}_container" class="card" style="width: 60%; position: relative; margin-left: 20%; margin-right: 20%; display: None">
 
-{#        {% block mian_inputs %}#}
-            {% for mi in form.main_inputs %}
+        <div id="{{ form_id }}_header" class="card-header card-outline-info">
+            <h3 class="card-title" style="margin: 0 auto; line-height: 50px;">{{ form_title }}</h3>
+        </div>
+        <div id="{{ form_id }}_body" class="card-body">
+                <form id="{{ form_id }}" method="post" action="{% url form_action %}" enctype="{{ enc_type }}">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                </form>
+            {% block form_body %}{% endblock %}
+        </div>
+        <hr>
+        <div id="{{ form_id }}_foot" class="card-body text-right">
             <div class="form-group">
-                <label for="{% getValue mi.attribute id %}">{{ mi.label }}</label>
-                <div class="input-group">
-                    <{{ mi.tag }}
-                        {% for p in mi.attribute %}
-                            {{ p }}="{% getValue mi.attribute p %}"
-                        {% endfor %}>
-                        {% if mi.sub_elems %}
-                            {% for se in mi.sub_elems %}
-                                <{{ se.tag }}
-                                    {% for p in se.attribute %}
-                                        {{ p }}="{% getValue se.attribute p %}"
-                                    {% endfor %}
-                                >{{ se.text }}
-                                </{{ se.tag }}>
-                            {% endfor %}
-                        {% endif %}
-                    </{{ mi.tag }}>
-{#                    {% if mi.tag != 'input' %}</{{ mi.tag }}>{% endif %}#}
-                    {% if mi.satellite %}
-                        <div class="btn-group">
-                        {% for s in mi.satellite %}
-                            <{{ s.tag }}
-                                {% for p in s.attribute %}
-                                    {{ p }}="{% getValue s.attribute p %}"
-                                {% endfor %}>
-                                <i class="{{ s.icon }}"></i>
-                            </{{ s.tag }}>
-                        {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-
-
-
-
-            </div>
-            {% endfor %}
-{#        {% endblock %}#}
-
-    </div>
-
-    <div class="card-body b-t">
-        <div class="row">
-            <div class="col-6 text-right">
-            </div>
-            <div class="col-6 text-right">
-
+                <button type="button" class="btn btn-success"><i class="mdi mdi-check"></i>确认</button>
+                <button type="button" class="btn btn-inverse"><i class="mdi mdi-close"></i>关闭</button>
                 {% block form_button %}{% endblock %}
 
             </div>
+
         </div>
     </div>
 
+{% endblock %}
 
 
+{% block extra_js %}
+    <script src="/static/myjs/formOperation.js"></script>
+    <script>
+        $(function(){
+            modifyForm();
+            document.getElementById('{{ form_id }}_container').style.display = 'block';
+        })
+    </script>
+    
+    {% include form_js %}
 
+{% endblock %}
 
-
-
-</div>
-
+{% block extra_js2 %}{% endblock %}

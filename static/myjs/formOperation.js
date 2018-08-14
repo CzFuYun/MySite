@@ -151,7 +151,9 @@ function makeForm(urlName, data, sizeX, sizeY, formId){
     $.get({
         url: parseUrl(urlName),
         async: false,
+        timeout: 10000,
         data: $.extend({}, data, {
+            urlName: urlName,
             sizeX: sizeX,
             sizeY: sizeY,
             screenX: screen.availWidth,
@@ -160,7 +162,8 @@ function makeForm(urlName, data, sizeX, sizeY, formId){
         }),
         dataType: 'text',
         success: function(response){
-            $('script:first').before($(response));
+            let $form = $(response);
+            $('script:first').before($form);
         }
     });
 }
@@ -174,16 +177,60 @@ function fillForm2(formId, dataDic){
     );
 }
 
-function modifyForm(formId){
-    let selector = formId ? '#' + formId : 'form';
-    $(selector + ' li label input').each(
+// function modifyForm(formId){
+//     let selector = formId ? '#' + formId : 'form';
+//     // $(selector + ' p').each(
+//     //     function(index, elem){
+//     //         $(elem).addClass('form-group');
+//     //     }
+//     // );
+//     $(selector + ' li label input').each(
+//         function(index, elem){
+//             $(elem).parent().before($(elem));
+//         }
+//     );
+//     $(selector + ' ul').each(
+//         function(index, elem){
+//             $(elem).addClass('form-control list-unstyled list-inline');
+//         }
+//     );
+//     $(selector + ' select').each(
+//         function(index, elem){
+//             $(elem).addClass('form-control custom-select');
+//         }
+//     );
+//     $(selector + ' [type=date]').each(
+//         function(index, elem){
+//             $(elem).addClass('form-control');
+//         }
+//     );
+//
+// }
+function modifyForm(form){
+    let $form = form ? form : $('form');
+    $('li label input', $form).each(
         function(index, elem){
             $(elem).parent().before($(elem));
         }
     );
-    $(selector + ' ul').each(
+    $('ul', $form).each(
         function(index, elem){
-            $(elem).addClass('list-unstyled list-inline');
+            $(elem).addClass('form-control list-unstyled list-inline');
+        }
+    );
+    $('select', $form).each(
+        function(index, elem){
+            $(elem).addClass('form-control custom-select');
+        }
+    );
+    $('[type=date]', $form).each(
+        function(index, elem){
+            $(elem).addClass('form-control');
+        }
+    );
+    $('input', $form).each(
+        function(index, elem){
+            $(elem).addClass('form-control');
         }
     );
 }

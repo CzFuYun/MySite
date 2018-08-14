@@ -18,7 +18,7 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-success" onclick="showForm('project_adder_container',1)"><i class="mdi mdi-target"></i>新增</button>
+    <button class="btn waves-effect waves-light btn-success"><i class="mdi mdi-target"></i><a href="{% url 'addProject' %}" target="_blank" style="color: white">新增</a></button>
     <button class="btn waves-effect waves-light btn-danger" onclick=""><i class="mdi mdi-bomb"></i>删除</button>
     <button class="btn waves-effect waves-light btn-warning" onclick="editProject()"><i class="mdi mdi-grease-pencil"></i>修改</button>
     <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>
@@ -43,10 +43,7 @@
             buildProjectList();
             renderProjectList();
             $('#extra_function').append($('#business_selector'));
-            makeForm('addProject', {}, 618, 1000, 'project_adder');
-            $('#project_adder').slimScroll({
-                height: '95%'
-            });
+
         });
 
         function buildProjectList(){
@@ -133,20 +130,14 @@
             }
         }
 
-        function editProject(){
 
+        function showProjectAddForm(){
+            makeForm('addProject', {}, 618, 1000, 'project_adder');
+            $('#project_adder').slimScroll({
+                height: '2000px'
+            });
+            showForm('project_adder_container', 1);
         }
-
-        function closeProject(){
-            let projectId = judgeSelectedProject();
-            if(!projectId){
-                alert('请选择项目');
-                return false;
-            }
-
-        }
-
-
 
 
     </script>

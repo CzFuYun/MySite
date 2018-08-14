@@ -48,7 +48,7 @@ def test(request):
     # form = html_forms.ProjectForm()
 
 
-    return render(request, 'forms/form_test.html', locals())
+    return render(request, 'blank_form.html', locals())
 
 
 def viewProjectRepository(request):
@@ -339,133 +339,13 @@ def viewProjectList(request):
 
 def addProject(request):
     if request.method == 'GET':
-        form = utilities.HtmlFormBody(request)
-        form_mi = []
-
-        si_customer = utilities.FormSatelliteInput('button', {'onclick': 'addCustomer()', 'title': '新增客户', 'class': 'btn btn-info'}, 'mdi mdi-plus')
-        mi_customer = utilities.FormMainInput('input',{
-            'id': 'customer_name',
-            'name': 'customer_name',
-            'type': 'text',
-            'class': 'form-control',
-            'oninput': 'getCustomerName(this)'
-        }, '客户名称')
-        mi_customer.addSatellite(si_customer)
-        form_mi.append(mi_customer)
-
-        mi_staff = utilities.FormMainInput('input',{
-            'id': 'staff',
-            'name': 'staff',
-            'type': 'text',
-            'class': 'form-control',
-            'oninput': 'getStaff(this)'
-        },'客户经理')
-        form_mi.append(mi_staff)
-
-        mi_is_green = utilities.FormMainInput('select', {
-            'id': 'is_green',
-            'name': 'is_green',
-            'class': 'form-control custom-select'
-        }, '绿色金融')
-        mi_is_green.addSubElem(*[
-            utilities.FormInputSubElem('option', {'value': -1}, ''),
-            utilities.FormInputSubElem('option', {'value': 1}, '是'),
-            utilities.FormInputSubElem('option', {'value': 0}, '否')
-        ])
-        form_mi.append(mi_is_green)
-
-        mi_plan_pretrial = utilities.FormMainInput('input', {
-            'type': 'date',
-            'class': 'form-control',
-            'placeholder': "yyyy-mm-dd",
-            'name': 'plan_pretrial',
-        }, '计划预审')
-        form_mi.append(mi_plan_pretrial)
-
-        mi_plan_chushen = utilities.FormMainInput('input', {
-            'type': 'date',
-            'class': 'form-control',
-            'placeholder': "yyyy-mm-dd",
-            'name': 'plan_chushen',
-        }, '计划初审')
-        form_mi.append(mi_plan_chushen)
-
-        mi_plan_zhuanshen = utilities.FormMainInput('input', {
-            'type': 'date',
-            'class': 'form-control',
-            'placeholder': "yyyy-mm-dd",
-            'name': 'plan_zhuanshen',
-        }, '计划专审')
-        form_mi.append(mi_plan_zhuanshen)
-
-        mi_plan_xinshen = utilities.FormMainInput('input', {
-            'type': 'date',
-            'class': 'form-control',
-            'placeholder': "yyyy-mm-dd",
-            'name': 'plan_xinshen',
-        }, '计划信审')
-        form_mi.append(mi_plan_xinshen)
-
-        mi_plan_reply = utilities.FormMainInput('input', {
-            'type': 'date',
-            'class': 'form-control',
-            'placeholder': "yyyy-mm-dd",
-            'name': 'plan_reply',
-        }, '计划批复')
-        form_mi.append(mi_plan_reply)
-
-        mi_plan_luodi = utilities.FormMainInput('input', {
-            'type': 'date',
-            'class': 'form-control',
-            'placeholder': "yyyy-mm-dd",
-            'name': 'plan_luodi',
-        }, '计划落地')
-        form_mi.append(mi_plan_luodi)
-
-        mi_total_net = utilities.FormMainInput('input', {
-            'type': 'text',
-            'class': 'form-control',
-            'name': 'existing_net',
-        }, '总敞口')
-        form_mi.append(mi_total_net)
-
-        mi_existing_net = utilities.FormMainInput('input', {
-            'type': 'text',
-            'class': 'form-control',
-            'name': 'existing_net',
-        }, '已有敞口')
-        form_mi.append(mi_existing_net)
-
-        mi_is_defuse = utilities.FormMainInput('select', {
-            'id': 'is_green',
-            'name': 'is_defuse',
-            'class': 'form-control custom-select'
-        }, '涉及化解')
-        mi_is_defuse.addSubElem(*[
-            utilities.FormInputSubElem('option', {'value': -1}, ''),
-            utilities.FormInputSubElem('option', {'value': 1}, '是'),
-            utilities.FormInputSubElem('option', {'value': 0}, '否')
-        ])
-        form_mi.append(mi_is_defuse)
-
-        mi_is_pure_credit = utilities.FormMainInput('select', {
-            'id': 'is_green',
-            'name': 'is_pure_credit',
-            'class': 'form-control custom-select'
-        }, '信用')
-        mi_is_pure_credit.addSubElem(*[
-            utilities.FormInputSubElem('option', {'value': -1}, ''),
-            utilities.FormInputSubElem('option', {'value': 1}, '是'),
-            utilities.FormInputSubElem('option', {'value': 0}, '否')
-        ])
-        form_mi.append(mi_is_pure_credit)
-
-
-
-
-        form.addInput(*form_mi)
-        form.prepareForm('addProject')
-        return render_to_response('forms/one_project_detail_form.html', {'form': form})
+        form = html_forms.ProjectModelForm()
+        form_id = 'project_adder'
+        form_action = addProject.__name__
+        form_title = '新增项目'
+        enc_type = 'multipart/form-data'
+        form_js = 'proj_rep/project_form.html'
+        return render(request, 'blank_form.html', locals())
     elif request.method == 'POST':
 
         pass

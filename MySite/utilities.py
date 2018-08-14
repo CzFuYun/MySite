@@ -129,3 +129,22 @@ class FormInputSubElem(FormInput):
     def __init__(self, tag, html_attribute_dict, inner_text):
         FormInput.__init__(self, tag, html_attribute_dict)
         self.text = inner_text
+
+
+class HtmlFormInfo():
+    def __init__(self, request, method='post', title='', subtitle='', enc_type='multipart/form-data'):
+        self.request = request
+        data = getattr(self.request, self.request.method)
+        self.form_id = data.get('formId') or data.get('form_id')
+        self.action = data.get('urlName') or data.get('url_name')
+        sizeX = data['sizeX']
+        sizeY = data['sizeY']
+        screenX = data['screenX']
+        screenY = data['screenY']
+        self.marginX = (int(screenX) - int(sizeX)) / 2
+        self.marginY = max((int(screenY) - int(sizeY)) / 2, 0)
+        self.title = title
+        self.subtitle = subtitle
+        self.method = method
+        self.enc_type = enc_type
+

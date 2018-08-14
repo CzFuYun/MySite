@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ content_title }}</title>
-{#    <link href="/static/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">#}
-{#    <link href="/static/css/style.css" rel="stylesheet">#}
-{#    <link href="/static/assets/plugins/sweetalert/sweetalert.css" rel="stylesheet">#}
-{#    <link href="/static/css/colors/blue.css" id="theme" rel="stylesheet">#}
 
+    <link href="/static/assets/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     {% block extra_css %}
 
     {% endblock %}
@@ -18,7 +15,7 @@
 
 
     <div class="page-wrapper">
-        <div class="col-lg-12">
+        <div class="col-container-fluid col-lg-12">
             <input id="opener_params" type="text" value="{{ opener_params }}" style="display: none">
             <div class="col-12" id="main_content">
                 {% block content %}

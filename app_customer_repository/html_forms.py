@@ -5,10 +5,7 @@ from . import models
 from root_db import models as rd_m
 
 
-INPUT_TYPE_CSS = {
-    'select': 'form-control custom-select',
-
-}
+YES_OR_NO = ((1, '是'), (0, '否'),)
 
 class ProjectForm(Form):
     customer = fields.CharField(
@@ -80,62 +77,49 @@ class ProjectForm(Form):
 #         fields = '__all__'
 
 class ProjectModelForm(forms.ModelForm):
-    # staff = forms.ChoiceField(label='客户经理', choices=rd_m.Staff.getBusinessDeptStaff(), widget=forms.Select(attrs={'class':"form-control custom-select"}))
-
 
     def __init__(self, *args, **kwargs):
         super(ProjectModelForm, self).__init__(*args, **kwargs)
-        self.fields['staff'].choices=rd_m.Staff.getBusinessDeptStaff()
-        # self.fields['staff'].attrs = {'class': 'form-control custom-select'}
+        self.fields['customer'].widget = forms.TextInput()
+        # self.fields['customer'].required = True
+        self.fields['project_name'].widget = forms.TextInput()
+        # self.fields['staff'].choices = rd_m.Staff.getBusinessDeptStaff()
+        self.fields['staff'].widget = forms.TextInput()
         self.fields['business'].choices = models.SubBusiness.getAllBusiness()
-        self.fields['is_green'].widget = forms.RadioSelect(choices = ((1, '是'), (0, '否'),),)
+        self.fields['is_green'].widget = forms.RadioSelect(choices=YES_OR_NO)
+        self.fields['is_defuse'].widget = forms.RadioSelect(choices=YES_OR_NO)
+        self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=YES_OR_NO)
+        self.fields['plan_pretrial_date'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_chushen'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_zhuanshen'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_xinshen'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_reply'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
+
+
 
     class Meta:
         model = models.ProjectRepository
-        fields = '__all__'
-        #     [
-        #     'customer',
-        #     'staff',
-        #     'business',
-        #     'is_green',
-        #     'total_net',
-        #     'existing_net',
-        #     'is_defuse',
-        #     'is_pure_credit',
-        #     'plan_pretrial_date',
-        #     'plan_chushen',
-        #     'plan_zhuanshen',
-        #     'plan_xinshen',
-        #     'plan_reply',
-        #     'plan_luodi'
-        # ]
+        fields = [
+            'customer',
+            'project_name',
+            'staff',
+            'business',
+            'is_green',
+            'total_net',
+            'existing_net',
+            'is_defuse',
+            'is_pure_credit',
+            'plan_pretrial_date',
+            'plan_chushen',
+            'plan_zhuanshen',
+            'plan_xinshen',
+            'plan_reply',
+            'plan_luodi'
+        ]
         # widgets = {
-        #     'staff': forms.Select(choices=rd_m.Staff.objects.exclude(sub_department__superior__code__in=['NONE', 'JGBS']).order_by(
-        #         'sub_department__superior__display_order').values_list('staff_id', 'name'))
+        #     'customer': forms.TextInput(),
+        #     'staff': forms.Select(choices=rd_m.Staff.getBusinessDeptStaff()),
+        #     'is_green': forms.RadioSelect(choices=YES_OR_NO, attrs={'type': 'radio'})
         # }
-
-class MyForm(Form):  # 继承自Form类
-    user = forms.CharField(
-        widget=forms.TextInput(attrs={'id': 'i1', 'class': 'form-control'})
-        # 定义生成的html标签类型是input的text框，attrs={'id': 'i1', 'class': 'c1'}代表在这个标签中添加属性ID为i1，添加class为c1
-    )
-
-    gender = forms.ChoiceField(
-
-        choices=((1, '男'), (2, '女'),),  # 定义下拉框的选项，元祖第一个值为option的value值，后面为html里面的值
-        initial=2,  # 默认选中第二个option
-        widget=forms.RadioSelect(attrs={'class': 'form-control'}),  # 插件表现形式为单选按钮
-
-    )
-
-    city = forms.CharField(
-        initial=2,  # 初始值为2
-        widget=forms.Select( choices=((1,'上海'),(2,'北京'),), attrs={'class': 'form-control custom-select'})  # 插件表现形式为下拉框
-    )
-
-    pwd = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}, render_value=True)  # 插件表现形式为密码输入框
-    )
-
-
 
