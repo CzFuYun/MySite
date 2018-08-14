@@ -248,3 +248,33 @@ function showMask(status){
     }
     document.getElementById('mask').style.display = status ? 'block' : 'none';
 }
+
+function makeDataList(id, urlName, postDataDict){
+    $.post({
+        url: parseUrl(urlName),
+        data: postDataDict,
+        dataType: 'json',
+        success: function(response){
+            $('#' + id).remove();
+            let $dataList = $('<datalist id="' + id + '" class="form-group">');
+            for(let i=0; i<response.length; i++){
+                $dataList[0].appendChild($('<option value="' + response[i] + '"></option>')[0]);
+            }
+            $('[list=' + id + ']').after($dataList);
+        }
+    });
+}
+
+function addSatelliteButtonForInput(inputId, buttonInfo){
+    // buttonInfo = [{icon, title, onclick}]
+    let $buttonGroup = $('<div class="btn-group"></div>');
+    let $input = $('#' + inputId);
+    let $div = $('<div class="input-group"></div>');
+    $input.after($div);
+    $input.appendTo($div);
+    for(let i=0; i<buttonInfo.length; i++){
+        let $button = $('<button type="button" title="' + buttonInfo[i].title + '" class="btn btn-info" onclick="' + buttonInfo[i].onclick + '"><i class="' + buttonInfo[i].icon + '"></i></button>');
+        $buttonGroup.append($button);
+    }
+    $input.after($buttonGroup);
+}

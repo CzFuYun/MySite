@@ -10,4 +10,6 @@ urlpatterns = [
     url(r'projectsummary\.view', views.viewProjectSummary, name='viewProjectSummary'),
     url(r'projectlist\.view', views.viewProjectList, name='viewProjectList'),
     url(r'project\.add', views.addProject, name='addProject'),
+    url(r'customer\.ajax', views.ajaxCustomer, name='ajaxCustomer'),
+    url(r'staff\.ajax', views.ajaxStaff, name='ajaxStaff'),
 ]

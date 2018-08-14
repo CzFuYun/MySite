@@ -40,18 +40,25 @@ class Staff(models.Model):
         self.save()
 
     @classmethod
-    def getBusinessDeptStaff(cls, dept_code=''):
+    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='list'):
         dept_q = Q(sub_department__superior__code=dept_code) if dept_code else Q(sub_department__superior__code__in=['NONE', 'JGBS'])
-        staff_qs = Staff.objects.exclude(dept_q).order_by(
+        name_q = Q(name__contains=name_contains) if name_contains else Q(name__is_null=False)
+        staff_qs = Staff.objects.exclude(dept_q & name_q).order_by(
                 'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
-        staff_list = []
-        for s in staff_qs:
-            if len(s['name']) > 4:
-                continue
-            staff_list.append((s['staff_id'], s['sub_department__superior__caption']+ ' — ' + s['name']))
-        return staff_list
-
-
+        if return_mode == 'list':
+            staff_list = []
+            for s in staff_qs:
+                if len(s['name']) > 4:
+                    continue
+                staff_list.append((s['staff_id'], s['sub_department__superior__caption'] + '　' + s['name']))
+            return staff_list
+        elif return_mode == 'str':
+            staff_strs = []
+            for s in staff_qs:
+                if len(s['name']) > 4:
+                    continue
+                staff_strs.append(s['sub_department__superior__caption'] + '　' + s['name'] + '　' + s['staff_id'])
+        return staff_strs
 ########################################################################################################################
 class Department(models.Model):
     code = models.CharField(primary_key=True, max_length=8, unique=True, verbose_name='部门编号')

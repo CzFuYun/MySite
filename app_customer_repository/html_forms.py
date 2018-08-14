@@ -80,11 +80,11 @@ class ProjectModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjectModelForm, self).__init__(*args, **kwargs)
-        self.fields['customer'].widget = forms.TextInput()
+        self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list'})
         # self.fields['customer'].required = True
         self.fields['project_name'].widget = forms.TextInput()
         # self.fields['staff'].choices = rd_m.Staff.getBusinessDeptStaff()
-        self.fields['staff'].widget = forms.TextInput()
+        self.fields['staff'].widget = forms.TextInput(attrs={'list': 'staff_list'})
         self.fields['business'].choices = models.SubBusiness.getAllBusiness()
         self.fields['is_green'].widget = forms.RadioSelect(choices=YES_OR_NO)
         self.fields['is_defuse'].widget = forms.RadioSelect(choices=YES_OR_NO)

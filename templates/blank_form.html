@@ -20,8 +20,8 @@
                 </form>
             {% block form_body %}{% endblock %}
         </div>
-        <hr>
         <div id="{{ form_id }}_foot" class="card-body text-right">
+            <hr>
             <div class="form-group">
                 <button type="button" class="btn btn-success"><i class="mdi mdi-check"></i>确认</button>
                 <button type="button" class="btn btn-inverse"><i class="mdi mdi-close"></i>关闭</button>
@@ -37,6 +37,8 @@
 
 {% block extra_js %}
     <script src="/static/myjs/formOperation.js"></script>
+    <script src="/static/myjs/common.js"></script>
+
     <script>
         $(function(){
             modifyForm();

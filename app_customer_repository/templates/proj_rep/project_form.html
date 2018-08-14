@@ -1,10 +1,26 @@
 
     <script type="text/javascript">
         $(function () {
-
-            $('#id_customer')[0].setAttribute('oninput', 'f()');
+            document.getElementById('id_customer').setAttribute('oninput', 'searchCustomer(this)');
+            document.getElementById('id_staff').setAttribute('oninput', 'searchStaff(this)');
+            addSatelliteButtonForInput('id_customer', [{icon: 'mdi mdi-plus', title: '新增客户', onclick: 'addCustomer()'}]);
         });
-        function f() {
-            console.log(this);
+
+        function searchCustomer(elem) {
+            let value = elem.value;
+            let customer = getCnChars(value);
+            if(customer.length > 1){
+                makeDataList('customer_list', 'ajaxCustomer', {customerName: customer});
+            }
         }
+
+        function searchStaff(elem){
+            let value = elem.value;
+            let staff = getCnChars(value);
+            if(staff.length){
+                makeDataList('staff_list', 'ajaxStaff', {staffName: staff});
+            }
+        }
+
+
     </script>

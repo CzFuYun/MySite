@@ -349,7 +349,7 @@ class SubBusiness(models.Model):
         sub_bus_qs = cls.objects.values('id', 'caption', 'superior__caption').order_by('display_order')
         bus_list = []
         for b in sub_bus_qs:
-            bus_list.append((b['id'], b['superior__caption'] + ' — ' + b['caption']))
+            bus_list.append((b['id'], b['superior__caption'] + '　' + b['caption']))
         return bus_list
 
 class Stars(models.Model):

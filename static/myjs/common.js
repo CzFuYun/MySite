@@ -335,3 +335,19 @@ function lockThead(tableDivId, tableId){
     });
 }
 
+function getCnChars(string){
+    let r = /^[\u4e00-\u9fa5]+$/;
+    try{
+        return r.exec(string)[0];
+    }catch (e) {
+        return null;
+    }
+}
+
+function valuesListToDict(valuesList){
+    let dict = {};
+    for(let i=0; i<valuesList.length; i++){
+        dict[valuesList[i][0]] = valuesList[i][1];
+    }
+    return dict;
+}

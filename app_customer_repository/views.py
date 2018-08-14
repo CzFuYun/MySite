@@ -343,6 +343,7 @@ def addProject(request):
         form_id = 'project_adder'
         form_action = addProject.__name__
         form_title = '新增项目'
+        content_title = '新增项目'
         enc_type = 'multipart/form-data'
         form_js = 'proj_rep/project_form.html'
         return render(request, 'blank_form.html', locals())
@@ -352,9 +353,19 @@ def addProject(request):
 
 
 def editProjectExe(request):
-
     pass
 
+def ajaxCustomer(request):
+    customer_name = request.POST.get('customerName')
+    customer_qs = models.CustomerRepository.objects.filter(
+        Q(name__contains=customer_name) | Q(simple_name__contains=customer_name) | Q(customer__name__contains=customer_name)
+    ).values_list('name')
+    return HttpResponse(json.dumps(list(customer_qs)))
+
+def ajaxStaff(request):
+    staff_name =  request.POST.get('staffName')
+    staffs= rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='str')
+    return HttpResponse(json.dumps(staffs))
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
 # SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')
