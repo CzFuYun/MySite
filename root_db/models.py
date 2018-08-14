@@ -41,9 +41,9 @@ class Staff(models.Model):
 
     @classmethod
     def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='list'):
-        dept_q = Q(sub_department__superior__code=dept_code) if dept_code else Q(sub_department__superior__code__in=['NONE', 'JGBS'])
-        name_q = Q(name__contains=name_contains) if name_contains else Q(name__is_null=False)
-        staff_qs = Staff.objects.exclude(dept_q & name_q).order_by(
+        dept_q = Q(sub_department__superior__code=dept_code) if dept_code else ~Q(sub_department__superior__code__in=['NONE', 'JGBS'])
+        name_q = Q(name__contains=name_contains) if name_contains else Q(name__isnull=False)
+        staff_qs = Staff.objects.filter(dept_q & name_q).order_by(
                 'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
         if return_mode == 'list':
             staff_list = []
