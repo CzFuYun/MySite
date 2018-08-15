@@ -284,12 +284,18 @@ function makeDataList(id, urlName, postDataDict){
         data: postDataDict,
         dataType: 'json',
         success: function(response){
-            $('#' + id).remove();
-            let $dataList = $('<datalist id="' + id + '" class="form-group">');
-            for(let i=0; i<response.length; i++){
-                $dataList[0].appendChild($('<option value="' + response[i] + '"></option>')[0]);
+            // console.log(response);
+            let $dataList = $('#' + id);
+            if(!$dataList.length){
+                $dataList = $('<datalist id="' + id + '" class="form-group">');
+                $('[list=' + id + ']').after($dataList);
+            }else {
+                $('#' + id + ' option').remove();
             }
-            $('[list=' + id + ']').after($dataList);
+            for(let i=0; i<response.length; i++){
+                $('<option value="' + response[i][0] + '">' + response[i][1] + '</option>').appendTo($dataList);
+            }
+
         }
     });
 }

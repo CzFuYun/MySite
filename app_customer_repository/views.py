@@ -42,12 +42,17 @@ def test(request):
     #     'account_num',
     # )
     # models.ProjectExecution.takePhoto(None, '2018-08-01')
-    p = models.ProjectRepository.objects.get(id=47)
-    form = html_forms.ProjectModelForm(instance=p)
+    # p = models.ProjectRepository.objects.get(id=47)
+    form = html_forms.ProjectForm()
     # form = html_forms.ProjectModelForm()
     # form = html_forms.ProjectForm()
 
-
+    form_id = 'customer_adder'
+    form_action = addCustomer.__name__
+    form_title = '新增客户'
+    content_title = '新增客户'
+    enc_type = 'multipart/form-data'
+    form_js = 'cust/customer_form_add.html'
     return render(request, 'blank_form.html', locals())
 
 
@@ -367,8 +372,8 @@ def ajaxCustomer(request):
 
 
 def ajaxStaff(request):
-    staff_name =  request.POST.get('staffName')
-    staffs= rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='str')
+    staff_name = request.POST.get('staffName')
+    staffs = rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='dlist')
     return HttpResponse(json.dumps(staffs))
 
 
@@ -382,9 +387,6 @@ def addCustomer(request):
     if request.method == 'GET':
         form = html_forms.CustomerModelForm_add()
     elif request.method == 'POST':
-        customer_id = request.POST.get('customer')
-        if customer_id:
-            request.POST['customer'] = re.match(r'\d{16}', customer_id)
         form = html_forms.CustomerModelForm_add(request.POST)
         if form.is_valid():
             form.save()
@@ -394,7 +396,7 @@ def addCustomer(request):
 def matchAccount(request):
     customer_name = request.POST.get('customerName')
     if customer_name:
-        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name)
+        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'dlist')
         return HttpResponse(json.dumps(customer_list))
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')

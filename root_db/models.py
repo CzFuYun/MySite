@@ -40,12 +40,12 @@ class Staff(models.Model):
         self.save()
 
     @classmethod
-    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='list'):
+    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='dlist'):
         dept_q = Q(sub_department__superior__code=dept_code) if dept_code else ~Q(sub_department__superior__code__in=['NONE', 'JGBS'])
         name_q = Q(name__contains=name_contains) if name_contains else Q(name__isnull=False)
         staff_qs = Staff.objects.filter(dept_q & name_q).order_by(
                 'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
-        if return_mode == 'list':
+        if return_mode == 'dlist':
             staff_list = []
             for s in staff_qs:
                 if len(s['name']) > 4:
@@ -109,8 +109,9 @@ class SubDepartment(models.Model):
 
     class Meta:
         verbose_name_plural = '部门（细分）'
-
 ########################################################################################################################
+
+
 class AccountedCompany(models.Model):
     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
     name = models.CharField(max_length=128, verbose_name='账户名称')
@@ -137,13 +138,20 @@ class AccountedCompany(models.Model):
         if return_mode == 'list':
             ret = []
             for c in c_qs:
-                ret.append((c['name'], c['customer_id']))
+                ret.append(c['name'] + '　' + c['customer_id'])
+        elif return_mode == 'dlist':
+            ret = []
+            for c in c_qs:
+                ret.append((c['customer_id'], c['name']))
             return ret
         elif return_mode == 'dict':
             ret = {}
             for c in c_qs:
                 ret[c['customer_id']] = c['name']
-        ########################################################################################################################
+        return ret
+########################################################################################################################
+
+
 class Series(models.Model):
     code = models.CharField(primary_key=True, max_length=8, verbose_name='代号')
     caption = models.CharField(max_length=32, unique=True, verbose_name='名称')
@@ -154,9 +162,9 @@ class Series(models.Model):
 
     class Meta:
         verbose_name_plural = '系列'
-
-
 ########################################################################################################################
+
+
 class TypeOf3311(models.Model):
     caption = models.CharField(max_length=32)
     level = models.CharField(max_length=16, null=True ,blank=True)
@@ -176,6 +184,8 @@ class TypeOf3311(models.Model):
             ret.append((q['id'], q['caption'] + '#' + q['level'] + (('（' + q['remark'] + '）') if q['remark'] else '')))
         return ret
 ########################################################################################################################
+
+
 class Scale(models.Model):
     caption = models.CharField(max_length=16)
 
@@ -184,9 +194,9 @@ class Scale(models.Model):
 
     class Meta:
         verbose_name_plural = '企业规模'
-
-
 ########################################################################################################################
+
+
 class Industry(models.Model):
     code = models.CharField(max_length=8, primary_key=True, verbose_name='行业代码')
     caption = models.CharField(max_length=64)

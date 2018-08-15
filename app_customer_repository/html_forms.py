@@ -6,7 +6,18 @@ from . import models
 from root_db import models as rd_m
 
 
-YES_OR_NO = ((True, '是'), (False, '否'),)
+YES_OR_NO = (('1', '是'), ('0', '否'),)
+
+def modifyFields(self, allow_null):
+    for field_name in self.base_fields:
+        if field_name in allow_null:
+            continue
+        field = self.base_fields[field_name]  # self.base_fields说白了就是把所有字段取出来
+        field.required = True
+        field.widget.attrs.update({'required': ''})
+        if str(type(field)).find('BooleanField') >= 0:
+            self.fields[field_name] = forms.IntegerField(label=field.label, widget=forms.RadioSelect(choices=YES_OR_NO))
+
 
 class ProjectForm(Form):
     customer = fields.CharField(
@@ -21,10 +32,9 @@ class ProjectForm(Form):
         required=True,
         error_messages={'required': '不能为空'},
     )
-    is_green = fields.ChoiceField(
+    is_green = fields.BooleanField(
         label='绿色金融',
-        widget=widgets.RadioSelect(attrs={'id': 'is_green', 'name': 'is_green', 'type': 'radio'}),
-        choices=((1, '是'), (0, '否'),),
+        widget=widgets.NullBooleanSelect(),
         required=True,
         error_messages={'required': '必选'},
         # initial=0,
@@ -87,6 +97,7 @@ class ProjectModelForm(forms.ModelForm):
         self.fields['plan_reply'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
 
+
     class Meta:
         model = models.ProjectRepository
         fields = [
@@ -113,7 +124,9 @@ class ProjectModelForm(forms.ModelForm):
         # }
 
 
+
 class CustomerModelForm_add(forms.ModelForm):
+    # is_strategy = forms.IntegerField(label='战略客户')
 
     class Meta:
         model = models.CustomerRepository
@@ -121,20 +134,20 @@ class CustomerModelForm_add(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CustomerModelForm_add, self).__init__(*args, **kwargs)
-        allow_null = ('customer', 'credit_file')
-        # self.fields['simple_name'].required = True
+        # allow_null = ('customer', 'credit_file')
         self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list'})
-        # self.fields['customer'].required = False
-        # self.fields['credit_file'].required = False
-        self.fields['is_strategy'].widget = forms.RadioSelect(choices=YES_OR_NO)
         self.fields['department'].choices = rd_m.Department.getDepartments()
+        self.fields['is_strategy'].widget = forms.RadioSelect(choices=YES_OR_NO)
         self.fields['type_of_3311'].choices = rd_m.TypeOf3311.get3311Type()
-        for field_name in self.base_fields:
-            if field_name in allow_null:
-                continue
-            field = self.base_fields[field_name]        # self.base_fields说白了就是把所有字段取出来
-            field.required = True
-            field.widget.attrs.update({'required': ''})
+        # modifyFields(self, allow_null)
+        # for field_name in self.base_fields:
+        #     if field_name in allow_null:
+        #         continue
+        #     field = self.base_fields[field_name]        # self.base_fields说白了就是把所有字段取出来
+        #     field.required = True
+        #     field.widget.attrs.update({'required': ''})
+        #     if str(type(field)).find('BooleanField') >= 0:
+        #         self.fields[field_name] = forms.IntegerField(label=field.label, widget=forms.RadioSelect(choices=YES_OR_NO))
 
     def clean_credit_file(self):
         '''
