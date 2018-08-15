@@ -131,8 +131,19 @@ class AccountedCompany(models.Model):
     class Meta:
         verbose_name_plural = '已开户对公客户'
 
-
-########################################################################################################################
+    @classmethod
+    def matchAccountByName(cls, name, return_mode='list'):
+        c_qs = cls.objects.filter(name__contains=name).values('name', 'customer_id')
+        if return_mode == 'list':
+            ret = []
+            for c in c_qs:
+                ret.append((c['name'], c['customer_id']))
+            return ret
+        elif return_mode == 'dict':
+            ret = {}
+            for c in c_qs:
+                ret[c['customer_id']] = c['name']
+        ########################################################################################################################
 class Series(models.Model):
     code = models.CharField(primary_key=True, max_length=8, verbose_name='代号')
     caption = models.CharField(max_length=32, unique=True, verbose_name='名称')
@@ -157,7 +168,13 @@ class TypeOf3311(models.Model):
     class Meta:
         verbose_name_plural = '3311类型'
 
-
+    @classmethod
+    def get3311Type(cls, return_mode='list'):
+        qs = cls.objects.all().values()
+        ret = []
+        for q in qs:
+            ret.append((q['id'], q['caption'] + '#' + q['level'] + (('（' + q['remark'] + '）') if q['remark'] else '')))
+        return ret
 ########################################################################################################################
 class Scale(models.Model):
     caption = models.CharField(max_length=16)

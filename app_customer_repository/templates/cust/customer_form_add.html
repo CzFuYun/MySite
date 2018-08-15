@@ -1,0 +1,13 @@
+
+    <script type="text/javascript">
+        $(function(){
+            document.getElementById('id_customer').setAttribute('onfocus', 'matchAccount()');
+        });
+
+        function matchAccount(){
+            let customerName = document.getElementById('id_name').value;
+            if(customerName.length >= 4){
+                makeDataList('customer_list', 'matchAccount', {customerName: customerName});
+            }
+        }
+    </script>

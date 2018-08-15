@@ -12,4 +12,6 @@ urlpatterns = [
     url(r'project\.add', views.addProject, name='addProject'),
     url(r'customer\.ajax', views.ajaxCustomer, name='ajaxCustomer'),
     url(r'staff\.ajax', views.ajaxStaff, name='ajaxStaff'),
+    url(r'customer\.add', views.addCustomer, name='addCustomer'),
+    url(r'matchaccount\.ajax', views.matchAccount, name='matchAccount'),
 ]

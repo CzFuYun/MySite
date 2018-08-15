@@ -7,7 +7,6 @@
 
 {% block content %}
 
-
     <div id="{{ form_id }}_container" class="card" style="width: 60%; position: relative; margin-left: 20%; margin-right: 20%; display: None">
 
         <div id="{{ form_id }}_header" class="card-header card-outline-info">
@@ -23,8 +22,8 @@
         <div id="{{ form_id }}_foot" class="card-body text-right">
             <hr>
             <div class="form-group">
-                <button type="button" class="btn btn-success"><i class="mdi mdi-check"></i>确认</button>
-                <button type="button" class="btn btn-inverse"><i class="mdi mdi-close"></i>关闭</button>
+                <button type="submit" class="btn btn-success" onclick="document.getElementById('{{ form_id }}').submit()"><i class="mdi mdi-check"></i>确认</button>
+                <button type="button" class="btn btn-inverse" onclick="window.close()"><i class="mdi mdi-close"></i>关闭</button>
                 {% block form_button %}{% endblock %}
 
             </div>
@@ -43,7 +42,8 @@
         $(function(){
             modifyForm();
             document.getElementById('{{ form_id }}_container').style.display = 'block';
-        })
+        });
+
     </script>
     
     {% include form_js %}

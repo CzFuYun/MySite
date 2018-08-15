@@ -1,5 +1,5 @@
-import json, pickle
-from django.shortcuts import render, HttpResponse, render_to_response
+import json, re
+from django.shortcuts import render, HttpResponse, render_to_response, redirect
 from django.db.models import Q, F, Sum
 from . import models, models_operation as mo, html_forms
 from deposit_and_credit import models_operation, models as dac_m
@@ -338,22 +338,25 @@ def viewProjectList(request):
 
 
 def addProject(request):
+    form_id = 'project_adder'
+    form_action = addProject.__name__
+    form_title = '新增项目'
+    content_title = '新增项目'
+    enc_type = 'multipart/form-data'
+    form_js = 'proj_rep/project_form.html'
     if request.method == 'GET':
         form = html_forms.ProjectModelForm()
-        form_id = 'project_adder'
-        form_action = addProject.__name__
-        form_title = '新增项目'
-        content_title = '新增项目'
-        enc_type = 'multipart/form-data'
-        form_js = 'proj_rep/project_form.html'
-        return render(request, 'blank_form.html', locals())
     elif request.method == 'POST':
-
-        pass
+        form = html_forms.ProjectModelForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/feedback')
+    return render(request, 'blank_form.html', locals())
 
 
 def editProjectExe(request):
     pass
+
 
 def ajaxCustomer(request):
     customer_name = request.POST.get('customerName')
@@ -362,10 +365,37 @@ def ajaxCustomer(request):
     ).values_list('name')
     return HttpResponse(json.dumps(list(customer_qs)))
 
+
 def ajaxStaff(request):
     staff_name =  request.POST.get('staffName')
     staffs= rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='str')
     return HttpResponse(json.dumps(staffs))
+
+
+def addCustomer(request):
+    form_id = 'customer_adder'
+    form_action = addCustomer.__name__
+    form_title = '新增客户'
+    content_title = '新增客户'
+    enc_type = 'multipart/form-data'
+    form_js = 'cust/customer_form_add.html'
+    if request.method == 'GET':
+        form = html_forms.CustomerModelForm_add()
+    elif request.method == 'POST':
+        customer_id = request.POST.get('customer')
+        if customer_id:
+            request.POST['customer'] = re.match(r'\d{16}', customer_id)
+        form = html_forms.CustomerModelForm_add(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/feedback')
+    return render(request, 'blank_form.html', locals())
+
+def matchAccount(request):
+    customer_name = request.POST.get('customerName')
+    if customer_name:
+        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name)
+        return HttpResponse(json.dumps(customer_list))
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
 # SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')

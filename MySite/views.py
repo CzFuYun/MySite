@@ -9,6 +9,10 @@ def login(request):
     return views.login(request)
 
 
+def feedback(request):
+    feedback_type = request.GET.get('t')
+    return render(request, 'feedback.html')
+
 @views.checkPermission
 def home(request):
     return render(request, settings.HOME_PAGE)

@@ -9,18 +9,30 @@
         function searchCustomer(elem) {
             let value = elem.value;
             let customer = getCnChars(value);
-            if(customer.length > 1){
-                makeDataList('customer_list', 'ajaxCustomer', {customerName: customer});
+            try{
+                if(customer.length > 1){
+                    makeDataList('customer_list', 'ajaxCustomer', {customerName: customer});
+                }
+            }catch (e) {
+
             }
         }
+
 
         function searchStaff(elem){
             let value = elem.value;
             let staff = getCnChars(value);
-            if(staff.length){
-                makeDataList('staff_list', 'ajaxStaff', {staffName: staff});
+            try{
+                if(staff.length){
+                    makeDataList('staff_list', 'ajaxStaff', {staffName: staff});
+                }
+            }catch (e) {
+
             }
         }
 
+        function addCustomer(){
+            window.open('{% url "addCustomer" %}');
+        }
 
     </script>

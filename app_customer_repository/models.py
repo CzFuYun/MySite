@@ -15,14 +15,14 @@ class CustomerRepository(models.Model):
         (30, '外资'),
     )
     name = models.CharField(max_length=128, unique=True, verbose_name='企业名称')
-    simple_name = models.CharField(max_length=32, unique=True, blank=True, null=True)
+    simple_name = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='企业简称')
     customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, verbose_name='核心客户号', on_delete=models.PROTECT)
     credit_file = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
-    department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='支行')
+    department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='管户部门')
     type_of_3311 = models.ForeignKey('root_db.TypeOf3311', blank=True, null=True, on_delete=models.PROTECT, verbose_name='3311类型')
     is_strategy = models.BooleanField(default=False, verbose_name='是否战略客户')
-    industry = models.ForeignKey('root_db.Industry', blank=True, null=True, on_delete=models.PROTECT)
-    stockholder = models.IntegerField(choices=stockholder_choices, blank=True, null=True)
+    industry = models.ForeignKey('root_db.Industry', blank=True, null=True, on_delete=models.PROTECT, verbose_name='行业门类')
+    stockholder = models.IntegerField(choices=stockholder_choices, blank=True, null=True, verbose_name='控股方式')
     taxes_2017 = models.IntegerField(default=0, verbose_name='2017年纳税（万元）')
     inter_clearing_2017 = models.IntegerField(default=0, verbose_name='2017年国际结算（万元）')
 

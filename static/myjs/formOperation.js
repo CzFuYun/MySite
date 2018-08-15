@@ -213,9 +213,26 @@ function modifyForm(form){
             $(elem).parent().before($(elem));
         }
     );
-    $('ul', $form).each(
+    $('ul[id]', $form).each(
         function(index, elem){
-            $(elem).addClass('form-control list-unstyled list-inline');
+            let $elem = $(elem);
+            $elem.addClass('form-control list-unstyled list-inline');
+            elem.style.display = 'block';
+            elem.style['margin-bottom'] = 0;
+            elem.style['padding-bottom'] = 0;
+            elem.style['padding-left'] = 0;
+            // elem.style({display: 'block', margin: 0, 'padding-bottom': 0});
+            $elem.appendTo($elem.prev());
+        }
+    );
+    $('ul[class*=errorlist]', $form).each(
+        function(index, elem){
+            $elem = $(elem);
+            // $elem.removeClass('form-control');
+            $elem.addClass('form-control-feedback');
+            let $p = $elem.next();
+            $elem.appendTo($p);
+            $p.addClass('has-danger');
         }
     );
     $('select', $form).each(
@@ -223,14 +240,26 @@ function modifyForm(form){
             $(elem).addClass('form-control custom-select');
         }
     );
-    $('[type=date]', $form).each(
+    // $('[type=date]', $form).each(
+    //     function(index, elem){
+    //         $(elem).addClass('form-control');
+    //     }
+    // );
+    $('input', $form).each(
         function(index, elem){
             $(elem).addClass('form-control');
         }
     );
-    $('input', $form).each(
+    $('[required]', $form).each(       // 必填项标签加粗
         function(index, elem){
-            $(elem).addClass('form-control');
+            let $elem = $(elem);
+            try{
+                $elem.prev()[0].style['font-weight'] = 'bold';
+            }catch (e) {
+                console.log(elem);
+                $elem.parents('ul').prev()[0].style['font-weight'] = 'bold';
+            }
+            
         }
     );
 }
