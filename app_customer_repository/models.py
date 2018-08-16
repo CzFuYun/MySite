@@ -29,24 +29,28 @@ class CustomerRepository(models.Model):
     def __str__(self):
         return self.name
 
+    def getCustomer(self):
+        pass
+
 class ProjectRepository(models.Model):
     close_reason_choices = (
         (10, '预审未通过终止申报'),
         (20, '申报过程中终止'),
         (30, '分行续议后终止申报'),
+        (35, '获批但未新增额度'),
         (40, '分行否决'),
         (50, '总行否决'),
         (60, '获批后不再继续'),
         (70, '部分落地后终止'),
         (80, '全部落地'),
-        (90, '授信到期')
+        (90, '授信到期'),
     )
     whose_matter_choices = (
         (10, '我行原因'),
         (20, '监管原因'),
         (30, '客户原因'),
     )
-    customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT, verbose_name='客户名称')
+    customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT, verbose_name='客户')
     project_name = models.CharField(max_length=64, blank=True, null=True, verbose_name='项目名称')
     staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='客户经理')
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
@@ -89,7 +93,7 @@ class ProjectRepository(models.Model):
             industry = self.customer.industry_id
             factor_industry = industry_factor_rule.get(industry, 1)     # 行业带来的系数，目前仅有制造业有额外加成系数1.5
             factor_3311 = 2 if self.customer.type_of_3311.id >= 10 else 1       # 3311客户加成系数2
-            factor = max(factor_industry, factor_3311)
+            factor = factor_industry * factor_3311      # max(factor_industry, factor_3311)
             imp_d = models_operation.DateOperation()
             if self.existing_net:
                 base = 0.5
@@ -125,16 +129,27 @@ class ProjectRepository(models.Model):
         if need_photo:
             ProjectExecution.takePhoto(pr)
 
-    @classmethod
-    def listProject(cls, start_date, end_date, include_close):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.judge_is_focus()
+        self.calculate_acc_num()
+        super(ProjectRepository, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+        ProjectExecution.takePhoto(self)
 
-        pass
-
-    # def close(self):
-    #     imp_date = models_operation.DateOperation()
-    #     self.close_date = imp_date.today
-    #     self.save()
-
+    def closeTemply(self, request):
+        imp_date = models_operation.DateOperation()
+        exclude_fields = ['csrfmiddlewaretoken', 'id']
+        try:
+            update_dict = {
+                **{'tmp_close_date': imp_date.today},
+                **getattr(request, request.method).dict()
+            }
+            for ef in exclude_fields:
+                if update_dict.get(ef):
+                    update_dict.pop(ef)
+            ProjectRepository.objects.filter(id=self.id).update(**update_dict)
+        except Exception as error:
+            return False
+        return True
 
 class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
@@ -226,15 +241,18 @@ class ProjectExecution(models.Model):
     def takePhoto(cls, project_obj=None, photo_date=None):
         # from app_customer_repository.models import ProjectExecution
         imp_date = models_operation.DateOperation()
-        photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
+
         if project_obj:
+            if not photo_date:
+                photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
             ProjectExecution(
                 project=project_obj,
-                photo_date=photo_date_str,
+                photo_date=photo_date,
                 current_progress_id=0,
             ).save()
             return
         else:
+            photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
                 return
             if photo_date_str:
@@ -312,6 +330,14 @@ class ProjectExecution(models.Model):
                 print('请核实以下客户的真实用信情况：')
                 for a in attention:
                     print(a)
+
+    @classmethod
+    def lastExePhoto(cls):
+        imp_date = models_operation.DateOperation()
+        last_photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
+        exe_qs = ProjectExecution.objects.filter(photo_date=last_photo_date)
+        return exe_qs
+
 
 class Progress(models.Model):
     caption = models.CharField(max_length=32)

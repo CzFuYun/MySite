@@ -1,0 +1,29 @@
+{# ajax获取项目执行情况明细表 #}
+{% load tags %}
+
+<table class="table full-color-table full-dark-table table-sm table-hover table-bordered">
+    <thead>
+        <tr>
+            {% for col in table_col %}
+                <th width="{{ col.width }}">{{ col.col_name }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in exe_qs %}
+        <tr>
+            {% for col in table_col %}
+                <td
+                    {% for attr in col.td_attr %}
+
+                            {{ attr }}="{% getValueValue d col.td_attr attr %}"
+
+                    {% endfor %}
+                    >{% getValue d col.index %}
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+
+</table>

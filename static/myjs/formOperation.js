@@ -262,6 +262,12 @@ function modifyForm(form){
             
         }
     );
+    $('[hidden][readonly]', $form).each(       // 必填项标签加粗
+        function(index, elem){
+            let $elem = $(elem);
+            $elem.parent()[0].style['display'] = 'none';
+        }
+    );
 }
 
 function showForm(formId, status){

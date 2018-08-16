@@ -45,8 +45,10 @@
         });
 
     </script>
-    
-    {% include form_js %}
+
+    {% if form_js %}
+        {% include form_js %}
+    {% endif %}
 
 {% endblock %}
 

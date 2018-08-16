@@ -1,7 +1,7 @@
 import json, re
 from django.shortcuts import render, HttpResponse, render_to_response, redirect
 from django.db.models import Q, F, Sum
-from . import models, models_operation as mo, html_forms
+from app_customer_repository import models, models_operation as mo, html_forms
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
 from root_db import models as rd_m
@@ -42,17 +42,17 @@ def test(request):
     #     'account_num',
     # )
     # models.ProjectExecution.takePhoto(None, '2018-08-01')
-    # p = models.ProjectRepository.objects.get(id=47)
-    form = html_forms.ProjectForm()
+    p = models.ProjectRepository.objects.get(id=47)
+    form = html_forms.ProjectModelForm(instance=p)
     # form = html_forms.ProjectModelForm()
     # form = html_forms.ProjectForm()
 
     form_id = 'customer_adder'
     form_action = addCustomer.__name__
-    form_title = '新增客户'
-    content_title = '新增客户'
+    # form_title = '新增客户'
+    # content_title = '新增客户'
     enc_type = 'multipart/form-data'
-    form_js = 'cust/customer_form_add.html'
+    # form_js = 'cust/customer_form_add.html'
     return render(request, 'blank_form.html', locals())
 
 
@@ -84,7 +84,7 @@ def selectProjectAction(request):
     elif action == '3':
         pass
     elif action == '4':
-        return editProjectExe(request)
+        return trackProjectExe(request)
 
 
 def viewProjectSummary(request):
@@ -222,7 +222,9 @@ def viewProjectList(request):
     exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
     project_qs = models.ProjectRepository.objects.filter(
         (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
-        & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date))
+        & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date)
+        & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__gte=end_date))
+        & (Q(close_date__isnull=True) | Q(close_date__gte=end_date)))
     project_detail = project_qs.values(
         'id',
         'customer__name',
@@ -355,20 +357,157 @@ def addProject(request):
         form = html_forms.ProjectModelForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/feedback')
+            return render(request, 'feedback.html')
     return render(request, 'blank_form.html', locals())
 
 
-def editProjectExe(request):
-    pass
+def trackProjectExe(request):
+    if request.method == 'POST':
+        return render(request, 'proj_exe/project_exe_frame.html', locals())
+    elif request.method == 'GET':
+        exe_qs = models.ProjectExecution.lastExePhoto().filter(
+            project__tmp_close_date__isnull=True,
+            current_progress__status_num__lt=200,
+        ).values(
+            'id',
+            'project_id',
+            'project__customer__name',
+            'project__staff__sub_department__superior__caption',
+            'project__staff__sub_department__superior__code',
+            'project__staff__name',
+            'project__staff_id',
+            'project__staff__yellow_red_card',
+            'project__business__caption',
+            'project__is_focus',
+            'current_progress__status_num',
+            'current_progress__caption',
+            'project__total_net',
+            'project__existing_net',
+            'new_net_used',
+            'remark__content',
+            'project__customer__customer_id',
+            'current_progress__star__caption',
+            'project__plan_pretrial_date',
+            'project__plan_chushen',
+            'project__plan_zhuanshen',
+            'project__plan_xinshen',
+            'project__plan_reply',
+            'project__plan_luodi',
+            'project__pre_approver',
+            'project__pre_approver__staff_id',
+            'project__approver',
+            'project__approver__staff_id',
+        ).order_by(
+            'project__staff__sub_department__superior__display_order',
+            'project__staff',
+            'project__business__display_order',
+        )
+        # ret = []
+        # customer_list = []
+        table_col = [
+            {
+                'index': None,
+                'col_name': '#',
+                'width': '2%',
+                'td_attr': {
+                    'exe_id': 'id',
+                    'project_id': 'project_id',
+                }
+            },
+            {
+                'index': 'project__customer__name',
+                'col_name': '客户名称',
+                'width': '13%',
+                'td_attr': {
+                    'customer_id': 'project__customer__customer_id'
+                }
+            },
+            {
+                'index': 'project__staff__sub_department__superior__caption',
+                'col_name': '经营单位',
+                'width': '4%',
+                'td_attr': {
+                    'dept_code': 'project__staff__sub_department__superior__code',
+                }
+            },
+            {
+                'index': 'project__staff__name',
+                'col_name': '客户经理',
+                'width': '4%',
+                'td_attr': {
+                    'staff': 'project__staff_id',
+                    'yr_card': 'project__staff__yellow_red_card',
+                }
+            },
+            {
+                'index': 'project__business__caption',
+                'col_name': '业务种类',
+                'width': '5%',
+                'td_attr': {
+                    # 'sub_business': 'business_id'
+                }
+            },
+            {
+                'index': 'current_progress__caption',
+                'col_name': '目前进度',
+                'width': '4%',
+                'td_attr': {
+                    'status_num': 'current_progress__status_num',
+                    'total_net': 'project__total_net',
+                    'existing_net': 'project__existing_net',
+                    'new_net_used': 'new_net_used',
+                    'plan_pretrial': 'project__plan_pretrial_date',
+                    'plan_chushen': 'project__plan_chushen',
+                    'plan_zhuanshen': 'project__plan_zhuanshen',
+                    'plan_xinshen': 'project__plan_xinshen',
+                    'plan_reply': 'project__plan_reply',
+                    'plan_luodi': 'project__plan_luodi',
+                }
+            },
+            {
+                'index': 'remark__content',
+                'col_name': '备注',
+                'width': '30%',
+                'td_attr': {}
+            },
+            {
+                'index': 'current_progress__star__caption',
+                'col_name': 'STAR',
+                'width': '4%',
+                'td_attr': {
+                    'is_focus': 'project__is_focus'
+                }
+            },
+            {
+                'index': 'project__pre_approver',
+                'col_name': '初审',
+                'width': '4%',
+                'td_attr': {
+                    'pre_approver': 'project__pre_approver__staff_id'
+                }
+            },
+            {
+                'index': 'project__approver',
+                'col_name': '专审',
+                'width': '4%',
+                'td_attr': {
+                    'approver': 'project__approver__staff_id'
+                }
+            },
+        ]
+
+        return render_to_response('proj_exe/project_exe_list.html', locals())
 
 
 def ajaxCustomer(request):
     customer_name = request.POST.get('customerName')
     customer_qs = models.CustomerRepository.objects.filter(
         Q(name__contains=customer_name) | Q(simple_name__contains=customer_name) | Q(customer__name__contains=customer_name)
-    ).values_list('name')
-    return HttpResponse(json.dumps(list(customer_qs)))
+    ).values('id', 'name')
+    ret = []
+    for c in customer_qs:
+        ret.append((c['id'], c['name'], ))
+    return HttpResponse(json.dumps(ret))
 
 
 def ajaxStaff(request):
@@ -398,6 +537,29 @@ def matchAccount(request):
     if customer_name:
         customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'dlist')
         return HttpResponse(json.dumps(customer_list))
+
+
+def delProject(request):
+    form_id = 'project_deler'
+    form_action = delProject.__name__
+    form_title = '删除项目'
+    content_title = '删除项目'
+    enc_type = 'multipart/form-data'
+
+    # form_js = 'cust/customer_form_add.html'
+    project_id = getattr(request, request.method).get('id')
+    project = models.ProjectRepository.objects.get(id=project_id)
+    if request.method == 'GET':
+        form = html_forms.ProjectModelForm_del(instance=project)
+        return render(request, 'blank_form.html', locals())
+    elif request.method == 'POST':
+        if project.closeTemply(request):
+            return render(request, 'feedback.html')
+        else:
+            form = html_forms.ProjectModelForm_del(request.POST)
+            form.is_valid()
+            return render(request, 'blank_form.html', locals())
+
 
 # Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
 # SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')

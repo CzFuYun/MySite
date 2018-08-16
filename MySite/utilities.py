@@ -1,6 +1,10 @@
 import os, json, datetime, decimal
 from django.http import StreamingHttpResponse, FileResponse
+from django import forms
 from django.shortcuts import HttpResponse, render_to_response
+
+yes_no_choices = (('1', '是'), ('0', '否'),)
+yes_no_unknown_choices = (('1', '是'), ('0', '否'), ('', '未知'))
 
 def uploadFile(request, target_dir):
     pass
@@ -148,3 +152,15 @@ class HtmlFormInfo():
         self.method = method
         self.enc_type = enc_type
 
+
+def setRequiredFields(self, exclude=('-', )):
+    for field_name in self.base_fields:
+        if field_name not in exclude:
+            field = self.base_fields[field_name]
+            field.required = True
+            field.widget.attrs.update({'required': ''})
+            field_type = str(type(field))
+            # if field_type.find('NullBooleanField') >= 0:
+            #     self.fields[field_name] = forms.IntegerField(label=field.label, widget=forms.RadioSelect(choices=yes_no_choices))
+            if field_type.find('BooleanField') >= 0:      # 布尔型字段要转换一下
+                self.fields[field_name] = forms.IntegerField(label=field.label, widget=forms.RadioSelect(choices=yes_no_choices))

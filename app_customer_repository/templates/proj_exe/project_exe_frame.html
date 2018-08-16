@@ -2,67 +2,41 @@
 {% load tags %}
 
 
-
 {% block extra_css %}
 
-
 {% endblock %}
-
-
-
-{% block navbar_before_ul %}
-    <button class="btn btn-dribbble waves-effect btn-rounded waves-light col-lg-2" type="button">{{ start_date }}→{{ end_date }}</button>
-
-{% endblock %}
-
-
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-success"><i class="mdi mdi-target"></i><a href="{% url 'addProject' %}" target="_blank" style="color: white">新增</a></button>
-    <button class="btn waves-effect waves-light btn-danger" onclick="delProject()"><i class="mdi mdi-bomb"></i>删除</button>
-    <button class="btn waves-effect waves-light btn-warning" onclick="editProject()"><i class="mdi mdi-grease-pencil"></i>修改</button>
+{#    <button class="btn waves-effect waves-light btn-success"><i class="mdi mdi-target"></i><a href="" target="_blank" style="color: white">新增</a></button>#}
+{#    <button class="btn waves-effect waves-light btn-danger" onclick="delProject()"><i class="mdi mdi-bomb"></i>删除</button>#}
+    <button class="btn waves-effect waves-light btn-warning" onclick=""><i class="mdi mdi-grease-pencil"></i>修改</button>
     <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>
-
 {% endblock %}
-
-
-
-{% block content %}
-
-
-{% endblock %}
-
-
 
 {% block extra_js %}
-    <script src="/static/js/jquery.slimscroll.js"></script>
-    <script src="/static/myjs/formOperation.js"></script>
-    <script src="/static/myjs/common.js"></script>
-    <script type="text/javascript">
+    <script>
         $(function(){
             refreshData();
-            $('#extra_function').append($('#business_selector'));
-
         });
 
         function refreshData(){
-            buildProjectList();
-            renderProjectList();
+            buildExeList();
+            renderExeList();
         }
 
-        function buildProjectList(){
-            $.post({
-                url: '{% url "viewProjectList" %}',
-                async: false,
-                data: {start_date: '{{ start_date }}', end_date: '{{ end_date }}'},
+        function buildExeList(){
+            $.get({
+                url: '{% url "trackProjectExe" %}',
                 dataType: 'text',
+                async: false,
                 success: function(response){
+                    console.log(response);
                     $('#main_content').html(response);
                 }
-            });
+            })
         }
 
-        function renderProjectList(){
+        function renderExeList(){
             $('td[yr_card]').each(function(index, elem){
                 let yr_card = Number(elem.getAttribute('yr_card'));
                 if(yr_card === 1){
@@ -71,13 +45,12 @@
                     $(elem).addClass('text-danger text-semibold');
                 }
             });
-
-            $('td[project_id]').each(function(index, elem){
-                let projectId = elem.getAttribute('project_id');
+            $('td[exe_id]').each(function(index, elem){
+                let exeId = elem.getAttribute('exe_id');
                 let $radio = $(
                     '<div style="width: 0; height: 0;">' +
-                        '<input type="radio" id="project_' + projectId + '" project_id="' + projectId + '" name="project_id">' +
-                        '<label for="project_' + projectId + '" class=""></label>' +
+                        '<input type="radio" id="exe_' + exeId + '" exe_id="' + exeId + '" name="exe_id">' +
+                        '<label for="exe_' + exeId + '" class=""></label>' +
                     '</div>'
                 );
                 elem.innerText = '';
@@ -123,24 +96,22 @@
                 container.appendChild(progressBar);
                 elem.appendChild(container);
             });
+            $('td[is_focus=False]').each(function(index, elem){
+                elem.innerHTML = 'None';
+            });
         }
 
-        function judgeSelectedProject(){
-            let input = $('input[project_id]');
+        function judgeSelectedProjectExe(){
+            let input = $('input[exe_id]');
             for(let i=0; i<input.length; i++){
                 if(input[i].checked){
-                    return input[i].getAttribute('project_id');
+                    return input[i].getAttribute('exe_id');
                 }
             }
             alert('请选择项目');
         }
 
-        function delProject(){
-            let projectId = judgeSelectedProject();
-            if(!projectId){
-                return;
-            }
-            window.open('{% url "delProject" %}?id=' + projectId, '_blank');
-        }
+
     </script>
+
 {% endblock %}
