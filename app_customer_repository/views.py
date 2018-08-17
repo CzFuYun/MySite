@@ -1,7 +1,7 @@
 import json, re
 from django.views.generic import View, DetailView
 from django.views.generic.edit import UpdateView
-from django.shortcuts import render, HttpResponse, render_to_response, redirect
+from django.shortcuts import render, HttpResponse, render_to_response, redirect, reverse
 from django.db.models import Q, F, Sum
 from app_customer_repository import models, models_operation as mo, html_forms
 from deposit_and_credit import models_operation, models as dac_m
@@ -357,8 +357,8 @@ def addProject(request):
         form = html_forms.ProjectModelForm()
     elif request.method == 'POST':
         form = html_forms.ProjectModelForm(request.POST)
+        form.cleanData({})
         if form.is_valid():
-            # form.save()
             project = form.save(commit=False)       # commit=False生成model的实例而不提交到数据库
             project.create()
             form.save_m2m()     # 保存多对多关系，因为使用了save(commit=False)，导致多对多关系未被保存，所以保险起见加上这一句
@@ -371,6 +371,7 @@ class ProjectUpdateView(UpdateView):        # DetailView用于显示一个特定
     model = models.ProjectRepository        # 绑定数据模型
     template_name = 'blank_form.html'
     form_class = html_forms.ProjectModelForm
+    # success_url = reverse('')
     # fields = [
     #     'customer',
     #     'project_name',
@@ -549,13 +550,13 @@ def ajaxCustomer(request):
     ).values('id', 'name')
     ret = []
     for c in customer_qs:
-        ret.append((c['id'], c['name'], ))
+        ret.append(c['name'] + ' #' + str(c['id']))
     return HttpResponse(json.dumps(ret))
 
 
 def ajaxStaff(request):
     staff_name = request.POST.get('staffName')
-    staffs = rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='dlist')
+    staffs = rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='html_data_list')
     return HttpResponse(json.dumps(staffs))
 
 
@@ -570,6 +571,7 @@ def addCustomer(request):
         form = html_forms.CustomerModelForm_add()
     elif request.method == 'POST':
         form = html_forms.CustomerModelForm_add(request.POST)
+        form.cleanData({'customer': re.compile(r'\d{16}')})
         if form.is_valid():
             form.save()
             return redirect('/feedback')
@@ -578,7 +580,7 @@ def addCustomer(request):
 def matchAccount(request):
     customer_name = request.POST.get('customerName')
     if customer_name:
-        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'dlist')
+        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'html_data_list')
         return HttpResponse(json.dumps(customer_list))
 
 

@@ -240,16 +240,27 @@ function modifyForm(form){
             $(elem).addClass('form-control custom-select');
         }
     );
-    // $('[type=date]', $form).each(
-    //     function(index, elem){
-    //         $(elem).addClass('form-control');
-    //     }
-    // );
+
     $('input', $form).each(
         function(index, elem){
             $(elem).addClass('form-control');
         }
     );
+
+    $('[select2]', $form).each(
+        function(index, elem){
+            let $elem = $(elem);
+            $elem.select2({
+                language: 'zh-CN',
+                placeholder: '请选择',
+                width: '100%',
+                minimumInputLength: 2,
+                theme: 'default'
+            });
+        }
+    );
+
+
     $('[required]', $form).each(       // 必填项标签加粗
         function(index, elem){
             let $elem = $(elem);
@@ -268,6 +279,7 @@ function modifyForm(form){
             $elem.parent()[0].style['display'] = 'none';
         }
     );
+
 }
 
 function showForm(formId, status){
@@ -299,7 +311,7 @@ function makeDataList(id, urlName, postDataDict){
                 $('#' + id + ' option').remove();
             }
             for(let i=0; i<response.length; i++){
-                $('<option value="' + response[i][0] + '">' + response[i][1] + '</option>').appendTo($dataList);
+                $('<option value="' + response[i] + '"></option>').appendTo($dataList);
             }
 
         }

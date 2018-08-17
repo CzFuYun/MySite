@@ -3,17 +3,26 @@
 
 {% block extra_css %}
     <link href="/static/css/style.css" rel="stylesheet">
+    <link href="/static/assets/plugins/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css" />
+{#        <link href="/static/assets/plugins/bootstrap-select/bootstrap-select.min.css" rel="stylesheet" />#}
+{#        <link href="/static/assets/plugins/multiselect/css/multi-select.css" rel="stylesheet" type="text/css" />#}
+{#        <link href="/static/assets/plugins/switchery/dist/switchery.min.css" rel="stylesheet" />#}
+{#    <link href="/static/assets/plugins/bootstrap-tagsinput/dist/bootstrap-tagsinput.css" rel="stylesheet" />#}
+{#    <link href="/static/assets/plugins/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.css" rel="stylesheet" />#}
+{#    <link href="/static/assets/plugins/multiselect/css/multi-select.css" rel="stylesheet" type="text/css" />#}
+
+
 {% endblock %}
 
 {% block content %}
 
-    <div id="{{ form_id }}_container" class="card" style="width: 60%; position: relative; margin-left: 20%; margin-right: 20%; display: None">
+    <div id="{{ form_id }}_container" class="card" style="position: relative; margin-left: 19%; margin-right: 19%; display: None">
 
         <div id="{{ form_id }}_header" class="card-header card-outline-info">
             <h3 class="card-title" style="margin: 0 auto; line-height: 50px;">{{ form_title }}</h3>
         </div>
         <div id="{{ form_id }}_body" class="card-body">
-                <form id="{{ form_id }}" method="post" action="{% url form_action|default:'home' %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
+                <form id="{{ form_id }}" method="post" action="{% url form_action %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
                     {% csrf_token %}
                     {{ form.as_p }}
                 </form>
@@ -37,6 +46,8 @@
 {% block extra_js %}
     <script src="/static/myjs/formOperation.js"></script>
     <script src="/static/myjs/common.js"></script>
+    <script src="/static/assets/plugins/select2/dist/js/select2.full.min.js" type="text/javascript"></script>
+{#    <script src="/static/assets/plugins/bootstrap-select/bootstrap-select.min.js" type="text/javascript"></script>#}
 
     <script>
         $(function(){

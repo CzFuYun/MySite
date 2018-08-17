@@ -68,14 +68,14 @@ class ProjectForm(Form):
         )
 
 
-class ProjectModelForm(ModelForm):
+class ProjectModelForm(ModelForm, utilities.CleanForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjectModelForm, self).__init__(*args, **kwargs)
         self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list'})
         self.fields['project_name'].widget = forms.TextInput()
         self.fields['staff'].widget = forms.TextInput(attrs={'list': 'staff_list'})
-        self.fields['business'].choices = models.SubBusiness.getAllBusiness()
+        # self.fields['business'].choices = models.SubBusiness.getAllBusiness()
         self.fields['is_green'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['is_defuse'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
@@ -112,13 +112,16 @@ class ProjectModelForm(ModelForm):
         #     'is_green': forms.RadioSelect(choices=utilities.yes_or_no_choices, attrs={'type': 'radio'})
         # }
 
-    def clean_data(self):
+    def _cleanData(self):
+        '''
+        在clean()之前先清洗一遍数据
+        '''
         print(self)
-        pass
 
 
 
-class CustomerModelForm_add(ModelForm):
+
+class CustomerModelForm_add(ModelForm, utilities.CleanForm):
     # is_strategy = forms.IntegerField(label='战略客户')
 
     class Meta:
@@ -127,11 +130,9 @@ class CustomerModelForm_add(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CustomerModelForm_add, self).__init__(*args, **kwargs)
-        self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list'})
-        self.fields['department'].choices = rd_m.Department.getDepartments()
+        self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list', 'select2': ''})
         self.fields['is_strategy'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        self.fields['type_of_3311'].choices = rd_m.TypeOf3311.get3311Type()
-        utilities.setRequiredFields(self, ('customer', 'credit_file'))
+        # utilities.setRequiredFields(self, ('customer', 'credit_file'))
 
     def clean_credit_file(self):
         '''

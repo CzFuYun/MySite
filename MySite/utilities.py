@@ -1,4 +1,4 @@
-import os, json, datetime, decimal
+import os, json, datetime, decimal, re
 from django.http import StreamingHttpResponse, FileResponse
 from django import forms
 from django.shortcuts import HttpResponse, render_to_response
@@ -164,3 +164,25 @@ def setRequiredFields(self, exclude=('-', )):
             #     self.fields[field_name] = forms.IntegerField(label=field.label, widget=forms.RadioSelect(choices=yes_no_choices))
             if field_type.find('BooleanField') >= 0:      # 布尔型字段要转换一下
                 self.fields[field_name] = forms.IntegerField(label=field.label, widget=forms.RadioSelect(choices=yes_no_choices))
+
+
+class CleanForm():
+
+    def cleanData(self, rule):
+        '''
+
+        :param rule: 由字段名和re.compile对象组成的字典
+        :return:
+        '''
+        self.data = self.data.copy()
+        for field in self.data:
+            reg = rule.get(field)
+            if reg:
+                value_list = self.data.getlist(field)
+                cleaned_value_list = []
+                for value in value_list:
+                    # if reg.groups:
+                    #     cleaned_value_list.append(None)
+                    # else:
+                        cleaned_value_list.append(reg.findall(value)[0])
+                self.data.setlist(field, cleaned_value_list)

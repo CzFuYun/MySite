@@ -40,25 +40,25 @@ class Staff(models.Model):
         self.save()
 
     @classmethod
-    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='dlist'):
+    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='list'):
         dept_q = Q(sub_department__superior__code=dept_code) if dept_code else ~Q(sub_department__superior__code__in=['NONE', 'JGBS'])
         name_q = Q(name__contains=name_contains) if name_contains else Q(name__isnull=False)
         staff_qs = Staff.objects.filter(dept_q & name_q).order_by(
                 'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
         if return_mode == 'dlist':
-            staff_list = []
+            ret = []
             for s in staff_qs:
                 if len(s['name']) > 4:
                     continue
-                staff_list.append((s['staff_id'], s['sub_department__superior__caption'] + '　' + s['name']))
-            return staff_list
-        elif return_mode == 'str':
-            staff_strs = []
+                ret.append((s['staff_id'], s['sub_department__superior__caption'] + '  ' + s['name']))
+            return ret
+        elif return_mode == 'html_data_list':
+            ret = []
             for s in staff_qs:
                 if len(s['name']) > 4:
                     continue
-                staff_strs.append(s['sub_department__superior__caption'] + '　' + s['name'] + '　' + s['staff_id'])
-        return staff_strs
+                ret.append(s['sub_department__superior__caption'] + '  ' + s['name'] + '  ' + s['staff_id'])
+            return ret
 ########################################################################################################################
 class Department(models.Model):
     code = models.CharField(primary_key=True, max_length=8, unique=True, verbose_name='部门编号')
@@ -67,9 +67,12 @@ class Department(models.Model):
 
     class Meta:
         verbose_name_plural = '部门（综合）'
+        ordering = ('display_order', )
 
     def __str__(self):
         return self.caption
+
+
 
     @classmethod
     def getDepartments(cls, return_mode='l'):
@@ -84,6 +87,10 @@ class Department(models.Model):
             for d in dept:
                 dic[d['code']] = d['caption']
             return dic
+
+    @classmethod
+    def getDeptChoices(cls):
+        pass
 
     @classmethod
     def getBusinessDept(cls, return_mode='l'):
@@ -135,10 +142,11 @@ class AccountedCompany(models.Model):
     @classmethod
     def matchAccountByName(cls, name, return_mode='list'):
         c_qs = cls.objects.filter(name__contains=name).values('name', 'customer_id')
-        if return_mode == 'list':
+        if return_mode == 'html_data_list':
             ret = []
             for c in c_qs:
-                ret.append(c['name'] + '　' + c['customer_id'])
+                ret.append(c['name'] + '  ' + c['customer_id'])
+            return ret
         elif return_mode == 'dlist':
             ret = []
             for c in c_qs:
@@ -148,7 +156,7 @@ class AccountedCompany(models.Model):
             ret = {}
             for c in c_qs:
                 ret[c['customer_id']] = c['name']
-        return ret
+            return ret
 ########################################################################################################################
 
 

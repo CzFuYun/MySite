@@ -379,6 +379,12 @@ class SubBusiness(models.Model):
     is_focus = models.BooleanField(default=False, verbose_name='是否重点产品')
     acc_factor = models.FloatField(default=0, verbose_name='折算户数系数')
 
+    class Meta:
+        ordering = ('display_order', )
+
+    def __str__(self):
+        return self.caption
+
     @classmethod
     def getAllBusiness(cls):
         sub_bus_qs = cls.objects.values('id', 'caption', 'superior__caption').order_by('display_order')
