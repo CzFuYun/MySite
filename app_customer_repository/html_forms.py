@@ -112,9 +112,9 @@ class ProjectModelForm(ModelForm):
         #     'is_green': forms.RadioSelect(choices=utilities.yes_or_no_choices, attrs={'type': 'radio'})
         # }
 
-    def save(self, commit=True):
-        print('')
-        super(ProjectModelForm, self).save(commit)
+    def clean_data(self):
+        print(self)
+        pass
 
 
 
@@ -163,6 +163,6 @@ class ProjectModelForm_del(ModelForm):
         model = models.ProjectRepository
         fields = ('id', 'close_reason', 'whose_matter', )
 
-    # def __init__(self, *args, **kwargs):
-    #     super(ProjectModelForm_del, self).__init__(*args, **kwargs)
-        # self.fields['id'].widge = forms.TextInput(attrs={'hidden': 'hidden'})
+
+class ProjectExeForm_replied_edit(Form):
+    pass

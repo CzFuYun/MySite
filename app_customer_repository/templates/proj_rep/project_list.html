@@ -142,5 +142,13 @@
             }
             window.open('{% url "delProject" %}?id=' + projectId, '_blank');
         }
+
+        function editProject(){
+            let projectId = judgeSelectedProject();
+            if(!projectId){
+                return;
+            }
+            window.open('{% url "editProject" %}?pk=' + projectId, '_blank');
+        }
     </script>
 {% endblock %}

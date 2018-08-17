@@ -13,7 +13,7 @@
             <h3 class="card-title" style="margin: 0 auto; line-height: 50px;">{{ form_title }}</h3>
         </div>
         <div id="{{ form_id }}_body" class="card-body">
-                <form id="{{ form_id }}" method="post" action="{% url form_action %}" enctype="{{ enc_type }}">
+                <form id="{{ form_id }}" method="post" action="{% url form_action|default:'home' %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
                     {% csrf_token %}
                     {{ form.as_p }}
                 </form>

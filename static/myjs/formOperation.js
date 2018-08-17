@@ -319,3 +319,7 @@ function addSatelliteButtonForInput(inputId, buttonInfo){
     }
     $input.after($buttonGroup);
 }
+
+function makeModalDialog(){
+    let $dialogDiv = $('<div style=""></div>');
+}

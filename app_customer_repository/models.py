@@ -98,55 +98,63 @@ class ProjectRepository(models.Model):
             if self.existing_net:
                 base = 0.5
             else:
-                history_sum_net = self.customer.customer.contributor_set.filter(
-                    data_date__gte=imp_d.last_year_today,
-                    data_date__lte=imp_d.today
-                ).values_list('net_total').aggregate(Sum('net_total'))['net_total__sum']
-                base = 0.5 if int(history_sum_net) else 1       # 一年内用过信或直接声明有存量敞口的，基数为0.5户
+                try:
+                    history_sum_net = self.customer.customer.contributor_set.filter(
+                        data_date__gte=imp_d.last_year_today,
+                        data_date__lte=imp_d.today
+                    ).values_list('net_total').aggregate(Sum('net_total'))['net_total__sum']
+                    base = 0.5 if int(history_sum_net) else 1       # 一年内用过信或直接声明有存量敞口的，基数为0.5户
+                except:
+                    pass
         else:
             factor = self.business.acc_factor
         self.account_num = base * factor
 
-    @classmethod
-    def create_or_update(cls, pr_dict):
-        '''
-        根据传入的数据更新或创建储备项目，自动填充创建日期并生成快照
-        :param pr_dict:
-        :return:
-        '''
-        # fields = self._meta.fields
-        imp_date = models_operation.DateOperation()
-        need_photo = False
-        if pr_dict.get('id'):       # 修改
-            pr = ProjectRepository.objects.get(id=pr_dict['id'])
-        else:       # 创建
-            pr = ProjectRepository({**pr_dict, **{'create_date': imp_date.today}})
-            # pr.create_date = imp_date.today
-            need_photo = True
-        pr.judge_is_focus()
-        pr.calculate_acc_num()
-        pr.save()
-        if need_photo:
-            ProjectExecution.takePhoto(pr)
+    # @classmethod
+    # def create_or_update(cls, pr_dict):
+    #     '''
+    #     根据传入的数据更新或创建储备项目，自动填充创建日期并生成快照
+    #     :param pr_dict:
+    #     :return:
+    #     '''
+    #     # fields = self._meta.fields
+    #     imp_date = models_operation.DateOperation()
+    #     need_photo = False
+    #     if pr_dict.get('id'):       # 修改
+    #         pr = ProjectRepository.objects.get(id=pr_dict['id'])
+    #     else:       # 创建
+    #         pr = ProjectRepository({**pr_dict, **{'create_date': imp_date.today}})
+    #         need_photo = True
+    #     # pr.judge_is_focus()
+    #     # pr.calculate_acc_num()
+    #     pr.save()
+    #     if need_photo:
+    #         ProjectExecution.takePhoto(pr)
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def create(self, **kwargs):
+        if kwargs:
+            self.__dict__.update(**kwargs)
         self.judge_is_focus()
         self.calculate_acc_num()
-        super(ProjectRepository, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+        self.save(force_insert=True)        # 强制数据库使用INSERT，而不是UDPATE语句
         ProjectExecution.takePhoto(self)
 
+    def update(self, **kwargs):
+        if kwargs:
+            self.__dict__.update(**kwargs)
+        self.save(force_update=True)
+
     def closeTemply(self, request):
-        imp_date = models_operation.DateOperation()
         exclude_fields = ['csrfmiddlewaretoken', 'id']
         try:
             update_dict = {
-                **{'tmp_close_date': imp_date.today},
+                **{'tmp_close_date': models_operation.DateOperation().today},
                 **getattr(request, request.method).dict()
             }
             for ef in exclude_fields:
                 if update_dict.get(ef):
                     update_dict.pop(ef)
-            ProjectRepository.objects.filter(id=self.id).update(**update_dict)
+            self.update(**update_dict)
         except Exception as error:
             return False
         return True
@@ -164,11 +172,11 @@ class PretrialDocument(models.Model):
 
 
 class ProjectExecution(models.Model):
-    project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT)
+    project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT, verbose_name='项目')
     current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='进度')
     total_used = models.IntegerField(default=0, verbose_name='累计投放敞口')          # 含本次
     new_net_used = models.IntegerField(default=0, verbose_name='累计投放新增敞口')      # 自动计算，含本次
-    remark = models.ForeignKey('ProjectRemark', blank=True, null=True, on_delete=models.PROTECT)
+    remark = models.ForeignKey('ProjectRemark', blank=True, null=True, on_delete=models.PROTECT, verbose_name='备注')
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
@@ -181,7 +189,7 @@ class ProjectExecution(models.Model):
                 return pe.values_list('update_count').order_by('-update_count')[0]
             return (0, )
 
-    def execute_processing(self, pe_dict):
+    def update(self, pe_dict):
         '''
         更新进度
         :param pe_dict: 字段名和新值构成的字典
@@ -192,23 +200,23 @@ class ProjectExecution(models.Model):
             'remark': 'remark.content',
         }
         # fields_no_edit = ['project']
-        imp_date = models_operation.DateOperation()
+        # imp_date = models_operation.DateOperation()
         field_list = self._meta.fields
-        self.previous_pe = ProjectExecution.objects.get(project=self.project, update_count=self.update_count-1) or ProjectExecution()
-        for f in field_list:
-            field = f.name
+        self.previous_pe = ProjectExecution.objects.filter(project=self.project, update_count=self.update_count-1).first() or ProjectExecution()
+        for field in field_list:
+            field_name = field.name
             # if field in fields_no_edit:
             #     continue
-            new_value = pe_dict.get(field, None)
+            new_value = pe_dict.get(field_name, None)
             if new_value:
-                if field in fields_to_compare:
-                    if eval('self.previous_pe.' + fields_to_compare[field]) != new_value:
-                        edit_method = getattr(self, '_edit_' + field)
+                if field_name in fields_to_compare:
+                    if eval('self.previous_pe.' + fields_to_compare[field_name]) != new_value:
+                        edit_method = getattr(self, '_update_' + field_name)
                         edit_method(new_value)
                     else:
                         pass
                 else:
-                    eval('self.' + field + '=' + new_value)
+                    eval('self.' + field_name + '=' + new_value)
             else:
                 pass
         self.save()
@@ -227,15 +235,16 @@ class ProjectExecution(models.Model):
     #     :return:
     #     '''
 
-    def _edit_total_used(self, new_value):
+    def _update_total_used(self, new_value):
         self.total_used = new_value
         this_time_used = self.total_used - self.previous_pe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
         self.new_net_used = this_time_used + self.previous_pe.new_net_used
 
-    def _edit_remark(self, new_value):
+    def _update_remark(self, new_value):
         new_remark = ProjectRemark(content=new_value)
         new_remark.save()
         self.remark = new_remark
+        # self.save()
 
     @classmethod
     def takePhoto(cls, project_obj=None, photo_date=None):

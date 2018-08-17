@@ -1,4 +1,5 @@
 from django.conf.urls import url, include
+from django.urls import path
 from django.contrib import admin
 from . import views
 
@@ -10,6 +11,7 @@ urlpatterns = [
     url(r'projectsummary\.view', views.viewProjectSummary, name='viewProjectSummary'),
     url(r'projectlist\.view', views.viewProjectList, name='viewProjectList'),
     url(r'project\.add', views.addProject, name='addProject'),
+    url(r'project\.edit', views.ProjectUpdateView.as_view(), name='editProject'),
     url(r'customer\.ajax', views.ajaxCustomer, name='ajaxCustomer'),
     url(r'staff\.ajax', views.ajaxStaff, name='ajaxStaff'),
     url(r'customer\.add', views.addCustomer, name='addCustomer'),

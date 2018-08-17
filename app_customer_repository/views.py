@@ -1,4 +1,6 @@
 import json, re
+from django.views.generic import View, DetailView
+from django.views.generic.edit import UpdateView
 from django.shortcuts import render, HttpResponse, render_to_response, redirect
 from django.db.models import Q, F, Sum
 from app_customer_repository import models, models_operation as mo, html_forms
@@ -356,9 +358,50 @@ def addProject(request):
     elif request.method == 'POST':
         form = html_forms.ProjectModelForm(request.POST)
         if form.is_valid():
-            form.save()
+            # form.save()
+            project = form.save(commit=False)       # commit=False生成model的实例而不提交到数据库
+            project.create()
+            form.save_m2m()     # 保存多对多关系，因为使用了save(commit=False)，导致多对多关系未被保存，所以保险起见加上这一句
             return render(request, 'feedback.html')
     return render(request, 'blank_form.html', locals())
+
+
+class ProjectUpdateView(UpdateView):        # DetailView用于显示一个特定类型对象的详细信息。
+    context_object_name = 'form'        # 指定获取的模型列表数据保存的变量名。这个变量会被传递给模板
+    model = models.ProjectRepository        # 绑定数据模型
+    template_name = 'blank_form.html'
+    form_class = html_forms.ProjectModelForm
+    # fields = [
+    #     'customer',
+    #     'project_name',
+    #     'staff',
+    #     'business',
+    #     'is_green',
+    #     'total_net',
+    #     'existing_net',
+    #     'is_defuse',
+    #     'is_pure_credit',
+    #     'plan_pretrial_date',
+    #     'plan_chushen',
+    #     'plan_zhuanshen',
+    #     'plan_xinshen',
+    #     'plan_reply',
+    #     'plan_luodi'
+    # ]
+
+    # def get_form_kwargs(self):
+    #     pass
+
+
+    # def get_context_data(self, **kwargs):
+    #     pass
+    #
+    # def get_object(self, queryset=None):
+    #     pass
+    #
+    # def get(self, request, *args, **kwargs):
+    #     response = super(ProjectUpdateView, self).get(request, *args, **kwargs)
+    #     return response
 
 
 def trackProjectExe(request):
@@ -456,12 +499,12 @@ def trackProjectExe(request):
                     'total_net': 'project__total_net',
                     'existing_net': 'project__existing_net',
                     'new_net_used': 'new_net_used',
-                    'plan_pretrial': 'project__plan_pretrial_date',
-                    'plan_chushen': 'project__plan_chushen',
-                    'plan_zhuanshen': 'project__plan_zhuanshen',
-                    'plan_xinshen': 'project__plan_xinshen',
-                    'plan_reply': 'project__plan_reply',
-                    'plan_luodi': 'project__plan_luodi',
+                    'plan_20': 'project__plan_pretrial_date',
+                    'plan_40': 'project__plan_chushen',
+                    'plan_70': 'project__plan_zhuanshen',
+                    'plan_80': 'project__plan_xinshen',
+                    'plan_100': 'project__plan_reply',
+                    'plan_120': 'project__plan_luodi',
                 }
             },
             {
@@ -545,7 +588,6 @@ def delProject(request):
     form_title = '删除项目'
     content_title = '删除项目'
     enc_type = 'multipart/form-data'
-
     # form_js = 'cust/customer_form_add.html'
     project_id = getattr(request, request.method).get('id')
     project = models.ProjectRepository.objects.get(id=project_id)

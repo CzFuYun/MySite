@@ -298,10 +298,12 @@ function fillTable(tableId, valuesListByRow){
 }
 
 
-function lockThead(tableDivId, tableId){
+function lockThead(tableParentDivId, tableId){
     var r = window.devicePixelRatio;        // 屏幕缩放比例
-    $('#' + tableDivId).addClass('table-responsive section-scroll').attr('style', 'height:' + String(screen.availHeight * 0.68 /r) + 'px');
-    $('#' + tableId + ' thead:first th').addClass('table-th-css');
+    let $div = $('#' + tableParentDivId),
+        $thead = tableId ? $('#' + tableId + ' thead:first th') : $('table thead:first th', $div);
+    $div.addClass('table-responsive section-scroll').attr('style', 'height:' + String(screen.availHeight * 0.68 / r) + 'px');
+    $thead.addClass('table-th-css');
     tableCont = $('.section-scroll tr th');
     tableCont_child = $('.section-scroll tr th div');
     tableScroll = $('.section-scroll');

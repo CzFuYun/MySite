@@ -1,0 +1,20 @@
+
+
+    <div id="{{ dialog_id|default:'dialog' }}_container" class="card" style="position: fixed; z-index: 1000; margin: auto; left: {{ side_margin|default:'19%' }}; right: {{ side_margin|default:'19%' }}">
+        <div id="{{ dialog_id|default:'dialog' }}_header" class="card-header card-outline-info">
+            <h3 class="card-title" style="margin: 0 auto; line-height: 50px;">{{ dialog_title|default:'' }}</h3>
+        </div>
+
+        <div id="{{ dialog_id|default:'dialog' }}_body" class="card-body">
+            <form target="_blank" id="{{ dialog_id|default:'dialog' }}" method="post" action="{% url action %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
+                {{ form.as_p }}
+            </form>
+        </div>
+        <div id="{{ dialog_id|default:'dialog' }}_foot" class="card-body text-right">
+            <hr>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success" onclick="document.getElementById('{{ dialog_id|default:"dialog" }}').submit()"><i class="mdi mdi-check"></i>确认</button>
+                <button type="button" class="btn btn-inverse" onclick="showForm('{{ dialog_id|default:'dialog' }}_container', 0)"><i class="mdi mdi-close"></i>关闭</button>
+            </div>
+        </div>
+    </div>
