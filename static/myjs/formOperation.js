@@ -74,44 +74,51 @@ function getFormData(formId){
     }
 }
 
-function addItems(selectElemId, valueTextDict, defaultSelectedText, clearBeforeAdd, onchangeFunctionObject){
-    var selectElem = document.getElementById(selectElemId),
-        index = 0,
-        oldOptions = selectElem.options,
-        newOption;
+function addItems(selectElemId, optionData, defaultSelectedText, clearBeforeAdd, onchangeFunctionObject){
+    var $selectElem = $('#' + selectElemId),
+        $oldOptions = $('option', $selectElem),
+        $newOption,
+        index = 0;
     if(clearBeforeAdd){
-        for(var i=oldOptions.length-1; i>=0; i--){
-            oldOptions[i].remove();
-        }
+        $oldOptions.remove();
         if(!defaultSelectedText){
-            // ↓添加一个空选项
-            newOption = document.createElement('option');
-            newOption.setAttribute('value', '');
-            newOption.innerText = '';
-            selectElem.appendChild(newOption);
-            selectElem.selectedIndex = index;
+            // ↓如果没有指定默认选项，则需要添加一个空选项
+            $newOption = $('<option value="">请选择</option>');
+            $newOption.appendTo($selectElem);
+            $selectElem.selectedIndex = index;
         }
     }
     else{
-        for(var i=0; i<oldOptions.length; i++){
-            if(oldOptions[i].text === defaultSelectedText){
-                selectElem.selectedIndex = index;
+        for(var i=0; i<$oldOptions.length; i++){
+            if($oldOptions[i].text === defaultSelectedText){
+                $selectElem.selectedIndex = index;
             }
             index ++;
         }
     }
-    for(var v in valueTextDict){
-        newOption = document.createElement('option');
-        newOption.setAttribute('value', v);
-        newOption.innerText = valueTextDict[v];
-        selectElem.appendChild(newOption);
-        if(valueTextDict[v] === defaultSelectedText){
-            selectElem.selectedIndex = index;
+    if(Array.isArray(optionData)){
+        // optionData为数组（列表）
+        for(let i=0; i<optionData.length; i++){
+            $newOption = $('<option value="' + optionData[i][0] + '">' + optionData[i][1] + '</option>');
+            $newOption.appendTo($selectElem);
+            if(optionData[i][1] === defaultSelectedText){
+                $selectElem.selectedIndex = index;
+            }
+            index ++;
         }
-        index ++;
+    }else{
+        // optionData为字典
+        for(var v in optionData){
+            $newOption = $('<option value="' + v + '">' + optionData[v] + '</option>');
+            $newOption.appendTo($selectElem);
+            if(optionData[v] === defaultSelectedText){
+                $selectElem.selectedIndex = index;
+            }
+            index ++;
+        }
     }
     if(onchangeFunctionObject){
-        selectElem.setAttribute('onchange', onchangeFunctionObject.name + '(this)');
+        $selectElem.setAttribute('onchange', onchangeFunctionObject.name + '(this)');
     }
 }
 
@@ -208,6 +215,7 @@ function fillForm2(formId, dataDic){
 // }
 function modifyForm(form){
     let $form = form ? form : $('form');
+
     $('li label input', $form).each(
         function(index, elem){
             $(elem).parent().before($(elem));
@@ -217,11 +225,20 @@ function modifyForm(form){
         function(index, elem){
             let $elem = $(elem);
             $elem.addClass('form-control list-unstyled list-inline');
-            elem.style.display = 'block';
-            elem.style['margin-bottom'] = 0;
-            elem.style['padding-bottom'] = 0;
-            elem.style['padding-left'] = 0;
-            // elem.style({display: 'block', margin: 0, 'padding-bottom': 0});
+            $elem.css({
+                'display': 'block',
+                'margin-bottom': 0,
+                'padding': 0,
+                'height': '39px'
+                // 'padding-left': 0
+            });
+            $elem.children('li').css({
+                'padding': '6px'
+            });
+            // elem.style.display = 'block';
+            // elem.style['margin-bottom'] = 0;
+            // elem.style['padding-bottom'] = 0;
+            // elem.style['padding-left'] = 0;
             $elem.appendTo($elem.prev());
         }
     );
@@ -249,18 +266,9 @@ function modifyForm(form){
 
     $('[select2]', $form).each(
         function(index, elem){
-            let $elem = $(elem);
-            $elem.select2({
-                language: 'zh-CN',
-                placeholder: '请选择',
-                width: '100%',
-                minimumInputLength: 2,
-                theme: 'default'
-            });
+            $(elem).select2();
         }
     );
-
-
     $('[required]', $form).each(       // 必填项标签加粗
         function(index, elem){
             let $elem = $(elem);
@@ -316,6 +324,69 @@ function makeDataList(id, urlName, postDataDict){
 
         }
     });
+}
+
+function bindAjaxDataSourceToSelect2(url, data, $select2Elem){
+    $select2Elem = $select2Elem ? $select2Elem : $('select[select2]');
+    $select2Elem.select2({
+        placeholder: '请选择',
+        width: '100%',
+        // theme: 'default',
+        language: "zh-CN",
+        minimumInputLength: 2,
+        allowClear: true,
+        // data: [
+        //     { id: 0, text: 'enhancement' },
+        //     { id: 1, text: 'bug' },
+        //     { id: 2, text: 'duplicate' },
+        //     { id: 3, text: 'invalid' },
+        //     { id: 4, text: 'wontfix' }
+        //   ]
+        ajax: {
+            url: url,
+            async: false,
+            dataType: 'json',
+            data: data,
+            processResults: function(response, params){
+                //返回值必须处理成以下格式
+                // [{ id:  , text: ' ' }, { id:  , text: ' ' }, ];
+                if(!response){
+                    return;
+                }
+                params.page = params.page || 1;
+                let ret = [];
+                for(let i=0; i<response.length; i++)
+                {
+                    ret.push(
+                        {id: response[i][0], text: response[i][1]}
+                    );
+                }
+                return {
+                    results: ret,
+                    pagination: {
+                        more: (params.page * 30) < response.total_count
+                    }
+                };
+            },
+            templateResult: function(repo){return repo.text;},
+            templateSelection: function(repo){return repo.text;}
+        }
+    });
+
+    $('.select2-selection[aria-labelledby]', $select2Elem.next()).each(
+        function(index, elem){
+            $(elem).css({
+                height: '39px',
+                'border-color': 'gainsboro'
+            });
+            $(elem).children('span').css({
+                'margin': '0px',
+                'padding': '6px'
+            });
+        }
+    );
+
+
 }
 
 function addSatelliteButtonForInput(inputId, buttonInfo){

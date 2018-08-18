@@ -3,6 +3,7 @@ from django.http import StreamingHttpResponse, FileResponse
 from django import forms
 from django.shortcuts import HttpResponse, render_to_response
 
+# return_mode = {}
 yes_no_choices = (('1', '是'), ('0', '否'),)
 yes_no_unknown_choices = (('1', '是'), ('0', '否'), ('', '未知'))
 

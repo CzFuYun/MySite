@@ -357,7 +357,7 @@ def addProject(request):
         form = html_forms.ProjectModelForm()
     elif request.method == 'POST':
         form = html_forms.ProjectModelForm(request.POST)
-        form.cleanData({})
+        # form.cleanData({})
         if form.is_valid():
             project = form.save(commit=False)       # commit=False生成model的实例而不提交到数据库
             project.create()
@@ -544,13 +544,15 @@ def trackProjectExe(request):
 
 
 def ajaxCustomer(request):
-    customer_name = request.POST.get('customerName')
+    customer_name = request.GET.get('term')
+    if not re.search(r'[\u4e00-\u9fa5]{2}', customer_name):
+        return
     customer_qs = models.CustomerRepository.objects.filter(
         Q(name__contains=customer_name) | Q(simple_name__contains=customer_name) | Q(customer__name__contains=customer_name)
     ).values('id', 'name')
     ret = []
     for c in customer_qs:
-        ret.append(c['name'] + ' #' + str(c['id']))
+        ret.append([c['id'], c['name']])
     return HttpResponse(json.dumps(ret))
 
 
@@ -571,16 +573,15 @@ def addCustomer(request):
         form = html_forms.CustomerModelForm_add()
     elif request.method == 'POST':
         form = html_forms.CustomerModelForm_add(request.POST)
-        form.cleanData({'customer': re.compile(r'\d{16}')})
         if form.is_valid():
             form.save()
             return redirect('/feedback')
     return render(request, 'blank_form.html', locals())
 
 def matchAccount(request):
-    customer_name = request.POST.get('customerName')
+    customer_name = request.GET.get('customerName')
     if customer_name:
-        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'html_data_list')
+        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'as_choices')
         return HttpResponse(json.dumps(customer_list))
 
 

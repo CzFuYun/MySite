@@ -1,6 +1,7 @@
 import re
 from django.forms import Form, widgets, fields, ModelForm
 from django import forms
+from django.shortcuts import reverse
 from django.db.models import F
 from MySite import utilities
 from . import models
@@ -130,9 +131,9 @@ class CustomerModelForm_add(ModelForm, utilities.CleanForm):
 
     def __init__(self, *args, **kwargs):
         super(CustomerModelForm_add, self).__init__(*args, **kwargs)
-        self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list', 'select2': ''})
+        self.fields['customer'].widget = forms.Select(choices=())
         self.fields['is_strategy'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        # utilities.setRequiredFields(self, ('customer', 'credit_file'))
+
 
     def clean_credit_file(self):
         '''

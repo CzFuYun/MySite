@@ -1,13 +1,26 @@
 
+{#    <span style="text-align: "></span>#}
     <script type="text/javascript">
         $(function(){
             document.getElementById('id_customer').setAttribute('onfocus', 'matchAccount()');
+
+
         });
 
         function matchAccount(){
-            let customerName = document.getElementById('id_name').value;
+            let customerName = getCnChars(document.getElementById('id_name').value);
             if(customerName.length >= 2){
-                makeDataList('customer_list', 'matchAccount', {customerName: customerName});
+                $.get({
+                    url: '{% url "matchAccount" %}',
+                    data: {customerName: customerName},
+                    dataType: 'json',
+                    async: false,
+                    success: function(response){
+                        addItems('id_customer', response, null, true, null);
+                    }
+                });
+
+
             }
         }
     </script>

@@ -142,10 +142,10 @@ class AccountedCompany(models.Model):
     @classmethod
     def matchAccountByName(cls, name, return_mode='list'):
         c_qs = cls.objects.filter(name__contains=name).values('name', 'customer_id')
-        if return_mode == 'html_data_list':
+        if return_mode == 'as_choices':
             ret = []
             for c in c_qs:
-                ret.append(c['name'] + '  ' + c['customer_id'])
+                ret.append((c['customer_id'], c['name'] + '  ' + c['customer_id']))
             return ret
         elif return_mode == 'dlist':
             ret = []
