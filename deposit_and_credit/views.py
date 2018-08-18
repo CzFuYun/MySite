@@ -9,6 +9,7 @@ from django.utils.timezone import datetime, timedelta
 from root_db import models as rd_models
 from deposit_and_credit import models as dac_models, models_operation, settings
 from app_permission.views import checkPermission
+from MySite import utilities
 # import collections
 
 
@@ -106,7 +107,7 @@ def viewContributionTable(request):
                 data_date=opener_params['data_date']),
             'opener_params': json.dumps(opener_params),
             'data_date': opener_params['data_date'],
-            'department_list': rd_models.Department.getBusinessDept('l'),
+            'department_list': rd_models.Department.getBusinessDept(utilities.return_as['choice']),
         })
 
 

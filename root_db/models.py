@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models import Q
 from deposit_and_credit import models_operation
+from MySite import utilities
+
 
 class Staff(models.Model):
     position_choices = (
@@ -40,19 +42,19 @@ class Staff(models.Model):
         self.save()
 
     @classmethod
-    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode='list'):
+    def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode=utilities.return_as['choice']):
         dept_q = Q(sub_department__superior__code=dept_code) if dept_code else ~Q(sub_department__superior__code__in=['NONE', 'JGBS'])
         name_q = Q(name__contains=name_contains) if name_contains else Q(name__isnull=False)
         staff_qs = Staff.objects.filter(dept_q & name_q).order_by(
                 'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
-        if return_mode == 'dlist':
+        if return_mode == utilities.return_as['choice']:
             ret = []
             for s in staff_qs:
                 if len(s['name']) > 4:
                     continue
                 ret.append((s['staff_id'], s['sub_department__superior__caption'] + '  ' + s['name']))
             return ret
-        elif return_mode == 'html_data_list':
+        elif return_mode == utilities.return_as['list']:
             ret = []
             for s in staff_qs:
                 if len(s['name']) > 4:
@@ -75,14 +77,14 @@ class Department(models.Model):
 
 
     @classmethod
-    def getDepartments(cls, return_mode='l'):
+    def getDepartments(cls, return_mode=utilities.return_as['choice']):
         dept = cls.objects.values('code', 'caption').order_by('display_order')
-        if return_mode == 'l':
+        if return_mode == utilities.return_as['choice']:
             l = []
             for d in dept:
                 l.append((d['code'], d['caption']))
             return l
-        elif return_mode == 'd':
+        elif return_mode == utilities.return_as['dict']:
             dic = {}
             for d in dept:
                 dic[d['code']] = d['caption']
@@ -93,14 +95,14 @@ class Department(models.Model):
         pass
 
     @classmethod
-    def getBusinessDept(cls, return_mode='l'):
+    def getBusinessDept(cls, return_mode=utilities.return_as['choice']):
         dept = cls.objects.exclude(code__in=['JGBS' , 'NONE']).values('code', 'caption').order_by('display_order')
-        if return_mode == 'l':
+        if return_mode == utilities.return_as['choice']:
             l = []
             for d in dept:
                 l.append((d['code'], d['caption']))
             return l
-        elif return_mode == 'd':
+        elif return_mode == utilities.return_as['dict']:
             dic = {}
             for d in dept:
                 dic[d['code']] = d['caption']
@@ -140,19 +142,19 @@ class AccountedCompany(models.Model):
         verbose_name_plural = '已开户对公客户'
 
     @classmethod
-    def matchAccountByName(cls, name, return_mode='list'):
+    def matchAccountByName(cls, name, return_mode=utilities.return_as['choice']):
         c_qs = cls.objects.filter(name__contains=name).values('name', 'customer_id')
-        if return_mode == 'as_choices':
+        if return_mode == utilities.return_as['choice']:
             ret = []
             for c in c_qs:
                 ret.append((c['customer_id'], c['name'] + '  ' + c['customer_id']))
             return ret
-        elif return_mode == 'dlist':
+        elif return_mode == utilities.return_as['list']:
             ret = []
             for c in c_qs:
-                ret.append((c['customer_id'], c['name']))
+                ret.append(str(c['customer_id']) + '  ' + c['name'])
             return ret
-        elif return_mode == 'dict':
+        elif return_mode == utilities.return_as['dict']:
             ret = {}
             for c in c_qs:
                 ret[c['customer_id']] = c['name']
@@ -185,7 +187,7 @@ class TypeOf3311(models.Model):
         verbose_name_plural = '3311类型'
 
     @classmethod
-    def get3311Type(cls, return_mode='list'):
+    def get3311Type(cls, return_mode=utilities.return_as['choice']):
         qs = cls.objects.all().values()
         ret = []
         for q in qs:

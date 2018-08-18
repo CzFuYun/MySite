@@ -1,9 +1,10 @@
 
     <script type="text/javascript">
         $(function () {
-            document.getElementById('id_customer').setAttribute('oninput', 'searchCustomer(this)');
-            document.getElementById('id_staff').setAttribute('oninput', 'searchStaff(this)');
+            {#document.getElementById('id_customer').setAttribute('oninput', 'searchCustomer(this)');#}
+            {#document.getElementById('id_staff').setAttribute('oninput', 'searchStaff(this)');#}
             addSatelliteButtonForInput('id_customer', [{icon: 'mdi mdi-plus', title: '新增客户', onclick: 'addCustomer()'}]);
+            bindDataSourceToSelect2();
         });
 
         function searchCustomer(elem) {

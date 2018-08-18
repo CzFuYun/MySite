@@ -11,72 +11,71 @@ from root_db import models as rd_m
 
 
 
-class ProjectForm(Form):
-    customer = fields.CharField(
-        label='客户名称',
-        widget=widgets.TextInput(attrs={'id': 'customer_name', 'name': 'customer_name', 'class': 'form-control'}),
-        required=True,
-        error_messages={'required': '不能为空'},
-        )
-    staff = fields.CharField(
-        label='客户经理',
-        widget=widgets.TextInput(attrs={'id': 'staff', 'name': 'staff', 'class': 'form-control'}),
-        required=True,
-        error_messages={'required': '不能为空'},
-    )
-    is_green = fields.BooleanField(
-        label='绿色金融',
-        widget=widgets.NullBooleanSelect(),
-        required=True,
-        error_messages={'required': '必选'},
-        # initial=0,
-    )
-    business = fields.CharField(
-
-    )
-    plan_pretrial = fields.DateField(
-        label='计划预审',
-        widget=widgets.DateInput(attrs={'id': 'plan_pretrial', 'name': 'plan_pretrial', 'class': 'form-control', 'type': 'date'}),
-    )
-    plan_chushen = fields.DateField(
-        label='计划初审',
-        widget=widgets.DateInput(attrs={'id': 'plan_chushen', 'name': 'plan_chushen', 'class': 'form-control', 'type': 'date'}),
-    )
-    plan_zhuanshen = fields.DateField(
-        label='计划专审',
-        widget=widgets.DateInput(attrs={'id': 'plan_zhuanshen', 'name': 'plan_zhuanshen', 'class': 'form-control', 'type': 'date'}),
-    )
-    plan_xinshen = fields.DateField(
-        label='计划信审',
-        widget=widgets.DateInput(attrs={'id': 'plan_xinshen', 'name': 'plan_xinshen', 'class': 'form-control', 'type': 'date'}),
-    )
-    plan_reply = fields.DateField(
-        label='计划批复',
-        widget=widgets.DateInput(attrs={'id': 'plan_reply', 'name': 'plan_reply', 'class': 'form-control', 'type': 'date'}),
-    )
-    plan_luodi = fields.DateField(
-        label='计划落地',
-        widget=widgets.DateInput(attrs={'id': 'plan_luodi', 'name': 'plan_luodi', 'class': 'form-control', 'type': 'date'}),
-    )
-
-    def __init__(self, *args, **kwargs):
-        super(ProjectForm, self).__init__(*args, **kwargs)
-        self.fields['business'] = forms.CharField(
-            label='业务品种',
-            required=True,
-            error_messages={'required': '不能为空'},
-            widget=widgets.Select(choices=models.SubBusiness.objects.values_list('id', 'caption'), attrs={'class': "form-control"})
-        )
+# class ProjectForm(Form):
+#     customer = fields.CharField(
+#         label='客户名称',
+#         widget=widgets.TextInput(attrs={'id': 'customer_name', 'name': 'customer_name', 'class': 'form-control'}),
+#         required=True,
+#         error_messages={'required': '不能为空'},
+#         )
+#     staff = fields.CharField(
+#         label='客户经理',
+#         widget=widgets.TextInput(attrs={'id': 'staff', 'name': 'staff', 'class': 'form-control'}),
+#         required=True,
+#         error_messages={'required': '不能为空'},
+#     )
+#     is_green = fields.BooleanField(
+#         label='绿色金融',
+#         widget=widgets.NullBooleanSelect(),
+#         required=True,
+#         error_messages={'required': '必选'},
+#         # initial=0,
+#     )
+#     business = fields.CharField(
+#
+#     )
+#     plan_pretrial = fields.DateField(
+#         label='计划预审',
+#         widget=widgets.DateInput(attrs={'id': 'plan_pretrial', 'name': 'plan_pretrial', 'class': 'form-control', 'type': 'date'}),
+#     )
+#     plan_chushen = fields.DateField(
+#         label='计划初审',
+#         widget=widgets.DateInput(attrs={'id': 'plan_chushen', 'name': 'plan_chushen', 'class': 'form-control', 'type': 'date'}),
+#     )
+#     plan_zhuanshen = fields.DateField(
+#         label='计划专审',
+#         widget=widgets.DateInput(attrs={'id': 'plan_zhuanshen', 'name': 'plan_zhuanshen', 'class': 'form-control', 'type': 'date'}),
+#     )
+#     plan_xinshen = fields.DateField(
+#         label='计划信审',
+#         widget=widgets.DateInput(attrs={'id': 'plan_xinshen', 'name': 'plan_xinshen', 'class': 'form-control', 'type': 'date'}),
+#     )
+#     plan_reply = fields.DateField(
+#         label='计划批复',
+#         widget=widgets.DateInput(attrs={'id': 'plan_reply', 'name': 'plan_reply', 'class': 'form-control', 'type': 'date'}),
+#     )
+#     plan_luodi = fields.DateField(
+#         label='计划落地',
+#         widget=widgets.DateInput(attrs={'id': 'plan_luodi', 'name': 'plan_luodi', 'class': 'form-control', 'type': 'date'}),
+#     )
+#
+#     def __init__(self, *args, **kwargs):
+#         super(ProjectForm, self).__init__(*args, **kwargs)
+#         self.fields['business'] = forms.CharField(
+#             label='业务品种',
+#             required=True,
+#             error_messages={'required': '不能为空'},
+#             widget=widgets.Select(choices=models.SubBusiness.objects.values_list('id', 'caption'), attrs={'class': "form-control"})
+#         )
 
 
 class ProjectModelForm(ModelForm, utilities.CleanForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjectModelForm, self).__init__(*args, **kwargs)
-        self.fields['customer'].widget = forms.TextInput(attrs={'list': 'customer_list'})
+        self.fields['customer'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxCustomer'), 'src_type': 'dynamic'})
         self.fields['project_name'].widget = forms.TextInput()
-        self.fields['staff'].widget = forms.TextInput(attrs={'list': 'staff_list'})
-        # self.fields['business'].choices = models.SubBusiness.getAllBusiness()
+        self.fields['staff'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static'})
         self.fields['is_green'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['is_defuse'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
@@ -123,7 +122,6 @@ class ProjectModelForm(ModelForm, utilities.CleanForm):
 
 
 class CustomerModelForm_add(ModelForm, utilities.CleanForm):
-    # is_strategy = forms.IntegerField(label='战略客户')
 
     class Meta:
         model = models.CustomerRepository

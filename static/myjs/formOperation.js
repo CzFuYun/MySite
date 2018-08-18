@@ -215,7 +215,15 @@ function fillForm2(formId, dataDic){
 // }
 function modifyForm(form){
     let $form = form ? form : $('form');
-
+    $('p', $form).each(
+        function(index, elem){
+            let $elem = $(elem);
+            $elem.addClass('from-group');
+            $elem.css({
+                'margin-bottom': '20px'
+            });
+        }
+    );
     $('li label input', $form).each(
         function(index, elem){
             $(elem).parent().before($(elem));
@@ -235,10 +243,6 @@ function modifyForm(form){
             $elem.children('li').css({
                 'padding': '6px'
             });
-            // elem.style.display = 'block';
-            // elem.style['margin-bottom'] = 0;
-            // elem.style['padding-bottom'] = 0;
-            // elem.style['padding-left'] = 0;
             $elem.appendTo($elem.prev());
         }
     );
@@ -275,7 +279,6 @@ function modifyForm(form){
             try{
                 $elem.prev()[0].style['font-weight'] = 'bold';
             }catch (e) {
-                console.log(elem);
                 $elem.parents('ul').prev()[0].style['font-weight'] = 'bold';
             }
             
@@ -326,45 +329,41 @@ function makeDataList(id, urlName, postDataDict){
     });
 }
 
-function bindAjaxDataSourceToSelect2(url, data, $select2Elem){
-    $select2Elem = $select2Elem ? $select2Elem : $('select[select2]');
+function bindAjaxDataSourceToSelect2(url, $select2Elem){
+    // console.log(url);
+    // console.log($select2Elem);
     $select2Elem.select2({
         placeholder: '请选择',
         width: '100%',
-        // theme: 'default',
-        language: "zh-CN",
-        minimumInputLength: 2,
+        language: 'zh-CN',
+        minimumInputLength: 1,
         allowClear: true,
-        // data: [
-        //     { id: 0, text: 'enhancement' },
-        //     { id: 1, text: 'bug' },
-        //     { id: 2, text: 'duplicate' },
-        //     { id: 3, text: 'invalid' },
-        //     { id: 4, text: 'wontfix' }
-        //   ]
         ajax: {
             url: url,
             async: false,
+            delay : 250,        // 延迟显示
             dataType: 'json',
-            data: data,
-            processResults: function(response, params){
-                //返回值必须处理成以下格式
-                // [{ id:  , text: ' ' }, { id:  , text: ' ' }, ];
-                if(!response){
-                    return;
-                }
+            cache : false,
+            data: function(params){
+                return{
+                    term: params.term,      // 搜索框内输入的内容
+                    page: params.page,      // 第几页，分页
+                    rows: 10               // 每页显示多少行
+                };
+            },
+            processResults: function(data, params){
                 params.page = params.page || 1;
                 let ret = [];
-                for(let i=0; i<response.length; i++)
+                for(let i=0; i<data.length; i++)
                 {
                     ret.push(
-                        {id: response[i][0], text: response[i][1]}
+                        {id: data[i][0], text: data[i][1]}
                     );
                 }
                 return {
-                    results: ret,
+                    results: ret,    //必须处理成[{ id: , text: }, { id: , text:  }, ]格式
                     pagination: {
-                        more: (params.page * 30) < response.total_count
+                        more: params.page < data.total_count
                     }
                 };
             },
@@ -372,21 +371,54 @@ function bindAjaxDataSourceToSelect2(url, data, $select2Elem){
             templateSelection: function(repo){return repo.text;}
         }
     });
+}
 
-    $('.select2-selection[aria-labelledby]', $select2Elem.next()).each(
-        function(index, elem){
-            $(elem).css({
-                height: '39px',
-                'border-color': 'gainsboro'
-            });
-            $(elem).children('span').css({
-                'margin': '0px',
-                'padding': '6px'
-            });
+function bindStaticDataSourceToSelect2(href, $select2Elem){
+    let optionData = [{id: '', text: ''}];
+    $.get({
+        url: href,
+        async: false,
+        dataType: 'json',
+        success: function (response) {
+            for(let i=0; i<response.length; i++){
+                optionData.push({id: response[i][0], text: response[i][1]});
+            }
         }
-    );
+    });
+    $select2Elem.select2({
+        placeholder: '请选择',
+        width: '100%',
+        language: 'zh-CN',
+        minimumInputLength: 1,
+        allowClear: true,
+        data: optionData
+    });
+}
 
-
+function bindDataSourceToSelect2(){
+    $('select[select2]').each(function(index, elem){
+        let $select2Elem = $(elem),
+            href = $select2Elem.attr('href'),
+            srcType = $select2Elem.attr('src_type');
+        if(srcType === 'static'){
+            bindStaticDataSourceToSelect2(href, $select2Elem);
+        }else if (srcType === 'dynamic'){
+            bindAjaxDataSourceToSelect2(href, $select2Elem);
+        }
+        $('.select2-selection[aria-labelledby]', $select2Elem.next()).each(
+            function(index, elem){
+                $(elem).css({
+                    'height': '39px',
+                    'border': '1px solid rgba(0,0,0,.15)'
+                });
+                $(elem).children('span').css({
+                    'margin': '0px',
+                    'padding': '6px',
+                    'height': '39px'
+                });
+            }
+        );
+    });
 }
 
 function addSatelliteButtonForInput(inputId, buttonInfo){

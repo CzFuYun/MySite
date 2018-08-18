@@ -545,7 +545,7 @@ def trackProjectExe(request):
 
 def ajaxCustomer(request):
     customer_name = request.GET.get('term')
-    if not re.search(r'[\u4e00-\u9fa5]{2}', customer_name):
+    if not re.fullmatch(r'[\u4e00-\u9fa5]{2,}', customer_name):
         return
     customer_qs = models.CustomerRepository.objects.filter(
         Q(name__contains=customer_name) | Q(simple_name__contains=customer_name) | Q(customer__name__contains=customer_name)
@@ -557,8 +557,13 @@ def ajaxCustomer(request):
 
 
 def ajaxStaff(request):
-    staff_name = request.POST.get('staffName')
-    staffs = rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode='html_data_list')
+    staff_name = request.GET.get('term')
+    if staff_name is None:
+        staffs = rd_m.Staff.getBusinessDeptStaff(return_mode=utilities.return_as['choice'])
+    elif re.fullmatch(r'[\u4e00-\u9fa5]+', staff_name):
+        staffs = rd_m.Staff.getBusinessDeptStaff(name_contains=staff_name, return_mode=utilities.return_as['choice'])
+    else:
+        return
     return HttpResponse(json.dumps(staffs))
 
 
@@ -581,7 +586,7 @@ def addCustomer(request):
 def matchAccount(request):
     customer_name = request.GET.get('customerName')
     if customer_name:
-        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, 'as_choices')
+        customer_list = rd_m.AccountedCompany.matchAccountByName(customer_name, utilities.return_as['choice'])
         return HttpResponse(json.dumps(customer_list))
 
 
