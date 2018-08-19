@@ -1,12 +1,14 @@
 from django.db import models
 from django.db.models import Q, F, Sum, Max
-from . import models_operation as mo
+from MySite import utilities
+from app_customer_repository import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
 
 
 industry_factor_rule = {
     'C': 1.5,
 }
+
 
 class CustomerRepository(models.Model):
     stockholder_choices = (
@@ -31,6 +33,7 @@ class CustomerRepository(models.Model):
 
     def getCustomer(self):
         pass
+
 
 class ProjectRepository(models.Model):
     close_reason_choices = (
@@ -158,6 +161,7 @@ class ProjectRepository(models.Model):
         except Exception as error:
             return False
         return True
+
 
 class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
@@ -355,6 +359,21 @@ class Progress(models.Model):
     star = models.ForeignKey('Stars', blank=True, null=True, on_delete=models.PROTECT)
     suit_for_business = models.ManyToManyField('SubBusiness')
 
+    class Meta:
+        ordering = ('display_order', )
+
+    def __str__(self):
+        return self.caption
+
+    @classmethod
+    def getSuitableProgressForSubbusiness(cls, subbusiness, return_mode=utilities.return_as['choice']):
+        if type(subbusiness) == int:
+            suit_progress = cls.objects.filter(suit_for_business=subbusiness, status_num__lte=100)
+        elif type(subbusiness) == str:
+            suit_progress = cls.objects.filter(suit_for_business__caption=subbusiness, status_num__lte=100)
+        if return_mode == utilities.return_as['choice']:
+            return suit_progress.values_list('id', 'caption')
+
 
 class Business(models.Model):
     caption = models.CharField(max_length=32)
@@ -393,6 +412,7 @@ class SubBusiness(models.Model):
             bus_list.append((b['id'], b['superior__caption'] + '　' + b['caption']))
         return bus_list
 
+
 class Stars(models.Model):
     caption = models.CharField(max_length=32, blank=True, null=True)
     description = models.CharField(max_length=64, blank=True, null=True)
@@ -401,6 +421,9 @@ class Stars(models.Model):
 class ProjectRemark(models.Model):
     content = models.TextField(blank=True, null=True)
     create_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.content + ('\n' + str(self.create_date) if self.create_date else '')
 
 
 class TargetTask(models.Model):
@@ -460,3 +483,5 @@ class TargetTask(models.Model):
 
 
 
+# b=SubBusiness.objects.filter(id=11)
+# Progress.objects.filter(suit_for_business__caption='一般授信')

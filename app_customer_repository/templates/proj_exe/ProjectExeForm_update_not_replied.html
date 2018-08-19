@@ -1,0 +1,10 @@
+{% extends 'blank_modal_dialog.html' %}
+
+
+{% block extra_button %}
+    {% if form.instance.current_progress.status_num < 100 %}
+        <button class="btn waves-effect waves-light btn-danger" onclick=""><i class="mdi mdi-message-reply-text"></i>批复</button>
+    {% else %}
+        <button class="btn waves-effect waves-light btn-danger" title="终止跟踪项目进度" onclick=""><i class="mdi mdi-bomb"></i>删除</button>
+    {% endif %}
+{% endblock %}

@@ -6,12 +6,14 @@
     <link href="/static/mycss.css" rel="stylesheet">
 {% endblock %}
 
+
 {% block navbar_after_ul %}
 {#    <button class="btn waves-effect waves-light btn-success"><i class="mdi mdi-target"></i><a href="" target="_blank" style="color: white">新增</a></button>#}
 {#    <button class="btn waves-effect waves-light btn-danger" onclick="delProject()"><i class="mdi mdi-bomb"></i>删除</button>#}
     <button class="btn waves-effect waves-light btn-warning" onclick="editProjectExe()"><i class="mdi mdi-grease-pencil"></i>修改</button>
     <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>
 {% endblock %}
+
 
 {% block extra_js %}
     <script src="/static/myjs/common.js"></script>
@@ -32,7 +34,6 @@
                 dataType: 'text',
                 async: false,
                 success: function(response){
-                    console.log(response);
                     $('#main_content').html(response);
                 }
             })
@@ -118,7 +119,10 @@
             if(!exeId){
                 return false;
             }
-            {#window.open('{% url "" %}', '_blank');#}
+            let $dialog = makeDialog('{% url "editProjectExe" %}', {exeId: exeId});
+            if($dialog){
+                showDialog($dialog);
+            }
 
         }
     </script>

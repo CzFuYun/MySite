@@ -357,7 +357,6 @@ def addProject(request):
         form = html_forms.ProjectModelForm()
     elif request.method == 'POST':
         form = html_forms.ProjectModelForm(request.POST)
-        # form.cleanData({})
         if form.is_valid():
             project = form.save(commit=False)       # commit=False生成model的实例而不提交到数据库
             project.create()
@@ -366,32 +365,32 @@ def addProject(request):
     return render(request, 'blank_form.html', locals())
 
 
-class ProjectUpdateView(UpdateView):        # DetailView用于显示一个特定类型对象的详细信息。
+class ProjectUpdateView(View):        # DetailView用于显示一个特定类型对象的详细信息。
     context_object_name = 'form'        # 指定获取的模型列表数据保存的变量名。这个变量会被传递给模板
     model = models.ProjectRepository        # 绑定数据模型
     template_name = 'blank_form.html'
     form_class = html_forms.ProjectModelForm
     # success_url = reverse('')
-    # fields = [
-    #     'customer',
-    #     'project_name',
-    #     'staff',
-    #     'business',
-    #     'is_green',
-    #     'total_net',
-    #     'existing_net',
-    #     'is_defuse',
-    #     'is_pure_credit',
-    #     'plan_pretrial_date',
-    #     'plan_chushen',
-    #     'plan_zhuanshen',
-    #     'plan_xinshen',
-    #     'plan_reply',
-    #     'plan_luodi'
-    # ]
+    fields = [
+        'customer',
+        'project_name',
+        'staff',
+        'business',
+        'is_green',
+        'total_net',
+        'existing_net',
+        'is_defuse',
+        'is_pure_credit',
+        'plan_pretrial_date',
+        'plan_chushen',
+        'plan_zhuanshen',
+        'plan_xinshen',
+        'plan_reply',
+        'plan_luodi'
+    ]
 
-    # def get_form_kwargs(self):
-    #     pass
+    def get_form_kwargs(self):
+        pass
 
 
     # def get_context_data(self, **kwargs):
@@ -541,6 +540,16 @@ def trackProjectExe(request):
         ]
 
         return render_to_response('proj_exe/project_exe_list.html', locals())
+
+def editProjectExe(request):
+    action = 'editProjectExe'
+    if request.method == 'GET':
+        exe_id = request.GET.get('exeId')
+        exe_obj = models.ProjectExecution.objects.filter(id=exe_id).first()
+        if exe_obj.current_progress.status_num < 100:
+            form = html_forms.ProjectExeForm_update(instance=exe_obj)
+        return render_to_response('proj_exe/ProjectExeForm_update_not_replied.html', locals())
+    pass
 
 
 def ajaxCustomer(request):

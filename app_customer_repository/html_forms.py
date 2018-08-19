@@ -69,7 +69,7 @@ from root_db import models as rd_m
 #         )
 
 
-class ProjectModelForm(ModelForm, utilities.CleanForm):
+class ProjectModelForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjectModelForm, self).__init__(*args, **kwargs)
@@ -121,7 +121,7 @@ class ProjectModelForm(ModelForm, utilities.CleanForm):
 
 
 
-class CustomerModelForm_add(ModelForm, utilities.CleanForm):
+class CustomerModelForm_add(ModelForm):
 
     class Meta:
         model = models.CustomerRepository
@@ -164,5 +164,33 @@ class ProjectModelForm_del(ModelForm):
         fields = ('id', 'close_reason', 'whose_matter', )
 
 
-class ProjectExeForm_replied_edit(Form):
-    pass
+class ProjectExeForm_update(ModelForm):
+
+
+    class Meta:
+        model = models.ProjectExecution
+        fields = ['id', 'current_progress', 'project']
+
+    def __init__(self, *args, **kwargs):
+        super(ProjectExeForm_update, self).__init__(*args, **kwargs)
+        self.fields['id'] = forms.CharField(widget=forms.TextInput(attrs={'hidden': 'hidden', 'readonly': 'readonly'}))
+        self.fields['remark'] = forms.CharField(
+            label=self.Meta.model.remark.field.verbose_name,
+            widget=forms.Textarea(),
+            initial= self.instance.remark.content if self.instance.remark else '',
+        )
+        self.fields['current_progress'].widget = forms.Select(choices=models.Progress.getSuitableProgressForSubbusiness(self.instance.project.business.id))
+
+
+# class ProjectExeForm_update(Form):
+#     id = forms.CharField(widget=forms.TextInput(attrs={'hidden': 'hidden', 'readonly': 'readonly'}))
+#     current_progress = forms.ChoiceField(label=models.ProjectExecution.current_progress.field.verbose_name)
+#     remark = forms.CharField(widget=forms.Textarea())
+#
+#     def __init__(self, instance):
+#         super(ProjectExeForm_update, self).__init__()
+#         self.model = models.ProjectExecution
+#         self.fields['current_progress'].initial = str(instance.current_progress)
+#         self.fields['remark'].initial = str(instance.remark.content)
+#         # self.id.initial = instance.id
+#

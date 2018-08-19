@@ -267,7 +267,11 @@ function modifyForm(form){
             $(elem).addClass('form-control');
         }
     );
-
+    $('textarea', $form).each(
+        function(index, elem){
+            $(elem).addClass('form-control');
+        }
+    );
     $('[select2]', $form).each(
         function(index, elem){
             $(elem).select2();
@@ -284,12 +288,13 @@ function modifyForm(form){
             
         }
     );
-    $('[hidden][readonly]', $form).each(       // 必填项标签加粗
+    $('[hidden][readonly]', $form).each(
         function(index, elem){
             let $elem = $(elem);
             $elem.parent()[0].style['display'] = 'none';
         }
     );
+
 
 }
 
@@ -435,6 +440,32 @@ function addSatelliteButtonForInput(inputId, buttonInfo){
     $input.after($buttonGroup);
 }
 
-function makeModalDialog(){
-    let $dialogDiv = $('<div style=""></div>');
+function makeDialog(url, sendData){
+    let $dialog = null;
+    $.get({
+        url: url,
+        async: false,
+        data: sendData,
+        dataType: 'text',
+        success: function(response){
+            $dialog = $(response);
+            $dialog.appendTo($(document.body));
+        }
+    });
+    modifyForm($dialog);
+    return $dialog;
+}
+
+function showDialog($dialog){
+    let $elem = $dialog ? $dialog : $('[id*=_dialog_container]');
+    showMask(1);
+    $elem.css({
+        'display': 'block'
+    });
+
+}
+
+function unloadModalDialog(elem){
+    $(elem).parents('[id*=_dialog_container]').remove();
+    showMask(0);
 }
