@@ -174,6 +174,16 @@ class PretrialDocument(models.Model):
     document_name = models.CharField(max_length=128, blank=True, null=True)
     accept_date = models.DateField(auto_now_add=True, blank=True, null=True)
 
+    def __str__(self):
+        return self.document_name + '@' + str(self.accept_date)
+
+    # @classmethod
+    # def no_meeting_linked(cls):
+    #     qs = cls.objects.exclude().values('id', 'document_name', 'accept_date')
+    #     ret = []
+    #     for i in qs:
+    #         ret.append((i['id'], i['document_name'] + str(i['accept_date'])))
+    #     return ret
 
 class ProjectExecution(models.Model):
     project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT, verbose_name='项目')
@@ -368,9 +378,9 @@ class Progress(models.Model):
     @classmethod
     def getSuitableProgressForSubbusiness(cls, subbusiness, return_mode=utilities.return_as['choice']):
         if type(subbusiness) == int:
-            suit_progress = cls.objects.filter(suit_for_business=subbusiness, status_num__lte=100)
+            suit_progress = cls.objects.filter(suit_for_business=subbusiness, status_num__lt=100)
         elif type(subbusiness) == str:
-            suit_progress = cls.objects.filter(suit_for_business__caption=subbusiness, status_num__lte=100)
+            suit_progress = cls.objects.filter(suit_for_business__caption=subbusiness, status_num__lt=100)
         if return_mode == utilities.return_as['choice']:
             return suit_progress.values_list('id', 'caption')
 

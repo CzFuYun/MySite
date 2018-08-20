@@ -16,22 +16,22 @@
 
 {% block content %}
 
-    <div id="{{ form_id }}_container" class="card" style="position: relative; margin-left: 19%; margin-right: 19%; display: None">
+    <div id="{{ form_id|default:'form' }}_container" class="card" style="position: relative; margin-left: {{ side_margin|default:'19%' }}; margin-right: {{ side_margin|default:'19%' }}; display: None">
 
-        <div id="{{ form_id }}_header" class="card-header card-outline-info">
+        <div id="{{ form_id|default:'form' }}_header" class="card-header card-outline-info">
             <h3 class="card-title" style="margin: 0 auto; line-height: 50px;">{{ form_title }}</h3>
         </div>
-        <div id="{{ form_id }}_body" class="card-body">
-                <form id="{{ form_id }}" method="post" action="{% url form_action %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
+        <div id="{{ form_id|default:'form' }}_body" class="card-body">
+                <form id="{{ form_id|default:'form' }}" method="post" action="{% url form_action %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
                     {% csrf_token %}
                     {{ form.as_p }}
                 </form>
             {% block form_body %}{% endblock %}
         </div>
-        <div id="{{ form_id }}_foot" class="card-body text-right">
+        <div id="{{ form_id|default:'form' }}_foot" class="card-body text-right">
             <hr>
             <div class="form-group">
-                <button type="submit" class="btn btn-success" onclick="document.getElementById('{{ form_id }}').submit()"><i class="mdi mdi-check"></i>确认</button>
+                <button type="submit" class="btn btn-success" onclick="document.getElementById('{{ form_id|default:'form' }}').submit()"><i class="mdi mdi-check"></i>确认</button>
                 <button type="button" class="btn btn-inverse" onclick="window.close()"><i class="mdi mdi-close"></i>关闭</button>
                 {% block form_button %}{% endblock %}
 
@@ -52,7 +52,7 @@
     <script>
         $(function(){
             modifyForm();
-            document.getElementById('{{ form_id }}_container').style.display = 'block';
+            document.getElementById('{{ form_id|default:'form' }}_container').style.display = 'block';
         });
 
     </script>

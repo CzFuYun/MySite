@@ -184,36 +184,10 @@ function fillForm2(formId, dataDic){
     );
 }
 
-// function modifyForm(formId){
-//     let selector = formId ? '#' + formId : 'form';
-//     // $(selector + ' p').each(
-//     //     function(index, elem){
-//     //         $(elem).addClass('form-group');
-//     //     }
-//     // );
-//     $(selector + ' li label input').each(
-//         function(index, elem){
-//             $(elem).parent().before($(elem));
-//         }
-//     );
-//     $(selector + ' ul').each(
-//         function(index, elem){
-//             $(elem).addClass('form-control list-unstyled list-inline');
-//         }
-//     );
-//     $(selector + ' select').each(
-//         function(index, elem){
-//             $(elem).addClass('form-control custom-select');
-//         }
-//     );
-//     $(selector + ' [type=date]').each(
-//         function(index, elem){
-//             $(elem).addClass('form-control');
-//         }
-//     );
-//
-// }
 function modifyForm(form){
+    // 隐藏组件：设置readonly属性
+    // select2：设置select2属性
+    // 希望select组件有初始值，设置attrs={'initial':'xxx'}
     let $form = form ? form : $('form');
     $('p', $form).each(
         function(index, elem){
@@ -258,7 +232,13 @@ function modifyForm(form){
     );
     $('select', $form).each(
         function(index, elem){
-            $(elem).addClass('form-control custom-select');
+            let $elem = $(elem);
+            $elem.addClass('form-control custom-select');
+            if(elem.hasAttribute('initial') && $('[selected]', $elem).length === 0){
+                let initialValue = elem.getAttribute('initial') || '---------';
+                let $option = $('<option value selected>' + initialValue + '</option>');
+                $option.insertBefore($elem.children('option:first'));
+            }
         }
     );
 

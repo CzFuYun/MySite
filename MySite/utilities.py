@@ -191,3 +191,4 @@ class CleanForm():
                     # else:
                         cleaned_value_list.append(reg.findall(value)[0])
                 self.data.setlist(field, cleaned_value_list)
+

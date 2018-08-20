@@ -552,15 +552,28 @@ def editProjectExe(request):
     elif request.method == 'POST':
         pass
 
+
 def setProjectReplied(request):
-    exe_id = getattr(request, request.method).get('exeId')
-    project_id = models.ProjectExecution.objects.get(id=exe_id).project_id
     form_action = setProjectReplied.__name__
+    form_title = '确认项目信息'
     if request.method == 'GET':
+        # exe_id = getattr(request, request.method).get('exeId')
+        exe_id = request.GET.get('exeId')
+        project_id = models.ProjectExecution.objects.get(id=exe_id).project_id
         form = html_forms.ProjectModelForm_set_replied(instance=models.ProjectRepository.objects.get(id=project_id))
     elif request.method == 'POST':
-        pass
+        project_id = request.POST.get('id')
+        project_obj = models.ProjectRepository.objects.get(id=project_id)
+        form = html_forms.ProjectModelForm_set_replied(request.POST, instance=project_obj)
+        # ↑若需要modelform对数据库进行数据更新，则除了POST之外，也还需要一个instance
+        if form.is_valid():
+            form.save()
+            pe = models.ProjectExecution.objects.filter(project_id=project_id).last()
+            suit_progress = models.Progress.objects.filter(status_num=100, suit_for_business=project_obj.business_id).first()
+            pe.__dict__.update(**{'current_progress': suit_progress})
+            return redirect('/feedback')
     return render(request, 'blank_form.html', locals())
+
 
 def ajaxCustomer(request):
     customer_name = request.GET.get('term')
@@ -601,6 +614,7 @@ def addCustomer(request):
             form.save()
             return redirect('/feedback')
     return render(request, 'blank_form.html', locals())
+
 
 def matchAccount(request):
     customer_name = request.GET.get('customerName')
