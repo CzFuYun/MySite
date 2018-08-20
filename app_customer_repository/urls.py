@@ -19,4 +19,5 @@ urlpatterns = [
     url(r'project\.del', views.delProject, name='delProject'),
     url(r'projectexe\.view', views.trackProjectExe, name='trackProjectExe'),
     url(r'projectexe\.edit', views.editProjectExe, name='editProjectExe'),
+    url(r'projectreply\.set', views.setProjectReplied, name='setProjectReplied'),
 ]

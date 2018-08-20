@@ -548,9 +548,19 @@ def editProjectExe(request):
         exe_obj = models.ProjectExecution.objects.filter(id=exe_id).first()
         if exe_obj.current_progress.status_num < 100:
             form = html_forms.ProjectExeForm_update(instance=exe_obj)
-        return render_to_response('proj_exe/ProjectExeForm_update_not_replied.html', locals())
-    pass
+        return render_to_response('proj_exe/ProjectExeForm_update.html', locals())
+    elif request.method == 'POST':
+        pass
 
+def setProjectReplied(request):
+    exe_id = getattr(request, request.method).get('exeId')
+    project_id = models.ProjectExecution.objects.get(id=exe_id).project_id
+    form_action = setProjectReplied.__name__
+    if request.method == 'GET':
+        form = html_forms.ProjectModelForm_set_replied(instance=models.ProjectRepository.objects.get(id=project_id))
+    elif request.method == 'POST':
+        pass
+    return render(request, 'blank_form.html', locals())
 
 def ajaxCustomer(request):
     customer_name = request.GET.get('term')

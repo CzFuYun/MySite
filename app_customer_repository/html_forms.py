@@ -71,22 +71,6 @@ from root_db import models as rd_m
 
 class ProjectModelForm(ModelForm):
 
-    def __init__(self, *args, **kwargs):
-        super(ProjectModelForm, self).__init__(*args, **kwargs)
-        self.fields['customer'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxCustomer'), 'src_type': 'dynamic'})
-        self.fields['project_name'].widget = forms.TextInput()
-        self.fields['staff'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static'})
-        self.fields['is_green'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        self.fields['is_defuse'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        self.fields['plan_pretrial_date'].widget = forms.DateInput(attrs={'type': 'date'})
-        self.fields['plan_chushen'].widget = forms.DateInput(attrs={'type': 'date'})
-        self.fields['plan_zhuanshen'].widget = forms.DateInput(attrs={'type': 'date'})
-        self.fields['plan_xinshen'].widget = forms.DateInput(attrs={'type': 'date'})
-        self.fields['plan_reply'].widget = forms.DateInput(attrs={'type': 'date'})
-        self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
-        utilities.setRequiredFields(self)
-
     class Meta:
         model = models.ProjectRepository
         fields = [
@@ -112,13 +96,34 @@ class ProjectModelForm(ModelForm):
         #     'is_green': forms.RadioSelect(choices=utilities.yes_or_no_choices, attrs={'type': 'radio'})
         # }
 
-    def _cleanData(self):
-        '''
-        在clean()之前先清洗一遍数据
-        '''
-        print(self)
+    def __init__(self, *args, **kwargs):
+        super(ProjectModelForm, self).__init__(*args, **kwargs)
+        self.fields['customer'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxCustomer'), 'src_type': 'dynamic'})
+        self.fields['project_name'].widget = forms.TextInput()
+        self.fields['staff'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static'})
+        self.fields['is_green'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
+        self.fields['is_defuse'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
+        self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
+        self.fields['plan_pretrial_date'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_chushen'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_zhuanshen'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_xinshen'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_reply'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
+        utilities.setRequiredFields(self)
 
 
+class ProjectModelForm_set_replied(ModelForm):
+
+    class Meta:
+        model = models.ProjectRepository
+        exclude = [*ProjectModelForm.Meta.fields, *['is_focus', 'account_num', 'close_date', 'tmp_close_date']]
+
+    def __init__(self, *args, **kwargs):
+        super(ProjectModelForm_set_replied, self).__init__(*args, **kwargs)
+        jgbs7_staff = rd_m.Staff.objects.filter(sub_department='JGBS-7').values_list('staff_id', 'name')
+        self.fields['pre_approver'].widget = forms.Select(choices=jgbs7_staff)
+        self.fields['approver'].widget = forms.Select(choices=jgbs7_staff)
 
 
 class CustomerModelForm_add(ModelForm):
