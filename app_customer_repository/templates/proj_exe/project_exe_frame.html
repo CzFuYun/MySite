@@ -125,6 +125,14 @@
             }
 
         }
+
+        function setProjectReplied(){
+            let exeId = judgeSelectedProjectExe();
+            if(!exeId){
+                return;
+            }
+            window.open('{% url "setProjectReplied" %}?exeId=' + exeId, '_blank');
+        }
     </script>
 
 {% endblock %}

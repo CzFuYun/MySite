@@ -200,8 +200,8 @@ class ProjectExecution(models.Model):
             today = models_operation.DateOperation().today
             pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
             if pe.exists():
-                return pe.values_list('update_count').order_by('-update_count')[0]
-            return (0, )
+                return pe.values_list('update_count').order_by('-update_count')[0][0]
+            return 0
 
     def update(self, pe_dict):
         '''
@@ -213,41 +213,30 @@ class ProjectExecution(models.Model):
             'total_used': 'total_used',
             'remark': 'remark.content',
         }
-        # fields_no_edit = ['project']
-        # imp_date = models_operation.DateOperation()
         field_list = self._meta.fields
         self.previous_pe = ProjectExecution.objects.filter(project=self.project, update_count=self.update_count-1).first() or ProjectExecution()
         for field in field_list:
             field_name = field.name
-            # if field in fields_no_edit:
-            #     continue
             new_value = pe_dict.get(field_name, None)
             if new_value:
                 if field_name in fields_to_compare:
-                    if eval('self.previous_pe.' + fields_to_compare[field_name]) != new_value:
-                        edit_method = getattr(self, '_update_' + field_name)
-                        edit_method(new_value)
+                    try:
+                        old_value = eval('self.previous_pe.' + fields_to_compare[field_name])
+                    except:
+                        old_value = None
+                    if old_value != new_value:
+                        try:
+                            edit_method = getattr(self, '_update_' + field_name)
+                            edit_method(new_value)
+                        except:
+                            pass
                     else:
                         pass
                 else:
-                    eval('self.' + field_name + '=' + new_value)
+                    exec('self.' + field_name + '=new_value')
             else:
                 pass
         self.save()
-
-    @property
-    def total_used_in_last_contribution(self):
-        data_date = models_operation.DateOperation().last_data_date_str(dac_m.Contributor)
-        c = self.project.customer.customer.contributor_set.filter(data_date=data_date)
-        # customer = self.objects.prefetch_related('project__customer__customer_id')
-        return c.annotate(Sum('net_total'))
-
-    # @property
-    # def total_used_after_last_borrow(self):
-    #     '''
-    #     上次投放后的用信净余额
-    #     :return:
-    #     '''
 
     def _update_total_used(self, new_value):
         self.total_used = new_value
@@ -258,13 +247,17 @@ class ProjectExecution(models.Model):
         new_remark = ProjectRemark(content=new_value)
         new_remark.save()
         self.remark = new_remark
-        # self.save()
+
+    @property
+    def total_used_in_last_contribution(self):
+        data_date = models_operation.DateOperation().last_data_date_str(dac_m.Contributor)
+        c = self.project.customer.customer.contributor_set.filter(data_date=data_date)
+        # customer = self.objects.prefetch_related('project__customer__customer_id')
+        return c.annotate(Sum('net_total'))
 
     @classmethod
     def takePhoto(cls, project_obj=None, photo_date=None):
-        # from app_customer_repository.models import ProjectExecution
         imp_date = models_operation.DateOperation()
-
         if project_obj:
             if not photo_date:
                 photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
@@ -376,13 +369,12 @@ class Progress(models.Model):
         return self.caption
 
     @classmethod
-    def getSuitableProgressForSubbusiness(cls, subbusiness, return_mode=utilities.return_as['choice']):
+    def getSuitableProgressQsForSubbusiness(cls, subbusiness):
         if type(subbusiness) == int:
             suit_progress = cls.objects.filter(suit_for_business=subbusiness, status_num__lt=100)
         elif type(subbusiness) == str:
             suit_progress = cls.objects.filter(suit_for_business__caption=subbusiness, status_num__lt=100)
-        if return_mode == utilities.return_as['choice']:
-            return suit_progress.values_list('id', 'caption')
+        return suit_progress
 
 
 class Business(models.Model):

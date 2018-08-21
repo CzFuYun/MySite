@@ -542,15 +542,26 @@ def trackProjectExe(request):
         return render_to_response('proj_exe/project_exe_list.html', locals())
 
 def editProjectExe(request):
-    action = 'editProjectExe'
+    action = editProjectExe.__name__
     if request.method == 'GET':
         exe_id = request.GET.get('exeId')
         exe_obj = models.ProjectExecution.objects.filter(id=exe_id).first()
-        if exe_obj.current_progress.status_num < 100:
-            form = html_forms.ProjectExeForm_update(instance=exe_obj)
+        # if exe_obj.current_progress.status_num < 100:
+        form = html_forms.ProjectExeForm_update(instance=exe_obj)
         return render_to_response('proj_exe/ProjectExeForm_update.html', locals())
     elif request.method == 'POST':
-        pass
+        exe_id = request.POST.get('id')
+        exe_obj = models.ProjectExecution.objects.filter(id=exe_id).first()
+        form = html_forms.ProjectExeForm_update(request.POST, instance=exe_obj)
+        if form.is_valid():
+            pe = form.save(commit=False)
+            pe.update({
+                'remark': form.cleaned_data['remark'],
+                'update_count': pe.previous_update + 1,
+            })
+            # form.save_m2m()
+            return render(request, 'feedback.html')
+
 
 
 def setProjectReplied(request):
@@ -570,7 +581,7 @@ def setProjectReplied(request):
             form.save()
             pe = models.ProjectExecution.objects.filter(project_id=project_id).last()
             suit_progress = models.Progress.objects.filter(status_num=100, suit_for_business=project_obj.business_id).first()
-            pe.__dict__.update(**{'current_progress': suit_progress})
+            pe.update({'current_progress': suit_progress})
             return redirect('/feedback')
     return render(request, 'blank_form.html', locals())
 

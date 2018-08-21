@@ -172,20 +172,29 @@ class ProjectModelForm_del(ModelForm):
 
 class ProjectExeForm_update(ModelForm):
 
-
     class Meta:
         model = models.ProjectExecution
-        fields = ['id', 'current_progress', 'project']
+        fields = ['id']
 
     def __init__(self, *args, **kwargs):
         super(ProjectExeForm_update, self).__init__(*args, **kwargs)
         self.fields['id'] = forms.CharField(widget=forms.TextInput(attrs={'hidden': 'hidden', 'readonly': 'readonly'}))
+        if self.instance.current_progress.status_num < 100:
+            self.fields['current_progress'] = forms.ModelChoiceField(
+                label=self.Meta.model.current_progress.field.verbose_name,
+                widget=forms.Select(), queryset=models.Progress.getSuitableProgressQsForSubbusiness(self.instance.project.business.id),
+                initial=self.instance.current_progress
+            )
+        else:
+            self.fields['total_used'] = forms.IntegerField(
+                label='项目总计投放净额',
+                initial=self.instance.total_used
+            )
         self.fields['remark'] = forms.CharField(
             label=self.Meta.model.remark.field.verbose_name,
             widget=forms.Textarea(),
             initial=self.instance.remark.content if self.instance.remark else '',
         )
-        self.fields['current_progress'].widget = forms.Select(choices=models.Progress.getSuitableProgressForSubbusiness(self.instance.project.business.id))
 
 
 # class ProjectExeForm_update(Form):

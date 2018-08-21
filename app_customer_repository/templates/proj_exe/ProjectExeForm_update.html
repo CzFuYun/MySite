@@ -3,20 +3,12 @@
 
 {% block extra_button %}
     {% if form.instance.current_progress.status_num < 100 %}
-        <button class="btn waves-effect waves-light btn-warning" onclick="setProjectReplied()"><i class="mdi mdi-message-reply-text"></i>批复</button>
-        <button class="btn waves-effect waves-light btn-danger" title="放弃跟进" onclick=""><i class="mdi mdi-bomb"></i>删除</button>
+        <button class="btn waves-effect waves-light btn-warning" title="设为已批复" onclick="setProjectReplied();unloadModalDialog(this);"><i class="mdi mdi-message-reply-text"></i>批复</button>
+        <button class="btn waves-effect waves-light btn-danger" title="删除项目" onclick=""><i class="mdi mdi-bomb"></i>删除</button>
     {% else %}
-        <button class="btn waves-effect waves-light btn-danger" title="放弃跟进" onclick=""><i class="mdi mdi-bomb"></i>删除</button>
+        <button class="btn waves-effect waves-light btn-danger" title="完全落地或删除项目" onclick=""><i class="mdi mdi-bomb"></i>取消跟进</button>
     {% endif %}
 
-    <script>
-        function setProjectReplied(){
-            let exeId = judgeSelectedProjectExe();
-            if(!exeId){
-                return;
-            }
-            window.open('{% url "setProjectReplied" %}?exeId=' + exeId, '_blank');
-        }
-    </script>
+
 {% endblock %}
 
