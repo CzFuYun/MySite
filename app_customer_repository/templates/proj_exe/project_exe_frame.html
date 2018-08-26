@@ -12,6 +12,7 @@
 {#    <button class="btn waves-effect waves-light btn-danger" onclick="delProject()"><i class="mdi mdi-bomb"></i>删除</button>#}
     <button class="btn waves-effect waves-light btn-warning" onclick="editProjectExe()"><i class="mdi mdi-grease-pencil"></i>修改</button>
     <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>
+    <button class="btn waves-effect waves-light btn-danger" title="删除项目" onclick="delProject()"><i class="mdi mdi-bomb"></i>删除</button>
 {% endblock %}
 
 
@@ -132,6 +133,15 @@
                 return;
             }
             window.open('{% url "setProjectReplied" %}?exeId=' + exeId, '_blank');
+        }
+
+        function delProject(){
+            let exeId = judgeSelectedProjectExe();
+            let projectId = $('[exe_id='+ exeId + ']').attr('project_id');
+            if(!projectId){
+                return;
+            }
+            window.open('{% url "delProject" %}?id=' + projectId, '_blank');
         }
     </script>
 

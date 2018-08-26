@@ -436,9 +436,9 @@ def trackProjectExe(request):
             'project__plan_xinshen',
             'project__plan_reply',
             'project__plan_luodi',
-            'project__pre_approver',
+            'project__pre_approver__name',
             'project__pre_approver__staff_id',
-            'project__approver',
+            'project__approver__name',
             'project__approver__staff_id',
         ).order_by(
             'project__staff__sub_department__superior__display_order',
@@ -522,7 +522,7 @@ def trackProjectExe(request):
                 }
             },
             {
-                'index': 'project__pre_approver',
+                'index': 'project__pre_approver__name',
                 'col_name': '初审',
                 'width': '4%',
                 'td_attr': {
@@ -530,7 +530,7 @@ def trackProjectExe(request):
                 }
             },
             {
-                'index': 'project__approver',
+                'index': 'project__approver__name',
                 'col_name': '专审',
                 'width': '4%',
                 'td_attr': {
