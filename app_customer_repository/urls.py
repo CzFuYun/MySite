@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'projectlist\.view', views.viewProjectList, name='viewProjectList'),
     url(r'project\.add', views.addProject, name='addProject'),
     url(r'project\.edit', views.ProjectUpdateView.as_view(), name='editProject'),
+    url(r'projectdetail\.view', views.ProjectDetailView.as_view(), name='viewProjectDetail'),
     url(r'customer\.ajax', views.ajaxCustomer, name='ajaxCustomer'),
     url(r'staff\.ajax', views.ajaxStaff, name='ajaxStaff'),
     url(r'customer\.add', views.addCustomer, name='addCustomer'),

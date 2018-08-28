@@ -3,7 +3,7 @@
 
 {% block extra_button %}
     {% if form.instance.current_progress.status_num < 100 %}
-        <button class="btn waves-effect waves-light btn-warning" title="设为已批复" onclick="setProjectReplied()"><i class="mdi mdi-message-reply-text"></i>批复</button>
+        <button class="btn waves-effect waves-light btn-warning" title="设为已批复" onclick="setProjectReplied();unloadModalDialog(this)"><i class="mdi mdi-message-reply-text"></i>批复</button>
     {% else %}
 
     {% endif %}

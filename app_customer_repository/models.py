@@ -194,14 +194,30 @@ class ProjectExecution(models.Model):
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
+
+
     @property
     def previous_update(self):
+        # if self.id:     # 若本条记录确实存在于数据库
+        #     today = models_operation.DateOperation().today
+        #     pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
+        #     if pe.exists():
+        #         return pe.values_list('update_count').order_by('-update_count', '-id')[0][0]
+        #     return 0
+        previous_exe = self.previous_exe
+        if previous_exe:
+            return previous_exe.values_list('update_count')[0]
+        else:
+            return 0
+
+    @property
+    def previous_exe(self):
         if self.id:     # 若本条记录确实存在于数据库
             today = models_operation.DateOperation().today
             pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
             if pe.exists():
-                return pe.values_list('update_count').order_by('-update_count')[0][0]
-            return 0
+                return pe.order_by('-update_count', '-id').first()
+        return None
 
     def update(self, pe_dict):
         '''
@@ -212,16 +228,17 @@ class ProjectExecution(models.Model):
         fields_to_compare = {
             'total_used': 'total_used',
             'remark': 'remark.content',
+            'current_progress': 'current_progress.id',
         }
         field_list = self._meta.fields
-        self.previous_pe = ProjectExecution.objects.filter(project=self.project, update_count=self.update_count-1).first() or ProjectExecution()
+        previous_exe = self.previous_exe
         for field in field_list:
             field_name = field.name
             new_value = pe_dict.get(field_name, None)
             if new_value:
                 if field_name in fields_to_compare:
                     try:
-                        old_value = eval('self.previous_pe.' + fields_to_compare[field_name])
+                        old_value = eval('previous_exe.' + fields_to_compare[field_name])
                     except:
                         old_value = None
                     if old_value != new_value:
@@ -229,24 +246,29 @@ class ProjectExecution(models.Model):
                             edit_method = getattr(self, '_update_' + field_name)
                             edit_method(new_value)
                         except:
-                            pass
-                    else:
-                        pass
+                            print(field_name, '缺少更新方法')
                 else:
                     exec('self.' + field_name + '=new_value')
-            else:
-                pass
         self.save()
 
     def _update_total_used(self, new_value):
+        previous_exe = self.previous_exe
         self.total_used = new_value
-        this_time_used = self.total_used - self.previous_pe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
-        self.new_net_used = this_time_used + self.previous_pe.new_net_used
+        this_time_used = self.total_used - previous_exe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
+        self.new_net_used = this_time_used + previous_exe.new_net_used
 
     def _update_remark(self, new_value):
         new_remark = ProjectRemark(content=new_value)
         new_remark.save()
         self.remark = new_remark
+
+    def _update_current_progress(self, new_value):
+        try:
+            progress_id = int(new_value)
+            progress = Progress.objects.get(id=progress_id)
+        except:
+            progress = Progress.objects.get(caption=new_value)
+        self.current_progress = progress
 
     @property
     def total_used_in_last_contribution(self):

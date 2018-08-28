@@ -404,6 +404,11 @@ class ProjectUpdateView(View):        # DetailView用于显示一个特定类型
     #     return response
 
 
+class ProjectDetailView(View):
+    def get(self, *args, **kwargs):
+        pass
+
+
 def trackProjectExe(request):
     if request.method == 'POST':
         return render(request, 'proj_exe/project_exe_frame.html', locals())
@@ -550,19 +555,11 @@ def editProjectExe(request):
         form = html_forms.ProjectExeForm_update(instance=exe_obj)
         return render_to_response('proj_exe/ProjectExeForm_update.html', locals())
     elif request.method == 'POST':
-        exe_id = request.POST.get('id')
-        exe_obj = models.ProjectExecution.objects.filter(id=exe_id).first()
-        form = html_forms.ProjectExeForm_update(request.POST, instance=exe_obj)
-        if form.is_valid():
-            pe = form.save(commit=False)
-            pe.update({
-                'remark': form.cleaned_data['remark'],
-                'update_count': pe.previous_update + 1,
-            })
-            # form.save_m2m()
-            return render(request, 'feedback.html')
-
-
+        new_value = request.POST.dict().copy()
+        exe_id = new_value.pop('id')
+        project_exe = models.ProjectExecution.objects.filter(id=exe_id)[0]
+        project_exe.update(new_value)
+        return render(request, 'feedback.html')
 
 def setProjectReplied(request):
     form_action = setProjectReplied.__name__

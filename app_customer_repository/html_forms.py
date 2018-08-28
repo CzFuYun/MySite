@@ -179,22 +179,24 @@ class ProjectExeForm_update(ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProjectExeForm_update, self).__init__(*args, **kwargs)
         self.fields['id'] = forms.CharField(widget=forms.TextInput(attrs={'hidden': 'hidden', 'readonly': 'readonly'}))
-        if self.instance.current_progress.status_num < 100:
-            self.fields['current_progress'] = forms.ModelChoiceField(
-                label=self.Meta.model.current_progress.field.verbose_name,
-                widget=forms.Select(), queryset=models.Progress.getSuitableProgressQsForSubbusiness(self.instance.project.business.id),
-                initial=self.instance.current_progress
+        if not self.data:
+            if self.instance.current_progress.status_num < 100:
+                self.fields['current_progress'] = forms.ModelChoiceField(
+                    label=self.Meta.model.current_progress.field.verbose_name,
+                    widget=forms.Select(), queryset=models.Progress.getSuitableProgressQsForSubbusiness(self.instance.project.business.id),
+                    initial=self.instance.current_progress
+                )
+            else:
+                self.fields['total_used'] = forms.IntegerField(
+                    label='项目总计投放净额',
+                    initial=self.instance.total_used
+                )
+            self.fields['remark'] = forms.CharField(
+                label=self.Meta.model.remark.field.verbose_name,
+                widget=forms.Textarea(),
+                initial=self.instance.remark.content if self.instance.remark else '',
             )
-        else:
-            self.fields['total_used'] = forms.IntegerField(
-                label='项目总计投放净额',
-                initial=self.instance.total_used
-            )
-        self.fields['remark'] = forms.CharField(
-            label=self.Meta.model.remark.field.verbose_name,
-            widget=forms.Textarea(),
-            initial=self.instance.remark.content if self.instance.remark else '',
-        )
+
 
 
 # class ProjectExeForm_update(Form):
