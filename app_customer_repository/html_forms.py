@@ -125,7 +125,7 @@ class ProjectModelForm_set_replied(ModelForm):
         jgbs7_staff = rd_m.Staff.objects.filter(sub_department='JGBS-7')
         self.fields['pre_approver'] = forms.ModelChoiceField(label=self.Meta.model.pre_approver.field.verbose_name,queryset=jgbs7_staff)
         self.fields['approver'] = forms.ModelChoiceField(label=self.Meta.model.approver.field.verbose_name,queryset=jgbs7_staff)
-        # utilities.setRequiredFields(self)
+        self.fields['reply_date'].widget = forms.DateInput(attrs={'type': 'date'})
 
 
 class CustomerModelForm_add(ModelForm):

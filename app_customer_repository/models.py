@@ -49,6 +49,7 @@ class ProjectRepository(models.Model):
         (90, '授信到期'),
     )
     whose_matter_choices = (
+        (0, '无责任方'),
         (10, '我行原因'),
         (20, '监管原因'),
         (30, '客户原因'),
@@ -113,27 +114,6 @@ class ProjectRepository(models.Model):
             factor = self.business.acc_factor
         self.account_num = base * factor
 
-    # @classmethod
-    # def create_or_update(cls, pr_dict):
-    #     '''
-    #     根据传入的数据更新或创建储备项目，自动填充创建日期并生成快照
-    #     :param pr_dict:
-    #     :return:
-    #     '''
-    #     # fields = self._meta.fields
-    #     imp_date = models_operation.DateOperation()
-    #     need_photo = False
-    #     if pr_dict.get('id'):       # 修改
-    #         pr = ProjectRepository.objects.get(id=pr_dict['id'])
-    #     else:       # 创建
-    #         pr = ProjectRepository({**pr_dict, **{'create_date': imp_date.today}})
-    #         need_photo = True
-    #     # pr.judge_is_focus()
-    #     # pr.calculate_acc_num()
-    #     pr.save()
-    #     if need_photo:
-    #         ProjectExecution.takePhoto(pr)
-
     def create(self, **kwargs):
         if kwargs:
             self.__dict__.update(**kwargs)
@@ -147,18 +127,15 @@ class ProjectRepository(models.Model):
             self.__dict__.update(**kwargs)
         self.save(force_update=True)
 
-    def closeTemply(self, request):
-        exclude_fields = ['csrfmiddlewaretoken', 'id']
+    def closeTemply(self, close_reason, whose_matter):
         try:
             update_dict = {
-                **{'tmp_close_date': models_operation.DateOperation().today},
-                **getattr(request, request.method).dict()
+                'tmp_close_date': models_operation.DateOperation().today,
+                'close_reason': close_reason,
+                'whose_matter': whose_matter,
             }
-            for ef in exclude_fields:
-                if update_dict.get(ef):
-                    update_dict.pop(ef)
             self.update(**update_dict)
-        except Exception as error:
+        except:
             return False
         return True
 
@@ -194,16 +171,8 @@ class ProjectExecution(models.Model):
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
-
-
     @property
     def previous_update(self):
-        # if self.id:     # 若本条记录确实存在于数据库
-        #     today = models_operation.DateOperation().today
-        #     pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
-        #     if pe.exists():
-        #         return pe.values_list('update_count').order_by('-update_count', '-id')[0][0]
-        #     return 0
         previous_exe = self.previous_exe
         if previous_exe:
             return previous_exe.values_list('update_count')[0]
@@ -258,9 +227,12 @@ class ProjectExecution(models.Model):
         self.new_net_used = this_time_used + previous_exe.new_net_used
 
     def _update_remark(self, new_value):
-        new_remark = ProjectRemark(content=new_value)
-        new_remark.save()
-        self.remark = new_remark
+        if new_value:       # 新备注内容不为空
+            new_remark = ProjectRemark(content=new_value)
+            new_remark.save()
+            self.remark = new_remark
+        else:
+            self.remark = ProjectRemark.objects.get(id=0)
 
     def _update_current_progress(self, new_value):
         try:
@@ -506,6 +478,3 @@ class TargetTask(models.Model):
             return
 
 
-
-# b=SubBusiness.objects.filter(id=11)
-# Progress.objects.filter(suit_for_business__caption='一般授信')

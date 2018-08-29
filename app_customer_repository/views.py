@@ -546,6 +546,7 @@ def trackProjectExe(request):
 
         return render_to_response('proj_exe/project_exe_list.html', locals())
 
+
 def editProjectExe(request):
     action = editProjectExe.__name__
     if request.method == 'GET':
@@ -561,11 +562,11 @@ def editProjectExe(request):
         project_exe.update(new_value)
         return render(request, 'feedback.html')
 
+
 def setProjectReplied(request):
     form_action = setProjectReplied.__name__
     form_title = '确认项目信息'
     if request.method == 'GET':
-        # exe_id = getattr(request, request.method).get('exeId')
         exe_id = request.GET.get('exeId')
         project_id = models.ProjectExecution.objects.get(id=exe_id).project_id
         form = html_forms.ProjectModelForm_set_replied(instance=models.ProjectRepository.objects.get(id=project_id))
@@ -579,7 +580,11 @@ def setProjectReplied(request):
             pe = models.ProjectExecution.objects.filter(project_id=project_id).last()
             suit_progress = models.Progress.objects.filter(status_num=100, suit_for_business=project_obj.business_id).first()
             pe.update({'current_progress': suit_progress})
-            return redirect('/feedback')
+            text = ''
+            if form.cleaned_data['total_net'] <= project_obj.existing_net:      # 若未给予新增额度
+                project_obj.closeTemply(35, 0)
+                text = '但由于未新增敞口，项目已被删除'
+            return render(request, 'feedback.html', {'text': text})
     return render(request, 'blank_form.html', locals())
 
 
@@ -644,7 +649,7 @@ def delProject(request):
         form = html_forms.ProjectModelForm_del(instance=project)
         return render(request, 'blank_form.html', locals())
     elif request.method == 'POST':
-        if project.closeTemply(request):
+        if project.closeTemply(request.POST.get('close_reason'), request.POST.get('whose_matter')):
             return render(request, 'feedback.html')
         else:
             form = html_forms.ProjectModelForm_del(request.POST)
