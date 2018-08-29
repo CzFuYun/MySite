@@ -224,14 +224,14 @@
             }
             MOUSE_PAGE_LOCATION = getMousePageLocation(e);
             MOUSE_WINDOW_LOCATION = getMouseWindowLocation(e);
-            console.log(MOUSE_PAGE_LOCATION);
+            {#console.log(MOUSE_PAGE_LOCATION);#}
             $.post({
                 url: '{% url "viewExpirePromptTable" %}',
                 data: {'expire_id': elem.getAttribute('expire_prompt_id')},
                 dataType: 'json',
                 async: false,
                 success: function(response){
-                    console.log(response);
+                    {#console.log(response);#}
                     let nowEdit = response[0],
                         staff_dict = getStaffDict(nowEdit['dept_id']);
                     $('#expire_editor_div .dropify-clear')[0].click();
@@ -240,8 +240,8 @@
                     $('#expire_date_selector')[0].value = nowEdit['expire_date'];
                     $('#remark')[0].value = nowEdit['remark'];
                     $('#punishment')[0].value = nowEdit['punishment'];
-                    addItems('dept_selector', DEPARTMENTS, nowEdit['dept_caption'], 1, getStaffDict2);
-                    addItems('staff_selector', staff_dict, nowEdit['staff_name'], 1);
+                    addItem('dept_selector', DEPARTMENTS, nowEdit['dept_caption'], 1, getStaffDict2);
+                    addItem('staff_selector', staff_dict, nowEdit['staff_name'], 1);
                     showForm('expire_editor_div', 1);
                 },
                 error: function(){}
@@ -406,7 +406,7 @@
         function getStaffDict2(elem){
             let deptCode = elem.selectedOptions[0].getAttribute('value'),
                 staffDict = getStaffDict(deptCode);
-            addItems('staff_selector', staffDict, '', 1);
+            addItem('staff_selector', staffDict, '', 1);
         }
 
     </script>

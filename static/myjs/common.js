@@ -44,12 +44,13 @@ function getOrderedDeptDict() {
 function getStaffDict(deptCode){
     var staffDict;
     $.post({
-        url: parseUrl('ajaxStaff'),
+        url: parseUrl('ajaxStaffName'),
         async: false,
         data: {dept_code: deptCode},
         dataType: 'json',
         success: function (data) {
             staffDict = data;
+            console.log(data);
         },
         error: function () {
             alert('\u83b7\u53d6\u5458\u5de5\u540d\u5355\u5931\u8d25');

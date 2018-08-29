@@ -74,8 +74,9 @@ function getFormData(formId){
     }
 }
 
-function addItems(selectElemId, optionData, defaultSelectedText, clearBeforeAdd, onchangeFunctionObject){
-    var $selectElem = $('#' + selectElemId),
+function addItem(selectElemId, optionData, defaultSelectedText, clearBeforeAdd, onchangeFunctionObject){
+    var selectElem = document.getElementById(selectElemId),
+        $selectElem = $(selectElem),
         $oldOptions = $('option', $selectElem),
         $newOption,
         index = 0;
@@ -118,7 +119,7 @@ function addItems(selectElemId, optionData, defaultSelectedText, clearBeforeAdd,
         }
     }
     if(onchangeFunctionObject){
-        $selectElem.setAttribute('onchange', onchangeFunctionObject.name + '(this)');
+        selectElem.setAttribute('onchange', onchangeFunctionObject.name + '(this)');
     }
 }
 

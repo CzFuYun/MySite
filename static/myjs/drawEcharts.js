@@ -58,7 +58,7 @@ function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth, stepT
     let series = [],
         legend = {data: []},
         stack = needStack ? '总量' : '',
-        step = stepType || '',
+        // step = stepType || '',
         dataForEcharts = prepareBaseDataForEcharts(dataArray),
         seriesData = dataForEcharts.seriesData;
     for(let k in seriesData){
@@ -66,7 +66,7 @@ function prepareOptionForEchatrsCommonLine(dataArray, needStack, isSmooth, stepT
         series.push({
             name: k,
             type: 'line',
-            step: step,
+            // step: step,
             stack: stack,
             data: seriesData[k],
             areaStyle: {normal: {}},
@@ -174,7 +174,7 @@ function prepareOptionForEchartsInteractionLine(dataArray, commonLineOption, ste
     series.push({
         name: newSeriesName,
         type: 'line',
-        step: stepType || '',
+        // step: stepType || '',
         xAxisIndex: 1,
         yAxisIndex: 1,
         stack: series[0].stack,
