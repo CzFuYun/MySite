@@ -127,10 +127,11 @@ class ProjectRepository(models.Model):
             self.__dict__.update(**kwargs)
         self.save(force_update=True)
 
-    def closeTemply(self, close_reason, whose_matter):
+    def close(self, close_reason, whose_matter, temply=True):
+        close_method = 'tmp_close_date' if temply else 'close_date'
         try:
             update_dict = {
-                'tmp_close_date': models_operation.DateOperation().today,
+                close_method: models_operation.DateOperation().today,
                 'close_reason': close_reason,
                 'whose_matter': whose_matter,
             }
@@ -195,12 +196,12 @@ class ProjectExecution(models.Model):
         :return:
         '''
         fields_to_compare = {
-            'total_used': 'total_used',
             'remark': 'remark.content',
             'current_progress': 'current_progress.id',
+            'total_used': 'total_used',
         }
         field_list = self._meta.fields
-        previous_exe = self.previous_exe
+        previous_exe = self.previous_exe        # 该变量不可删，用到的
         for field in field_list:
             field_name = field.name
             new_value = pe_dict.get(field_name, None)
@@ -222,9 +223,16 @@ class ProjectExecution(models.Model):
 
     def _update_total_used(self, new_value):
         previous_exe = self.previous_exe
-        self.total_used = new_value
+        self.total_used = int(new_value)
         this_time_used = self.total_used - previous_exe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
         self.new_net_used = this_time_used + previous_exe.new_net_used
+        if self.new_net_used > 0:       # 若新增投放
+            project_new_net = self.project.total_net - self.project.existing_net
+            if self.new_net_used == project_new_net:
+                self.current_progress_id = 120
+                self.project.close(80, 0, False)
+            else:
+                self.current_progress_id = 115
 
     def _update_remark(self, new_value):
         if new_value:       # 新备注内容不为空
@@ -251,6 +259,8 @@ class ProjectExecution(models.Model):
 
     @classmethod
     def takePhoto(cls, project_obj=None, photo_date=None):
+        # from app_customer_repository import models
+        # models.ProjectExecution.takePhoto()
         imp_date = models_operation.DateOperation()
         if project_obj:
             if not photo_date:

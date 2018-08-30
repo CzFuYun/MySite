@@ -14,7 +14,7 @@
             <hr>
             <div class="form-group">
                 {% block extra_button %}{% endblock %}
-                <button type="submit" class="btn btn-success" title="确认并提交内容" onclick="document.getElementById('{{ dialog_id|default:"dialog" }}').submit()"><i class="mdi mdi-check"></i>确认</button>
+                <button type="submit" class="btn btn-success" title="确认并提交内容" onclick="document.getElementById('{{ dialog_id|default:"dialog" }}').submit();unloadModalDialog(this)"><i class="mdi mdi-check"></i>确认</button>
                 <button type="button" class="btn btn-inverse" title="关闭此窗体" onclick="unloadModalDialog(this)"><i class="mdi mdi-close"></i>取消</button>
             </div>
         </div>

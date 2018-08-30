@@ -582,7 +582,7 @@ def setProjectReplied(request):
             pe.update({'current_progress': suit_progress})
             text = ''
             if form.cleaned_data['total_net'] <= project_obj.existing_net:      # 若未给予新增额度
-                project_obj.closeTemply(35, 0)
+                project_obj.close(35, 0)
                 text = '但由于未新增敞口，项目已被删除'
             return render(request, 'feedback.html', {'text': text})
     return render(request, 'blank_form.html', locals())
@@ -649,7 +649,7 @@ def delProject(request):
         form = html_forms.ProjectModelForm_del(instance=project)
         return render(request, 'blank_form.html', locals())
     elif request.method == 'POST':
-        if project.closeTemply(request.POST.get('close_reason'), request.POST.get('whose_matter')):
+        if project.close(request.POST.get('close_reason'), request.POST.get('whose_matter')):
             return render(request, 'feedback.html')
         else:
             form = html_forms.ProjectModelForm_del(request.POST)
