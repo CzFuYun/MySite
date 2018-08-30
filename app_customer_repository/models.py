@@ -10,6 +10,7 @@ industry_factor_rule = {
 }
 
 
+
 class CustomerRepository(models.Model):
     stockholder_choices = (
         (10, '国有'),
@@ -17,14 +18,14 @@ class CustomerRepository(models.Model):
         (30, '外资'),
     )
     name = models.CharField(max_length=128, unique=True, verbose_name='企业名称')
-    simple_name = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='企业简称')
+    simple_name = models.CharField(max_length=32, unique=True, verbose_name='企业简称')
     customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, verbose_name='核心客户号', on_delete=models.PROTECT)
     credit_file = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
-    department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='管户部门')
-    type_of_3311 = models.ForeignKey('root_db.TypeOf3311', blank=True, null=True, on_delete=models.PROTECT, verbose_name='3311类型')
-    is_strategy = models.BooleanField(default=False, verbose_name='是否战略客户')
-    industry = models.ForeignKey('root_db.Industry', blank=True, null=True, on_delete=models.PROTECT, verbose_name='行业门类')
-    stockholder = models.IntegerField(choices=stockholder_choices, blank=True, null=True, verbose_name='控股方式')
+    department = models.ForeignKey('root_db.Department', on_delete=models.PROTECT, verbose_name='管户部门')
+    type_of_3311 = models.ForeignKey('root_db.TypeOf3311', on_delete=models.PROTECT, verbose_name='3311类型')
+    is_strategy = models.BooleanField(verbose_name='是否战略客户')
+    industry = models.ForeignKey('root_db.Industry', on_delete=models.PROTECT, verbose_name='行业门类')
+    stockholder = models.IntegerField(choices=stockholder_choices, verbose_name='控股方式')
     taxes_2017 = models.IntegerField(default=0, verbose_name='2017年纳税（万元）')
     inter_clearing_2017 = models.IntegerField(default=0, verbose_name='2017年国际结算（万元）')
 
@@ -45,7 +46,7 @@ class ProjectRepository(models.Model):
         (50, '总行否决'),
         (60, '获批后不再继续'),
         (70, '部分落地后终止'),
-        (80, '全部落地'),
+        # (80, '全部落地'),
         (90, '授信到期'),
     )
     whose_matter_choices = (
@@ -55,10 +56,10 @@ class ProjectRepository(models.Model):
         (30, '客户原因'),
     )
     customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT, verbose_name='客户')
-    project_name = models.CharField(max_length=64, blank=True, null=True, verbose_name='项目名称')
-    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='客户经理')
+    project_name = models.CharField(max_length=64, verbose_name='项目名称')
+    staff = models.ForeignKey('root_db.Staff', on_delete=models.PROTECT, verbose_name='客户经理')
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
-    is_green = models.BooleanField(default=False, verbose_name='绿色金融')
+    is_green = models.BooleanField(verbose_name='绿色金融')
     is_focus = models.BooleanField(default=False, verbose_name='重点项目')
     pretrial_doc = models.ForeignKey('PretrialDocument', blank=True, null=True, on_delete=models.PROTECT, verbose_name='预审表')
     create_date = models.DateField(auto_now_add=True, verbose_name='创建日期')
@@ -73,8 +74,8 @@ class ProjectRepository(models.Model):
     existing_net = models.IntegerField(default=0, verbose_name='存量敞口')
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
     account_num = models.DecimalField(default=0, max_digits=3, decimal_places=2, verbose_name='折算户数')
-    is_defuse = models.BooleanField(default=False, verbose_name='涉及化解')
-    is_pure_credit = models.BooleanField(default=False, verbose_name='纯信用')
+    is_defuse = models.BooleanField(verbose_name='涉及化解')
+    is_pure_credit = models.BooleanField(verbose_name='纯信用')
     close_date = models.DateField(blank=True, null=True, verbose_name='关闭日期')
     tmp_close_date = models.DateField(blank=True, null=True, verbose_name='临时关闭日期')
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True, verbose_name='关闭理由')
@@ -128,13 +129,14 @@ class ProjectRepository(models.Model):
         self.save(force_update=True)
 
     def close(self, close_reason, whose_matter, temply=True):
-        close_method = 'tmp_close_date' if temply else 'close_date'
+        update_dict = {
+            'tmp_close_date': models_operation.DateOperation().today,
+            'close_reason': close_reason,
+            'whose_matter': whose_matter,
+        }
         try:
-            update_dict = {
-                close_method: models_operation.DateOperation().today,
-                'close_reason': close_reason,
-                'whose_matter': whose_matter,
-            }
+            if not temply:
+                update_dict['close_date'] = models_operation.DateOperation().today
             self.update(**update_dict)
         except:
             return False
@@ -168,7 +170,7 @@ class ProjectExecution(models.Model):
     current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='进度')
     total_used = models.IntegerField(default=0, verbose_name='累计投放敞口')          # 含本次
     new_net_used = models.IntegerField(default=0, verbose_name='累计投放新增敞口')      # 自动计算，含本次
-    remark = models.ForeignKey('ProjectRemark', blank=True, null=True, on_delete=models.PROTECT, verbose_name='备注')
+    remark = models.ForeignKey('ProjectRemark', default=0, on_delete=models.PROTECT, verbose_name='备注')
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
@@ -230,7 +232,7 @@ class ProjectExecution(models.Model):
             project_new_net = self.project.total_net - self.project.existing_net
             if self.new_net_used == project_new_net:
                 self.current_progress_id = 120
-                self.project.close(80, 0, False)
+                # self.project.close(80, 0, False)
             else:
                 self.current_progress_id = 115
 
@@ -279,11 +281,20 @@ class ProjectExecution(models.Model):
                 photo_date = imp_date.strToDate(photo_date_str)
             else:
                 return
-            # ↓临关超过半年的项目正式关闭
+            # ↓先将临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(
                 tmp_close_date__isnull=False,
                 tmp_close_date__lte=imp_date.delta_date(-180, photo_date),
             ).update(close_date=imp_date.today)
+            # 提示关闭授信批复超过一年的项目
+            expire_credit_qs = ProjectRepository.objects.filter(
+                reply_date__isnull=False,
+                reply_date__lte=imp_date.delta_date(-365, photo_date),
+            )
+            for ep in expire_credit_qs:
+                need_close = input('>>>项目【' + ep.project_name + '】，授信批复日【' + str(ep.reply_date) + '】，疑似到期，是否关闭？\n0.否\n1.是')
+                if need_close:
+                    ep.close(90, 0, True)
             # ↓流程中项目的客户号、总敞口
             project_customer = cls.objects.filter(
                 project__close_date__isnull=True,
@@ -345,6 +356,7 @@ class ProjectExecution(models.Model):
                 pe_photo_list.append(cls(**tmp))
             if pe_photo_list:
                 cls.objects.bulk_create(pe_photo_list)
+                last_photoed = photo_date_str
                 print('success')
             if attention:
                 print('请核实以下客户的真实用信情况：')
@@ -488,3 +500,4 @@ class TargetTask(models.Model):
             return
 
 
+LAST_PHOTO_DATE = models_operation.DateOperation().last_data_date_str(ProjectExecution, 'photo_date')

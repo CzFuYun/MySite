@@ -84,8 +84,10 @@ def selectProjectAction(request):
     elif action == '2':
         return render(request, 'proj_rep/project_list.html', locals())
     elif action == '3':
-        pass
+        return downloadProjectList(start_date, end_date)
     elif action == '4':
+        if models_operation.DateOperation().date_dif(models.LAST_PHOTO_DATE) < 0:
+            return render(request, 'feedback.html', {'title': '数据尚未就绪', 'swal_type': 'error'})
         return trackProjectExe(request)
 
 
@@ -149,6 +151,8 @@ def viewProjectSummary(request):
                 projects_structure_data[dept_caption][b]['projects'] = []
     for p in project_data:
         dept_caption = p['staff__sub_department__superior__caption']
+        # if dept_caption == '机关部室':
+        #     print()
         business_caption = p['business__superior__caption']
         p_id = p['id']
         project = {**p, **project_exe[p_id]}
@@ -409,13 +413,34 @@ class ProjectDetailView(View):
         pass
 
 
+def downloadProjectList(start_date, end_date):
+    import xlsxwriter
+    from io import BytesIO
+    x_io = BytesIO()
+    work_book = xlsxwriter.Workbook(x_io)
+    work_sheet = work_book.add_worksheet('excel-1')
+    project_qs = models.ProjectRepository.objects.filter(
+        ((Q(create_date__gte=start_date) & Q(create_date__lte=end_date)) | (Q(reply_date__gte=start_date) & Q(reply_date__lte=end_date)))
+        & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__gt=end_date))
+        # & (Q(close_date__isnull=True))
+    )
+
+
+    work_book.close()
+    res = HttpResponse()
+    res['Content-Type'] = 'application/octet-stream'
+    res['Content-Disposition'] = 'filename="userinfo.xlsx"'
+    res.write(x_io.getvalue())
+    return res
+
+
 def trackProjectExe(request):
     if request.method == 'POST':
         return render(request, 'proj_exe/project_exe_frame.html', locals())
     elif request.method == 'GET':
         exe_qs = models.ProjectExecution.lastExePhoto().filter(
-            project__tmp_close_date__isnull=True,
-            current_progress__status_num__lt=200,
+            (Q(project__tmp_close_date__isnull=True) & Q(project__close_date__isnull=True))
+            & Q(current_progress__status_num__lt=200)
         ).values(
             'id',
             'project_id',
@@ -450,8 +475,6 @@ def trackProjectExe(request):
             'project__staff',
             'project__business__display_order',
         )
-        # ret = []
-        # customer_list = []
         table_col = [
             {
                 'index': None,
@@ -543,7 +566,6 @@ def trackProjectExe(request):
                 }
             },
         ]
-
         return render_to_response('proj_exe/project_exe_list.html', locals())
 
 
@@ -552,7 +574,6 @@ def editProjectExe(request):
     if request.method == 'GET':
         exe_id = request.GET.get('exeId')
         exe_obj = models.ProjectExecution.objects.filter(id=exe_id).first()
-        # if exe_obj.current_progress.status_num < 100:
         form = html_forms.ProjectExeForm_update(instance=exe_obj)
         return render_to_response('proj_exe/ProjectExeForm_update.html', locals())
     elif request.method == 'POST':
@@ -583,7 +604,7 @@ def setProjectReplied(request):
             text = ''
             if form.cleaned_data['total_net'] <= project_obj.existing_net:      # 若未给予新增额度
                 project_obj.close(35, 0)
-                text = '但由于未新增敞口，项目已被删除'
+                text = '但由于未新增敞口，项目已被自动屏蔽，不再展示'
             return render(request, 'feedback.html', {'text': text})
     return render(request, 'blank_form.html', locals())
 
