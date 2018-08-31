@@ -65,16 +65,22 @@ class ContributionTrees(models.Model):
 
 
 class ExpirePrompt(models.Model):
-    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT)
-    staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT)
-    expire_date = models.DateField(auto_now_add=False, null=True, blank=True)
-    remark = models.CharField(max_length=512, default='')
-    explain = models.CharField(max_length=256, blank=True, null=True)
+    apply_type_choices = (
+        (1, '如期'),
+        (2, '暂缓'),
+        (3, '退出'),
+    )
+    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
+    staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
+    expire_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='到期日')
+    remark = models.CharField(max_length=512, default='', verbose_name='备注')
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
-    created_at = models.DateField(auto_now_add=True, null=True, blank=True)
-    # jiandang = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name='系统建档')
-    # chushen = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name='初审')
+    created_at = models.DateField(auto_now_add=True)
+    apply_type = models.IntegerField(choices=apply_type_choices, default=1, verbose_name='续做计划')
+    current_progress = models.ForeignKey('app_customer_repository.Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='系统进度')
+    chushen = models.DateField(blank=True, null=True, verbose_name='预计初审')
+    reply = models.DateField(blank=True, null=True, verbose_name='预计批复')
 
     def toDict(self):
         fields = []
@@ -91,3 +97,4 @@ class ExpirePrompt(models.Model):
             else:
                 d[field] = str(field_obj)
         return d
+

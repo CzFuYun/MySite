@@ -1,4 +1,4 @@
-import json, os
+import json, os, copy
 # import datetime as python_datetime
 from decimal import Decimal
 from django.shortcuts import render, HttpResponse, redirect, reverse, render_to_response
@@ -7,7 +7,7 @@ from django.db.models import Q, Sum, F
 from django.utils.timezone import datetime, timedelta
 # from MySite import utilities
 from root_db import models as rd_models
-from deposit_and_credit import models as dac_models, models_operation, settings
+from deposit_and_credit import models as dac_models, models_operation, settings, html_forms, table_structure
 from app_permission.views import checkPermission
 from MySite import utilities
 # import collections
@@ -236,6 +236,112 @@ def viewExpirePrompt(request):
         return render_to_response('expire/expire_js.html')
 
 
+# def viewExpirePromptTable(request):
+#     if request.method == 'GET':
+#         filter_dict = request.GET
+#         filter_condition = '{'
+#         for f in filter_dict:
+#             if len(filter_dict.getlist(f)) <= 1:
+#                 filter_condition += ('"' + f + '":"' + filter_dict[f] + '",')
+#             else:
+#                 filter_condition += ('"' + f + '":"' + str(filter_dict.getlist(f)) + '",')
+#         filter_condition += '}'
+#         return render(request, 'expire/expire_table.html', {'filter': filter_condition})
+#     elif request.method == 'POST':
+#         imp_date = models_operation.DateOperation()
+#         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
+#         today = imp_date.today
+#         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
+#         expire_id = Q(id=request.POST.get('expire_id')) if request.POST.get('expire_id') else Q(id__gt=0)
+#         is_finished = True if request.POST.get('is_finished') == '1' else False
+#         if is_finished:
+#             finish_after = Q(
+#                 finish_date__gte=request.POST.get('finish_after') if request.POST.get('finish_after') else '1990-01-01')
+#             finish_before = Q(
+#                 finish_date__lte=request.POST.get('finish_before') if request.POST.get('finish_before') else str(today))
+#         else:
+#             finish_after = Q(finish_date__isnull=True)
+#             finish_before = Q(finish_date__isnull=True)
+#         expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
+#             data_date - timedelta(days=100)))
+#         expire_before = Q(
+#             expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
+#                 today + timedelta(days=180)))
+#         has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment') else Q(punishment=0)
+#         non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment') else Q(punishment__gt=0)
+#         expire_qs = dac_models.ExpirePrompt.objects.filter(
+#             expire_id, expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
+#         ).values_list(
+#             'customer_id',
+#             'id',
+#             'remark',
+#             'punishment',
+#             'staff_id',
+#             'finish_date',
+#             'expire_date',
+#             'staff_id__yellow_red_card',
+#             'staff_id__red_card_expire_date',
+#         )
+#         expire_customers = []
+#         customer_expire_data_dict = {}
+#         for i in expire_qs:
+#             customer_id = i[0]
+#             expire_customers.append(customer_id)
+#             customer_expire_data_dict[customer_id] = [
+#                 i[1],
+#                 i[2],
+#                 i[3],
+#                 i[4],
+#                 i[5],
+#                 i[6],
+#                 i[7],
+#                 i[8],
+#             ]
+#         customer_qs = dac_models.Contributor.objects.filter(
+#             customer_id__in=expire_customers,
+#             data_date=data_date_str
+#         ).values_list(
+#             'customer_id',
+#             'customer__name',
+#             'department_id',
+#             'department__caption',
+#             'staff_id',
+#             'staff__name',
+#             'expire_date',
+#         ).order_by('department__display_order', 'staff__name', 'expire_date')
+#         ret = []
+#         display_num = 0
+#         for i in customer_qs:
+#             display_num += 1
+#             customer_id = i[0]
+#             staff_id = i[4]
+#             staff_name = i[5]
+#             staff_id_in_expire_prompt = customer_expire_data_dict[customer_id][3]
+#             expire_date = customer_expire_data_dict[customer_id][5]
+#             if staff_id_in_expire_prompt != staff_id and staff_id_in_expire_prompt:
+#                 staff_id = staff_id_in_expire_prompt
+#                 staff_name = rd_models.Staff.objects.filter(staff_id=staff_id_in_expire_prompt)[0].name
+#             tmp = {
+#                 'display_num': display_num,
+#                 'expire_prompt_id': customer_expire_data_dict[customer_id][0],
+#                 'customer_id': customer_id,
+#                 'customer_name': i[1],
+#                 'dept_id': i[2],
+#                 'dept_caption': i[3],
+#                 'staff_id': staff_id,
+#                 'staff_name': staff_name,
+#                 'expire_date': str(expire_date) if expire_date else str(i[6]),
+#                 'days_remain': ((i[6] if i[6] else expire_date) - today).days,
+#                 'remark': customer_expire_data_dict[customer_id][1],
+#                 'punishment': customer_expire_data_dict[customer_id][2],
+#                 'finish_date': str(customer_expire_data_dict[customer_id][4]),
+#                 'yellow_red_card': customer_expire_data_dict[customer_id][6],
+#                 'red_card_expire_date': str(customer_expire_data_dict[customer_id][7]),
+#             }
+#             ret.append(tmp)
+#         return HttpResponse(json.dumps(ret))
+
+
 def viewExpirePromptTable(request):
     if request.method == 'GET':
         filter_dict = request.GET
@@ -246,8 +352,9 @@ def viewExpirePromptTable(request):
             else:
                 filter_condition += ('"' + f + '":"' + str(filter_dict.getlist(f)) + '",')
         filter_condition += '}'
-        return render(request, 'expire/expire_table.html', {'filter': filter_condition})
+        return render(request, 'expire/expire_frame.html', {'filter': filter_condition})
     elif request.method == 'POST':
+        table_col = copy.deepcopy(table_structure.expire_table)
         imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
@@ -262,84 +369,38 @@ def viewExpirePromptTable(request):
         else:
             finish_after = Q(finish_date__isnull=True)
             finish_before = Q(finish_date__isnull=True)
+            table_col.pop(len(table_col) - 1)
         expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
             data_date - timedelta(days=100)))
         expire_before = Q(
             expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
                 today + timedelta(days=180)))
-        has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment') else Q(punishment=0)
-        non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment') else Q(punishment__gt=0)
+        has_punishment = Q(punishment__gt=0) if '1' in eval(request.POST.get('has_punishment')) else Q(punishment=0)
+        non_punishment = Q(punishment=0) if '0' in eval(request.POST.get('has_punishment')) else Q(punishment__gt=0)
         expire_qs = dac_models.ExpirePrompt.objects.filter(
             expire_id, expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
-        ).values_list(
-            'customer_id',
+        ).values(
             'id',
+            'customer__name',
+            'customer_id',
             'remark',
             'punishment',
             'staff_id',
+            'staff_id__name',
+            'staff_id__sub_department__superior__caption',
+            'staff_id__sub_department__superior__code',
             'finish_date',
             'expire_date',
             'staff_id__yellow_red_card',
             'staff_id__red_card_expire_date',
-        )
-        expire_customers = []
-        customer_expire_data_dict = {}
-        for i in expire_qs:
-            customer_id = i[0]
-            expire_customers.append(customer_id)
-            customer_expire_data_dict[customer_id] = [
-                i[1],
-                i[2],
-                i[3],
-                i[4],
-                i[5],
-                i[6],
-                i[7],
-                i[8],
-            ]
-        customer_qs = dac_models.Contributor.objects.filter(
-            customer_id__in=expire_customers,
-            data_date=data_date_str
-        ).values_list(
-            'customer_id',
-            'customer__name',
-            'department_id',
-            'department__caption',
-            'staff_id',
-            'staff__name',
-            'expire_date',
-        ).order_by('department__display_order', 'staff__name', 'expire_date')
-        ret = []
-        display_num = 0
-        for i in customer_qs:
-            display_num += 1
-            customer_id = i[0]
-            staff_id = i[4]
-            staff_name = i[5]
-            staff_id_in_expire_prompt = customer_expire_data_dict[customer_id][3]
-            expire_date = customer_expire_data_dict[customer_id][5]
-            if staff_id_in_expire_prompt != staff_id and staff_id_in_expire_prompt:
-                staff_id = staff_id_in_expire_prompt
-                staff_name = rd_models.Staff.objects.filter(staff_id=staff_id_in_expire_prompt)[0].name
-            tmp = {
-                'display_num': display_num,
-                'expire_prompt_id': customer_expire_data_dict[customer_id][0],
-                'customer_id': customer_id,
-                'customer_name': i[1],
-                'dept_id': i[2],
-                'dept_caption': i[3],
-                'staff_id': staff_id,
-                'staff_name': staff_name,
-                'expire_date': str(expire_date) if expire_date else str(i[6]),
-                'days_remain': ((i[6] if i[6] else expire_date) - today).days,
-                'remark': customer_expire_data_dict[customer_id][1],
-                'punishment': customer_expire_data_dict[customer_id][2],
-                'finish_date': str(customer_expire_data_dict[customer_id][4]),
-                'yellow_red_card': customer_expire_data_dict[customer_id][6],
-                'red_card_expire_date': str(customer_expire_data_dict[customer_id][7]),
-            }
-            ret.append(tmp)
-        return HttpResponse(json.dumps(ret))
+            'chushen',
+            'reply',
+            'current_progress__caption',
+            'current_progress__status_num',
+        ).order_by('staff_id__sub_department__superior__display_order', 'staff_id', 'expire_date')
+
+
+        return render_to_response('expire/expire_list.html', locals())
 
 
 def editExpirePrompt(request):
@@ -376,6 +437,17 @@ def editExpirePrompt(request):
         if q.update(**expire_dict):
             ajax_result['success'] = True and (ajax_result['success'] or not file_obj)
     return HttpResponse(json.dumps(ajax_result))
+
+
+def editExpirePrompt2(request):
+    if request.method == 'GET':
+        expire_id = request.GET.get('expire_id')
+        expire_obj = dac_models.ExpirePrompt.objects.get(id=expire_id)
+        form = html_forms.ExpirePromptModelForm(instance=expire_obj)
+        return render_to_response('blank_modal_dialog.html', locals())
+    elif request.method == 'POST':
+        pass
+    pass
 
 
 def viewExpireExplain(request):

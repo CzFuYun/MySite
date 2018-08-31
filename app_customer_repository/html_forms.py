@@ -1,5 +1,5 @@
 import re
-from django.forms import Form, widgets, fields, ModelForm
+from django.forms import ModelForm
 from django import forms
 from django.shortcuts import reverse
 from django.db.models import F

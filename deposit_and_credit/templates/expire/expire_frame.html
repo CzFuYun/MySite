@@ -1,0 +1,67 @@
+{% extends 'blank.html' %}
+{% load tags %}
+
+
+{% block extra_css %}
+    <link href="/static/mycss.css" rel="stylesheet">
+{% endblock %}
+
+
+{% block navbar_after_ul %}
+    
+{% endblock %}
+
+
+{% block extra_js %}
+    <script src="/static/assets/plugins/dropify/dist/js/dropify.min.js"></script>
+    <script src="/static/js/waves.js"></script>
+    <script type="text/javascript" src="/static/myjs/common.js"></script>
+    <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
+    <script type="text/javascript">
+        FILTER = {{ filter | safe}};
+        TODAY = '{% now "Y-m-d" %}';
+        $(function(){
+            refreshData();
+        });
+
+        function refreshData(){
+            buildExpireList();
+            renderExpireList();
+            lockThead('main_content');
+        }
+
+        function buildExpireList(){
+            $.post({
+                url: '{% url "viewExpirePromptTable" %}',
+                data: FILTER,
+                dataType: 'text',
+                async: false,
+                success: function(response){
+                    $('#main_content').html(response);
+                }
+            })
+        }
+
+        function renderExpireList(){
+            $('td[yr_card]').each(function(index, elem){
+                let yr_card = Number(elem.getAttribute('yr_card'));
+                if(yr_card === 1){
+                    $(elem).addClass('text-warning text-semibold');
+                }else if(yr_card > 1){
+                    $(elem).addClass('text-danger text-semibold');
+                }
+            });
+            $('td[expire_id]').each(function(index, elem){
+                let expireId = elem.getAttribute('expire_id');
+                let $radio = $(
+                    '<div style="width: 0; height: 0;">' +
+                        '<input type="radio" id="expire_' + expireId + '" expire_id="' + expireId + '" name="expire_id">' +
+                        '<label for="expire_' + expireId + '" class=""></label>' +
+                    '</div>'
+                );
+                elem.innerText = '';
+                elem.append($radio[0]);
+            });
+        }
+    </script>
+{% endblock %}
