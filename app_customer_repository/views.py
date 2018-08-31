@@ -1,4 +1,4 @@
-import json, re
+import json, re, collections
 from django.views.generic import View, DetailView
 from django.views.generic.edit import UpdateView
 from django.shortcuts import render, HttpResponse, render_to_response, redirect, reverse
@@ -413,33 +413,43 @@ def downloadProjectList(start_date, end_date):
     x_io = BytesIO()
     work_book = xlsxwriter.Workbook(x_io)
     work_sheet = work_book.add_worksheet('项目明细清单')
-    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-    project_exe = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).values_list(
-        'project__customer__name',
-        'project__customer__industry__caption',
-        'project__customer__type_of_3311',
-        'project__is_green',
-        'project__staff__sub_department__superior__caption',
-        'project__staff__name',
-        'project__business__superior__caption',
-        'project__business__caption',
-        'project__pretrial_doc__meeting__meeting_date',
-        'project__total_net',
-        'project__existing_net',
-        'current_progress__caption',
-        'current_progress__status_num',
-        'project__reply_date',
-        'new_net_used',
-        'remark__content',
-        'project__is_defuse',
-        'project__account_num',
+    cols = collections.OrderedDict(
+        **{
+            'project__customer__name': '项目名称',
+            'project__customer__industry__caption': '行业门类',
+            'project__customer__type_of_3311__level': '3311类型',
+            'project__is_green': '绿色金融',
+            'project__staff__sub_department__superior__caption': '经营部门',
+            'project__staff__name': '主办人员',
+            'project__business__superior__caption': '业务大类',
+            'project__business__caption': '具体业务',
+            'project__pretrial_doc__meeting__meeting_date': '预审日期',
+            'project__total_net': '总敞口',
+            'project__existing_net': '存量敞口',
+            'current_progress__caption': '当前进度',
+            'current_progress__status_num': '进度代号',
+            'project__reply_date': '批复日期',
+            'new_net_used': '新增敞口投放',
+            'project__is_defuse': '涉及化解',
+            'project__account_num': '折算户数',
+            'remark__content': '备注',
+        }
     )
-
-
+    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
+    project_details = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).values_list(*list(cols.keys())).order_by(
+        'project__staff__sub_department__superior__display_order',
+        'project__staff',
+        'project__business__display_order',
+    )
+    work_sheet.write_row('A1', (*['#'],*list(cols.values())))
+    row_num = 1
+    for row_data in project_details:
+        work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
+        row_num += 1
     work_book.close()
     res = HttpResponse()
     res['Content-Type'] = 'application/octet-stream'
-    res['Content-Disposition'] = 'filename="ProjectsDetails(' + start_date + ' ' + end_date + ').xlsx"'
+    res['Content-Disposition'] = 'filename="ProjectsDetails(' + start_date + '  ' + end_date + ').xlsx"'
     res.write(x_io.getvalue())
     return res
 
