@@ -220,17 +220,11 @@ def viewProjectSummary(request):
         }, cls=utilities.JsonEncoderExtend))
 
 
+
 def viewProjectList(request):
-    imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
-    last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
-    exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
-    project_qs = models.ProjectRepository.objects.filter(
-        (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
-        & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date)
-        & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__gte=end_date))
-        & (Q(close_date__isnull=True) | Q(close_date__gte=end_date)))
+    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
     project_detail = project_qs.values(
         'id',
         'customer__name',
@@ -418,18 +412,34 @@ def downloadProjectList(start_date, end_date):
     from io import BytesIO
     x_io = BytesIO()
     work_book = xlsxwriter.Workbook(x_io)
-    work_sheet = work_book.add_worksheet('excel-1')
-    project_qs = models.ProjectRepository.objects.filter(
-        ((Q(create_date__gte=start_date) & Q(create_date__lte=end_date)) | (Q(reply_date__gte=start_date) & Q(reply_date__lte=end_date)))
-        & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__gt=end_date))
-        # & (Q(close_date__isnull=True))
+    work_sheet = work_book.add_worksheet('项目明细清单')
+    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
+    project_exe = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).values_list(
+        'project__customer__name',
+        'project__customer__industry__caption',
+        'project__customer__type_of_3311',
+        'project__is_green',
+        'project__staff__sub_department__superior__caption',
+        'project__staff__name',
+        'project__business__superior__caption',
+        'project__business__caption',
+        'project__pretrial_doc__meeting__meeting_date',
+        'project__total_net',
+        'project__existing_net',
+        'current_progress__caption',
+        'current_progress__status_num',
+        'project__reply_date',
+        'new_net_used',
+        'remark__content',
+        'project__is_defuse',
+        'project__account_num',
     )
 
 
     work_book.close()
     res = HttpResponse()
     res['Content-Type'] = 'application/octet-stream'
-    res['Content-Disposition'] = 'filename="userinfo.xlsx"'
+    res['Content-Disposition'] = 'filename="ProjectsDetails(' + start_date + ' ' + end_date + ').xlsx"'
     res.write(x_io.getvalue())
     return res
 

@@ -26,8 +26,8 @@ class CustomerRepository(models.Model):
     is_strategy = models.BooleanField(verbose_name='是否战略客户')
     industry = models.ForeignKey('root_db.Industry', on_delete=models.PROTECT, verbose_name='行业门类')
     stockholder = models.IntegerField(choices=stockholder_choices, verbose_name='控股方式')
-    taxes_2017 = models.IntegerField(default=0, verbose_name='2017年纳税（万元）')
-    inter_clearing_2017 = models.IntegerField(default=0, verbose_name='2017年国际结算（万元）')
+    tax_years = models.CharField(max_length=64, blank=True, null=True, verbose_name='纳税大户年份')
+    inter_clearing_years = models.CharField(max_length=64, blank=True, null=True, verbose_name='国结大户年份')
 
     def __str__(self):
         return self.name
@@ -142,6 +142,17 @@ class ProjectRepository(models.Model):
             return False
         return True
 
+    @classmethod
+    def getProjectList(cls, start_date, end_date):
+        imp_date = models_operation.DateOperation()
+        last_photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
+        exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
+        project_qs = cls.objects.filter(
+            (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
+            & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date)
+            & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__gte=end_date))
+            & (Q(close_date__isnull=True) | Q(close_date__gte=end_date)))
+        return project_qs, exe_date
 
 class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
