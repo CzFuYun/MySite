@@ -8,67 +8,6 @@ from . import models
 from root_db import models as rd_m
 
 
-
-
-
-# class ProjectForm(Form):
-#     customer = fields.CharField(
-#         label='客户名称',
-#         widget=widgets.TextInput(attrs={'id': 'customer_name', 'name': 'customer_name', 'class': 'form-control'}),
-#         required=True,
-#         error_messages={'required': '不能为空'},
-#         )
-#     staff = fields.CharField(
-#         label='客户经理',
-#         widget=widgets.TextInput(attrs={'id': 'staff', 'name': 'staff', 'class': 'form-control'}),
-#         required=True,
-#         error_messages={'required': '不能为空'},
-#     )
-#     is_green = fields.BooleanField(
-#         label='绿色金融',
-#         widget=widgets.NullBooleanSelect(),
-#         required=True,
-#         error_messages={'required': '必选'},
-#         # initial=0,
-#     )
-#     business = fields.CharField(
-#
-#     )
-#     plan_pretrial = fields.DateField(
-#         label='计划预审',
-#         widget=widgets.DateInput(attrs={'id': 'plan_pretrial', 'name': 'plan_pretrial', 'class': 'form-control', 'type': 'date'}),
-#     )
-#     plan_chushen = fields.DateField(
-#         label='计划初审',
-#         widget=widgets.DateInput(attrs={'id': 'plan_chushen', 'name': 'plan_chushen', 'class': 'form-control', 'type': 'date'}),
-#     )
-#     plan_zhuanshen = fields.DateField(
-#         label='计划专审',
-#         widget=widgets.DateInput(attrs={'id': 'plan_zhuanshen', 'name': 'plan_zhuanshen', 'class': 'form-control', 'type': 'date'}),
-#     )
-#     plan_xinshen = fields.DateField(
-#         label='计划信审',
-#         widget=widgets.DateInput(attrs={'id': 'plan_xinshen', 'name': 'plan_xinshen', 'class': 'form-control', 'type': 'date'}),
-#     )
-#     plan_reply = fields.DateField(
-#         label='计划批复',
-#         widget=widgets.DateInput(attrs={'id': 'plan_reply', 'name': 'plan_reply', 'class': 'form-control', 'type': 'date'}),
-#     )
-#     plan_luodi = fields.DateField(
-#         label='计划落地',
-#         widget=widgets.DateInput(attrs={'id': 'plan_luodi', 'name': 'plan_luodi', 'class': 'form-control', 'type': 'date'}),
-#     )
-#
-#     def __init__(self, *args, **kwargs):
-#         super(ProjectForm, self).__init__(*args, **kwargs)
-#         self.fields['business'] = forms.CharField(
-#             label='业务品种',
-#             required=True,
-#             error_messages={'required': '不能为空'},
-#             widget=widgets.Select(choices=models.SubBusiness.objects.values_list('id', 'caption'), attrs={'class': "form-control"})
-#         )
-
-
 class ProjectModelForm(ModelForm):
 
     class Meta:
@@ -123,8 +62,8 @@ class ProjectModelForm_set_replied(ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProjectModelForm_set_replied, self).__init__(*args, **kwargs)
         jgbs7_staff = rd_m.Staff.objects.filter(sub_department='JGBS-7')
-        self.fields['pre_approver'] = forms.ModelChoiceField(label=self.Meta.model.pre_approver.field.verbose_name,queryset=jgbs7_staff)
-        self.fields['approver'] = forms.ModelChoiceField(label=self.Meta.model.approver.field.verbose_name,queryset=jgbs7_staff)
+        self.fields['pre_approver'] = forms.ModelChoiceField(label=self.Meta.model.pre_approver.field.verbose_name, queryset=jgbs7_staff)
+        self.fields['approver'] = forms.ModelChoiceField(label=self.Meta.model.approver.field.verbose_name, queryset=jgbs7_staff)
         self.fields['reply_date'].widget = forms.DateInput(attrs={'type': 'date'})
 
 

@@ -189,6 +189,7 @@ function modifyForm(form){
     // 隐藏组件：设置readonly属性
     // select2：设置select2属性
     // 希望select组件有初始值，设置attrs={'initial':'xxx'}
+    bindDataSourceToSelect2();
     let $form = form ? form : $('form');
     $('p', $form).each(
         function(index, elem){
@@ -242,7 +243,6 @@ function modifyForm(form){
             }
         }
     );
-
     $('input', $form).each(
         function(index, elem){
             $(elem).addClass('form-control');
@@ -251,11 +251,6 @@ function modifyForm(form){
     $('textarea', $form).each(
         function(index, elem){
             $(elem).addClass('form-control');
-        }
-    );
-    $('[select2]', $form).each(
-        function(index, elem){
-            $(elem).select2();
         }
     );
     $('[required]', $form).each(       // 必填项标签加粗
@@ -275,8 +270,17 @@ function modifyForm(form){
             $elem.parent()[0].style['display'] = 'none';
         }
     );
-
-
+    $('[init_value]', $form).each(
+        function(index, elem){
+            let $elem = $(elem);
+            let value = elem.getAttribute('init_value');
+            if(elem.hasAttribute('select2')){
+                $elem.val(value).trigger('change');
+            }else {
+                $elem.val(value);
+            }
+        }
+    );
 }
 
 function showForm(formId, status){
@@ -299,7 +303,6 @@ function makeDataList(id, urlName, postDataDict){
         data: postDataDict,
         dataType: 'json',
         success: function(response){
-            // console.log(response);
             let $dataList = $('#' + id);
             if(!$dataList.length){
                 $dataList = $('<datalist id="' + id + '" class="form-group">');
@@ -386,6 +389,7 @@ function bindDataSourceToSelect2(){
         let $select2Elem = $(elem),
             href = $select2Elem.attr('href'),
             srcType = $select2Elem.attr('src_type');
+        $select2Elem.select2();
         if(srcType === 'static'){
             bindStaticDataSourceToSelect2(href, $select2Elem);
         }else if (srcType === 'dynamic'){
@@ -433,6 +437,7 @@ function makeDialog(url, sendData){
             $dialog.appendTo($(document.body));
         }
     });
+    // bindDataSourceToSelect2();
     modifyForm($dialog);
     return $dialog;
 }
@@ -440,10 +445,13 @@ function makeDialog(url, sendData){
 function showDialog($dialog){
     let $elem = $dialog ? $dialog : $('[id*=_dialog_container]');
     showMask(1);
+    let dialogHeight = $elem.height(),
+        screenHeight = screen.availHeight;
+    let top = dialogHeight <= screenHeight ? (screenHeight - dialogHeight) / 2 : 0;
     $elem.css({
+        'top': top + 'px',
         'display': 'block'
     });
-
 }
 
 function unloadModalDialog(elem){

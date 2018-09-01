@@ -4,6 +4,6 @@
     }
     .table-th-css {
         position: relative !important;
-        text-align: center;
+        /*text-align: center;*/
         top: 0;
     }

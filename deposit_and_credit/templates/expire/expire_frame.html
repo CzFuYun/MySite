@@ -4,16 +4,20 @@
 
 {% block extra_css %}
     <link href="/static/mycss.css" rel="stylesheet">
+    <link href="/static/assets/plugins/select2/dist/css/select2.min.css" rel="stylesheet" type="text/css">
 {% endblock %}
 
 
 {% block navbar_after_ul %}
-    
+    <button class="btn waves-effect waves-light btn-warning" onclick="showExpireEditor()"><i class="mdi mdi-grease-pencil"></i>修改</button>
+{#    <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>#}
+    <button class="btn waves-effect waves-light btn-danger" onclick="setFinish()"><i class="mdi mdi-check"></i>办结</button>
 {% endblock %}
 
 
 {% block extra_js %}
-    <script src="/static/assets/plugins/dropify/dist/js/dropify.min.js"></script>
+    <script src="/static/assets/plugins/select2/dist/js/select2.full.min.js" type="text/javascript"></script>
+{#    <script src="/static/assets/plugins/dropify/dist/js/dropify.min.js"></script>#}
     <script src="/static/js/waves.js"></script>
     <script type="text/javascript" src="/static/myjs/common.js"></script>
     <script type="text/javascript" src="/static/myjs/formOperation.js"></script>
@@ -34,10 +38,15 @@
             $.post({
                 url: '{% url "viewExpirePromptTable" %}',
                 data: FILTER,
-                dataType: 'text',
+                dataType: 'json',
                 async: false,
                 success: function(response){
-                    $('#main_content').html(response);
+                    let tableCol = response[0],
+                        tableColOrder = response[1],
+                        dataList = response[2];
+                    let table = makeListHtml(tableCol, tableColOrder, dataList);
+                    $('#main_content').html(table);
+
                 }
             })
         }
@@ -63,5 +72,58 @@
                 elem.append($radio[0]);
             });
         }
+
+        function judgeExpireId(){
+            let $radio = $('input[expire_id]');
+            for(let i=0; i<$radio.length; i++){
+                if($radio[i].checked){
+                    return $radio[i].getAttribute('expire_id');
+                }
+            }
+            alert('请选择一条记录');
+        }
+
+        function showExpireEditor(){
+            if(FILTER.is_finished.includes('1')){
+                alert('已办结，不可修改');
+                return;
+            }
+            let expireId = judgeExpireId();
+            if(!expireId){
+                return false;
+            }
+            window.open('{% url "editExpirePrompt" %}' + '?pk=' + expireId, '_blank');
+        }
+
+        function setFinish(){
+            if(FILTER.is_finished.includes('1')){
+                alert('已办结，不可再次办结');
+                return;
+            }
+            if(confirm('确认办结')){
+                let pk = judgeExpireId();
+                $.post({
+                    url: '{% url "finishExpirePrompt" %}',
+                    data: {pk: pk},
+                    dataType: 'json',
+                    success: function (data) {
+                        if(data.success){
+                            swal({
+                                title: '操作成功',
+                                showCancelButton: false
+                            });
+                            refreshData();
+                        }else{
+                            alert(data.error);
+                            swal({
+                                title: data.error,
+                                type: 'error',
+                            });
+                        }
+                    }
+                });
+            }
+        }
+
     </script>
 {% endblock %}

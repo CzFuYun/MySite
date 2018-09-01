@@ -369,16 +369,22 @@ def viewExpirePromptTable(request):
         else:
             finish_after = Q(finish_date__isnull=True)
             finish_before = Q(finish_date__isnull=True)
-            table_col.pop(len(table_col) - 1)
+            table_col.pop('finish_date')
         expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
             data_date - timedelta(days=100)))
         expire_before = Q(
             expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
                 today + timedelta(days=180)))
-        has_punishment = Q(punishment__gt=0) if '1' in eval(request.POST.get('has_punishment')) else Q(punishment=0)
-        non_punishment = Q(punishment=0) if '0' in eval(request.POST.get('has_punishment')) else Q(punishment__gt=0)
-        expire_qs = dac_models.ExpirePrompt.objects.filter(
-            expire_id, expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
+        has_punishment_filter_condition = eval(request.POST.get('has_punishment'))
+        if type(has_punishment_filter_condition) == int:
+            if has_punishment_filter_condition:
+                has_punishment = Q(punishment__gt=0)
+            else:
+                has_punishment = Q(punishment=0)
+        else:
+            has_punishment = Q(punishment__gte=0)
+        data_list = dac_models.ExpirePrompt.objects.filter(
+            expire_id, expire_after & expire_before, has_punishment, finish_after & finish_before
         ).values(
             'id',
             'customer__name',
@@ -397,57 +403,76 @@ def viewExpirePromptTable(request):
             'reply',
             'current_progress__caption',
             'current_progress__status_num',
+            'apply_type',
+            'progress_update_date',
+            'remark_update_date',
+            # 'pre_approver__name',
+            # 'approver__name',
         ).order_by('staff_id__sub_department__superior__display_order', 'staff_id', 'expire_date')
+        return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
 
 
-        return render_to_response('expire/expire_list.html', locals())
+# def editExpirePrompt(request):
+#     ajax_result = {
+#         'success': False,
+#         'error': None,
+#     }
+#     expire_id = request.POST.get('expire_id')
+#     q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
+#     if q[0].finish_date:
+#         ajax_result['error'] = '已办结，不可编辑'
+#     else:
+#         file_obj = request.FILES.get('explain')
+#         if file_obj:
+#             file_full_name = os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_obj.name)
+#             try:
+#                 tmp_file = open(file_full_name)
+#             except:
+#                 with open(file_full_name, 'wb') as f:
+#                     for i in file_obj:
+#                         f.write(i)
+#                 q.update(**{'explain': file_obj.name})
+#                 ajax_result['success'] = True
+#             else:
+#                 tmp_file.close()
+#                 ajax_result['success'] = False
+#                 ajax_result['error'] = '已存在同名文件'
+#                 return HttpResponse(json.dumps(ajax_result))
+#         expire_dict = {}
+#         expire_dict['expire_date'] = request.POST.get('expire_date')
+#         expire_dict['staff_id'] = request.POST.get('staff')
+#         expire_dict['punishment'] = int(request.POST.get('punishment'))
+#         expire_dict['remark'] = request.POST.get('remark')
+#         if q.update(**expire_dict):
+#             ajax_result['success'] = True and (ajax_result['success'] or not file_obj)
+#     return HttpResponse(json.dumps(ajax_result))
 
 
 def editExpirePrompt(request):
-    ajax_result = {
-        'success': False,
-        'error': None,
-    }
-    expire_id = request.POST.get('expire_id')
-    q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
-    if q[0].finish_date:
-        ajax_result['error'] = '已办结，不可编辑'
-    else:
-        file_obj = request.FILES.get('explain')
-        if file_obj:
-            file_full_name = os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_obj.name)
-            try:
-                tmp_file = open(file_full_name)
-            except:
-                with open(file_full_name, 'wb') as f:
-                    for i in file_obj:
-                        f.write(i)
-                q.update(**{'explain': file_obj.name})
-                ajax_result['success'] = True
-            else:
-                tmp_file.close()
-                ajax_result['success'] = False
-                ajax_result['error'] = '已存在同名文件'
-                return HttpResponse(json.dumps(ajax_result))
-        expire_dict = {}
-        expire_dict['expire_date'] = request.POST.get('expire_date')
-        expire_dict['staff_id'] = request.POST.get('staff')
-        expire_dict['punishment'] = int(request.POST.get('punishment'))
-        expire_dict['remark'] = request.POST.get('remark')
-        if q.update(**expire_dict):
-            ajax_result['success'] = True and (ajax_result['success'] or not file_obj)
-    return HttpResponse(json.dumps(ajax_result))
-
-
-def editExpirePrompt2(request):
-    if request.method == 'GET':
-        expire_id = request.GET.get('expire_id')
-        expire_obj = dac_models.ExpirePrompt.objects.get(id=expire_id)
-        form = html_forms.ExpirePromptModelForm(instance=expire_obj)
-        return render_to_response('blank_modal_dialog.html', locals())
-    elif request.method == 'POST':
-        pass
-    pass
+    form_action = editExpirePrompt.__name__
+    pk = getattr(request, request.method).get('pk')
+    if pk:
+        expire_obj = dac_models.ExpirePrompt.objects.get(id=pk)
+        if expire_obj.finish_date:
+            return render(request, 'feedback.html', {'swal_type': 'error', 'title': '已办结，不可修改'})
+        form_title = expire_obj.customer.name
+        if request.method == 'GET':
+            form = html_forms.ExpirePromptModelForm(instance=expire_obj)
+        elif request.method == 'POST':
+            old_remark = expire_obj.remark
+            old_progress = expire_obj.current_progress
+            form = html_forms.ExpirePromptModelForm(request.POST, instance=expire_obj)
+            if form.is_valid():
+                expire_obj_updated = form.save(commit=False)
+                if form.cleaned_data['remark'] != old_remark:
+                    today = models_operation.DateOperation().today
+                    expire_obj_updated.remark_update_date = today
+                    expire_obj_updated.remark += ('<' + str(today) + '>')
+                if form.cleaned_data['current_progress'] != old_progress:
+                    expire_obj_updated.progress_update_date = models_operation.DateOperation().today
+                expire_obj_updated.save()
+                return render(request, 'feedback.html')
+        return render_to_response('blank_form.html', locals())
 
 
 def viewExpireExplain(request):
@@ -475,8 +500,8 @@ def finishExpirePrompt(request):
         'success': False,
         'error': None,
     }
-    expire_prompt_id = request.POST.get('expire_prompt_id')
-    q = dac_models.ExpirePrompt.objects.filter(id=expire_prompt_id)[0]
+    pk = request.POST.get('pk')
+    q = dac_models.ExpirePrompt.objects.filter(id=pk)[0]
     if q and not q.finish_date:
         today = models_operation.DateOperation().today
         q.finish_date = today

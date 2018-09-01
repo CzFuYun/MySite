@@ -1,0 +1,31 @@
+{#通过ajax方式获取此html片段，render_to_httpresponse嵌入至前端页面#}
+{% load tags %}
+
+<table class="table full-color-table full-dark-table table-sm table-hover table-bordered">
+    <thead>
+        <tr>
+            {% for col in table_col.items %}
+                <th width="{{ col.1.width }} ">{{ col.1.col_name }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in data_list %}
+        <tr>
+            {% for col in table_col.items %}
+                <td
+                    {% with td_attr=col.1.td_attr %}
+                        {% for attr in td_attr %}
+
+                            {{ attr }}="{% getValue d td_attr.items.1 %}"
+
+                        {% endfor %}
+                    {% endwith %}
+                    >{% getValue d col.0 %}
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+
+</table>

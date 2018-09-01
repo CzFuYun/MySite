@@ -354,3 +354,38 @@ function valuesListToDict(valuesList){
     }
     return dict;
 }
+
+function makeListHtml(tableCol, tableColOrder, dataList){
+    let htmlTable = '<table class="table full-color-table full-dark-table table-sm table-hover table-bordered">';
+    htmlTable += '<thead><tr>';
+    for(let i=0; i<tableColOrder.length; i++){
+        let colIndex = tableColOrder[i];
+        let colWidth = tableCol[colIndex]['width'];
+        let colName = tableCol[colIndex]['col_name'];
+        htmlTable += '<th width="' + colWidth +'">' + colName + '</th>';
+    }
+    htmlTable += '</tr></thead><tbody>';
+    for(let r=0; r<dataList.length; r++){
+        let data = dataList[r];
+        htmlTable += '<tr>';
+        for(let c=0; c<tableColOrder.length; c++){
+            htmlTable += '<td';
+            let tdValue = data[tableColOrder[c]];
+            let tdAttrDict = tableCol[tableColOrder[c]]['td_attr'];
+            if(tdAttrDict){
+                for(let k in tdAttrDict){
+                    if(k === 'choice_to_display'){
+                        let choicesDict = tdAttrDict[k];
+                        tdValue = choicesDict[tdValue];
+                    }else {
+                        htmlTable += (' ' + k + '="' + data[tdAttrDict[k]] + '"');
+                    }
+                }
+            }
+            htmlTable += ('>' + tdValue + '</td>');
+        }
+        htmlTable += '</tr>'
+    }
+    htmlTable += '</tbody></table>';
+    return htmlTable;
+}

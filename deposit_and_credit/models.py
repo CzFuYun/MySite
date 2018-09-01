@@ -1,8 +1,7 @@
-
 from django.db import models
 from root_db import models as m
 from django.db.models import Sum
-
+from . import models_operation
 
 # class DepartmentDeposit(models.Model):
 #     data_date = models.DateField(null=True, blank=True)
@@ -73,14 +72,19 @@ class ExpirePrompt(models.Model):
     customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
     staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
     expire_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='到期日')
-    remark = models.CharField(max_length=512, default='', verbose_name='备注')
+    remark = models.CharField(max_length=512, default='', blank=True, null=True, verbose_name='备注')
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
     created_at = models.DateField(auto_now_add=True)
-    apply_type = models.IntegerField(choices=apply_type_choices, default=1, verbose_name='续做计划')
+    apply_type = models.IntegerField(choices=apply_type_choices, default=1, verbose_name='续做')
     current_progress = models.ForeignKey('app_customer_repository.Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='系统进度')
     chushen = models.DateField(blank=True, null=True, verbose_name='预计初审')
     reply = models.DateField(blank=True, null=True, verbose_name='预计批复')
+    cp_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
+    progress_update_date = models.DateField(blank=True, null=True)
+    remark_update_date = models.DateField(blank=True, null=True)
+    pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='xvshouxin_pre_approver', verbose_name='初审')
+    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='xvshouxin_approver', verbose_name='专审')
 
     def toDict(self):
         fields = []
@@ -98,3 +102,7 @@ class ExpirePrompt(models.Model):
                 d[field] = str(field_obj)
         return d
 
+    # def update(self):
+    #     today = models_operation.DateOperation().today
+    #
+    #     pass

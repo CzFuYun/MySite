@@ -192,3 +192,13 @@ class CleanForm():
                         cleaned_value_list.append(reg.findall(value)[0])
                 self.data.setlist(field, cleaned_value_list)
 
+
+def field_choices_to_dict(field_choices, reverse=True):
+    dic = {}
+    if reverse:
+        k, v = 1, 0
+    else:
+        k, v = 0, 1
+    for i in field_choices:
+        dic[str(i[k])] = i[v]
+    return dic

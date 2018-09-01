@@ -494,7 +494,7 @@ class TargetTask(models.Model):
                 'target_type',
             ).annotate(Sum('target_amount')).order_by('department__display_order').order_by('department__display_order')
                 dept_target = {}
-                target_type_sr = mo.field_choices_to_dict(cls.target_type_choices, False)
+                target_type_sr = utilities.field_choices_to_dict(cls.target_type_choices, False)
                 for i in qs:
                     department = i['department__caption']
                     business = i['business__caption']
