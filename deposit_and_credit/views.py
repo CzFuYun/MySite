@@ -343,6 +343,7 @@ def viewExpirePrompt(request):
 
 
 def viewExpirePromptTable(request):
+
     if request.method == 'GET':
         filter_dict = request.GET
         filter_condition = '{'
@@ -352,7 +353,7 @@ def viewExpirePromptTable(request):
             else:
                 filter_condition += ('"' + f + '":"' + str(filter_dict.getlist(f)) + '",')
         filter_condition += '}'
-        return render(request, 'expire/expire_frame.html', {'filter': filter_condition})
+        return render(request, 'expire/expire_frame.html', {'filter': filter_condition, 'content_title': '业务到期提示'})
     elif request.method == 'POST':
         table_col = copy.deepcopy(table_structure.expire_table)
         imp_date = models_operation.DateOperation()
@@ -451,6 +452,7 @@ def viewExpirePromptTable(request):
 def editExpirePrompt(request):
     form_action = editExpirePrompt.__name__
     pk = getattr(request, request.method).get('pk')
+    content_title = '业务到期提示'
     if pk:
         expire_obj = dac_models.ExpirePrompt.objects.get(id=pk)
         if expire_obj.finish_date:
@@ -467,12 +469,19 @@ def editExpirePrompt(request):
                 if form.cleaned_data['remark'] != old_remark:
                     today = models_operation.DateOperation().today
                     expire_obj_updated.remark_update_date = today
-                    expire_obj_updated.remark += ('<' + str(today) + '>')
+                    try:
+                        expire_obj_updated.remark += ('<' + str(today) + '>')
+                    except:
+                        pass
                 if form.cleaned_data['current_progress'] != old_progress:
                     expire_obj_updated.progress_update_date = models_operation.DateOperation().today
+                if request.POST.get('submit_name') == 'set_finish':
+                    set_finish = finishExpirePrompt(expire_obj)
+                    if not set_finish['success']:
+                        return render(request, 'feedback.html', {'title': set_finish['error'], 'swal_type': 'error'})
                 expire_obj_updated.save()
                 return render(request, 'feedback.html')
-        return render_to_response('blank_form.html', locals())
+        return render_to_response('expire/expire_update_form.html', locals())
 
 
 def viewExpireExplain(request):
@@ -495,25 +504,23 @@ def viewExpireExplain(request):
     return HttpResponse(json.dumps(ajax_result))
 
 
-def finishExpirePrompt(request):
-    ajax_result = {
+def finishExpirePrompt(expire_obj):
+    ret = {
         'success': False,
         'error': None,
     }
-    pk = request.POST.get('pk')
-    q = dac_models.ExpirePrompt.objects.filter(id=pk)[0]
-    if q and not q.finish_date:
+    if not expire_obj.finish_date:
         today = models_operation.DateOperation().today
-        q.finish_date = today
-        q.save()
-        if q.punishment:
-            staff = q.staff_id
+        expire_obj.finish_date = today
+        # expire_obj.save()
+        if expire_obj.punishment:
+            staff = expire_obj.staff_id
             staff.setYellowRedCard()
-        ajax_result['success'] = True
-        return HttpResponse(json.dumps(ajax_result))
+        ret['success'] = True
+        return ret
     else:
-        ajax_result['error'] = '不可重复办结'
-        return HttpResponse(json.dumps(ajax_result))
+        ret['error'] = '不可重复办结'
+        return ret
 
 
 def resetRedCard(request):

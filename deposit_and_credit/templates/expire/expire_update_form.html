@@ -1,0 +1,22 @@
+{% extends 'blank_form.html' %}
+
+
+{% block form_button %}
+    <button type="button" class="btn waves-effect waves-light btn-danger" onclick="beforeSetFinish()"><i class="mdi mdi-check"></i>办结</button>
+    <button type="submit" style="display: none" name="submit_name" value="set_finish"></button>
+    <script>
+        function beforeSetFinish(){
+            swal({
+                title: "确认办结？",
+                text: "办结后将无法修改",
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: true,
+                confirmButtonText: "YES",
+                confirmButtonColor: "#ec6c62"
+            }, function() {
+                $('[value=set_finish]')[0].click();
+            });
+        }
+    </script>
+{% endblock %}

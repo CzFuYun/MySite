@@ -1,4 +1,4 @@
-import os, json, datetime, decimal, re
+import os, json, datetime, decimal, re, xlsxwriter
 from django.http import StreamingHttpResponse, FileResponse
 from django import forms
 from django.shortcuts import HttpResponse, render_to_response
@@ -202,3 +202,24 @@ def field_choices_to_dict(field_choices, reverse=True):
     for i in field_choices:
         dic[str(i[k])] = i[v]
     return dic
+
+
+def downloadWorkbook(file_name, columns, query_set):
+    from io import BytesIO
+    from django.utils.encoding import escape_uri_path
+    from django.shortcuts import HttpResponse
+    data = query_set.values_list(*list(columns.keys()))
+    x_io = BytesIO()
+    work_book = xlsxwriter.Workbook(x_io)
+    work_sheet = work_book.add_worksheet()
+    work_sheet.write_row('A1', (*['#'], *list(columns.values())))
+    row_num = 1
+    for row_data in data:
+        work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
+        row_num += 1
+    work_book.close()
+    res = HttpResponse()
+    res['Content-Type'] = 'application/octet-stream'
+    res['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(file_name))
+    res.write(x_io.getvalue())
+    return res

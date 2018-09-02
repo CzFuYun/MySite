@@ -9,9 +9,7 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-warning" onclick="showExpireEditor()"><i class="mdi mdi-grease-pencil"></i>修改</button>
-{#    <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>#}
-    <button class="btn waves-effect waves-light btn-danger" onclick="setFinish()"><i class="mdi mdi-check"></i>办结</button>
+    <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-arrow-down-bold"></i>下载</button>
 {% endblock %}
 
 
@@ -30,8 +28,8 @@
 
         function refreshData(){
             buildExpireList();
-            renderExpireList();
             lockThead('main_content');
+            renderExpireList();
         }
 
         function buildExpireList(){
@@ -52,6 +50,7 @@
         }
 
         function renderExpireList(){
+            {#$('table')[0].className = 'full-color-table full-inverse-table hover-table';#}
             $('td[yr_card]').each(function(index, elem){
                 let yr_card = Number(elem.getAttribute('yr_card'));
                 if(yr_card === 1){
@@ -61,15 +60,12 @@
                 }
             });
             $('td[expire_id]').each(function(index, elem){
-                let expireId = elem.getAttribute('expire_id');
-                let $radio = $(
-                    '<div style="width: 0; height: 0;">' +
-                        '<input type="radio" id="expire_' + expireId + '" expire_id="' + expireId + '" name="expire_id">' +
-                        '<label for="expire_' + expireId + '" class=""></label>' +
-                    '</div>'
-                );
-                elem.innerText = '';
-                elem.append($radio[0]);
+                let expireId = this.getAttribute('expire_id');
+                this.setAttribute('onclick', 'showExpireEditor(this)');
+                $(this).css({
+                    'cursor': 'pointer'
+                });
+                this.innerText = index + 1;
             });
         }
 
@@ -83,47 +79,19 @@
             alert('请选择一条记录');
         }
 
-        function showExpireEditor(){
+        function showExpireEditor(elem){
             if(FILTER.is_finished.includes('1')){
-                alert('已办结，不可修改');
+                swal({
+                    title: '已办结，不可修改',
+                    type: 'error',
+                });
                 return;
             }
-            let expireId = judgeExpireId();
-            if(!expireId){
+            let pk = elem.getAttribute('expire_id');
+            if(!pk){
                 return false;
             }
-            window.open('{% url "editExpirePrompt" %}' + '?pk=' + expireId, '_blank');
+            window.open('{% url "editExpirePrompt" %}' + '?pk=' + pk, '_blank');
         }
-
-        function setFinish(){
-            if(FILTER.is_finished.includes('1')){
-                alert('已办结，不可再次办结');
-                return;
-            }
-            if(confirm('确认办结')){
-                let pk = judgeExpireId();
-                $.post({
-                    url: '{% url "finishExpirePrompt" %}',
-                    data: {pk: pk},
-                    dataType: 'json',
-                    success: function (data) {
-                        if(data.success){
-                            swal({
-                                title: '操作成功',
-                                showCancelButton: false
-                            });
-                            refreshData();
-                        }else{
-                            alert(data.error);
-                            swal({
-                                title: data.error,
-                                type: 'error',
-                            });
-                        }
-                    }
-                });
-            }
-        }
-
     </script>
 {% endblock %}
