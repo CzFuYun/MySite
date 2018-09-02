@@ -16,7 +16,7 @@
             swal({
                 title: '{{ title|default:"\n操作成功\n" }}',
                 text: '{{ text }}',
-                type: '{{ swal_type }}',
+                type: '{{ swal_type|default:"success" }}',
                 showCancelButton: false
             }, function(){
                 if(opener.refreshData){

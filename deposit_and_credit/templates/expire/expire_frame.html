@@ -9,7 +9,7 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-arrow-down-bold"></i>下载</button>
+    <button class="btn waves-effect waves-light btn-info" onclick="downloadExpireData()"><i class="mdi mdi-arrow-down-bold"></i>下载</button>
 {% endblock %}
 
 
@@ -28,8 +28,8 @@
 
         function refreshData(){
             buildExpireList();
-            lockThead('main_content');
             renderExpireList();
+            lockThead('main_content');
         }
 
         function buildExpireList(){
@@ -46,11 +46,10 @@
                     $('#main_content').html(table);
 
                 }
-            })
+            });
         }
 
         function renderExpireList(){
-            {#$('table')[0].className = 'full-color-table full-inverse-table hover-table';#}
             $('td[yr_card]').each(function(index, elem){
                 let yr_card = Number(elem.getAttribute('yr_card'));
                 if(yr_card === 1){
@@ -67,6 +66,22 @@
                 });
                 this.innerText = index + 1;
             });
+            if(FILTER.is_finished === '0'){
+                $('th:contains("到期日")').after($('<th width="2%">剩余</th>'));
+                $('td[expire_date]').each(function(index, elem){
+                    let expire_date = elem.innerText;
+                    let daysDelta = dateDif(expire_date, TODAY);
+                    let textColor = '';
+                    if(daysDelta <= 30){
+                        textColor = '"text-danger text-semibold"';
+                    }else if(daysDelta <= 60){
+                        textColor = '"text-warning text-semibold"';
+                    }else {
+                        textColor = '"text-success text-semibold"';
+                    }
+                    $(elem).after($('<td class=' + textColor + '>' + daysDelta + '</td>'));
+                });
+            }
         }
 
         function judgeExpireId(){
@@ -92,6 +107,10 @@
                 return false;
             }
             window.open('{% url "editExpirePrompt" %}' + '?pk=' + pk, '_blank');
+        }
+
+        function downloadExpireData(){
+            downloadFileByForm(location.pathname, location.search.substring(1) + '&download=1');
         }
     </script>
 {% endblock %}

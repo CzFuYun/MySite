@@ -121,6 +121,17 @@ function getValueFromOneKvp(kvp){
     }
 }
 
+function downloadFileByForm(url, data, method){
+    //data can be string of parameters or array/object
+    data = typeof data === 'string' ? data : jQuery.param(data);
+    var inputs ='';
+    $.each(data.split('&'), function(){
+        var pair =this.split('=');
+        inputs += '<input type="hidden" name="'+ pair[0] + '" value="' + pair[1] + '" />';
+    });
+    $('<form action="' + url +'" method="' + (method || 'post') + '">' + inputs + '</form>').appendTo('body').submit().remove();
+}
+
 function downloadSmallFile(urlList){
     for(var i=0; i<urlList.length; i++){
         $('<a href="' + urlList[i] + '" download></a>')[0].click();

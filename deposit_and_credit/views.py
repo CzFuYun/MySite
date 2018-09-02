@@ -343,7 +343,6 @@ def viewExpirePrompt(request):
 
 
 def viewExpirePromptTable(request):
-
     if request.method == 'GET':
         filter_dict = request.GET
         filter_condition = '{'
@@ -355,62 +354,77 @@ def viewExpirePromptTable(request):
         filter_condition += '}'
         return render(request, 'expire/expire_frame.html', {'filter': filter_condition, 'content_title': '业务到期提示'})
     elif request.method == 'POST':
+        request_dict = request.POST#getattr(request, request.method)
         table_col = copy.deepcopy(table_structure.expire_table)
         imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
-        expire_id = Q(id=request.POST.get('expire_id')) if request.POST.get('expire_id') else Q(id__gt=0)
-        is_finished = True if request.POST.get('is_finished') == '1' else False
+        expire_id = Q(id=request_dict.get('expire_id')) if request_dict.get('expire_id') else Q(id__gt=0)
+        is_finished = True if request_dict.get('is_finished') == '1' else False
         if is_finished:
             finish_after = Q(
-                finish_date__gte=request.POST.get('finish_after') if request.POST.get('finish_after') else '1990-01-01')
+                finish_date__gte=request_dict.get('finish_after') if request_dict.get('finish_after') else '1990-01-01')
             finish_before = Q(
-                finish_date__lte=request.POST.get('finish_before') if request.POST.get('finish_before') else str(today))
+                finish_date__lte=request_dict.get('finish_before') if request_dict.get('finish_before') else str(today))
         else:
             finish_after = Q(finish_date__isnull=True)
             finish_before = Q(finish_date__isnull=True)
             table_col.pop('finish_date')
-        expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
+        expire_after = Q(expire_date__gte=request_dict.get('expire_after') if request_dict.get('expire_after') else str(
             data_date - timedelta(days=100)))
         expire_before = Q(
-            expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
+            expire_date__lte=request_dict.get('expire_before') if request_dict.get('expire_before') else str(
                 today + timedelta(days=180)))
-        has_punishment_filter_condition = eval(request.POST.get('has_punishment'))
-        if type(has_punishment_filter_condition) == int:
-            if has_punishment_filter_condition:
-                has_punishment = Q(punishment__gt=0)
+        if request_dict.get('download'):
+            has_punishment_filter_condition = request_dict.getlist('has_punishment')
+            if '1' in has_punishment_filter_condition and '0' in has_punishment_filter_condition:
+                has_punishment = Q(punishment__gte=0)
             else:
-                has_punishment = Q(punishment=0)
+                if '1' in has_punishment_filter_condition:
+                    has_punishment = Q(punishment__gt=0)
+                else:
+                    has_punishment = Q(punishment=0)
         else:
-            has_punishment = Q(punishment__gte=0)
+            has_punishment_filter_condition = eval(request_dict.get('has_punishment'))
+            if type(has_punishment_filter_condition) == int:
+                if has_punishment_filter_condition:
+                    has_punishment = Q(punishment__gt=0)
+                else:
+                    has_punishment = Q(punishment=0)
+            else:
+                has_punishment = Q(punishment__gte=0)
         data_list = dac_models.ExpirePrompt.objects.filter(
             expire_id, expire_after & expire_before, has_punishment, finish_after & finish_before
-        ).values(
-            'id',
-            'customer__name',
-            'customer_id',
-            'remark',
-            'punishment',
-            'staff_id',
-            'staff_id__name',
-            'staff_id__sub_department__superior__caption',
-            'staff_id__sub_department__superior__code',
-            'finish_date',
-            'expire_date',
-            'staff_id__yellow_red_card',
-            'staff_id__red_card_expire_date',
-            'chushen',
-            'reply',
-            'current_progress__caption',
-            'current_progress__status_num',
-            'apply_type',
-            'progress_update_date',
-            'remark_update_date',
-            # 'pre_approver__name',
-            # 'approver__name',
         ).order_by('staff_id__sub_department__superior__display_order', 'staff_id', 'expire_date')
-        return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
+        if request_dict.get('download'):
+            return utilities.downloadWorkbook('到期业务清单' + str(today), table_structure.expire_table_download, data_list, **table_structure.expire_table_sr_for_download)
+        else:
+            data_list = data_list.values(
+                'id',
+                'customer__name',
+                'customer_id',
+                'remark',
+                'punishment',
+                'staff_id',
+                'staff_id__name',
+                'staff_id__sub_department__superior__caption',
+                'staff_id__sub_department__superior__code',
+                'finish_date',
+                'expire_date',
+                'staff_id__yellow_red_card',
+                'staff_id__red_card_expire_date',
+                'chushen',
+                'reply',
+                'current_progress__caption',
+                'current_progress__status_num',
+                'apply_type',
+                'progress_update_date',
+                'remark_update_date',
+                # 'pre_approver__name',
+                # 'approver__name',
+            )
+            return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
 
 
 # def editExpirePrompt(request):
@@ -472,7 +486,7 @@ def editExpirePrompt(request):
                     try:
                         expire_obj_updated.remark += ('<' + str(today) + '>')
                     except:
-                        pass
+                        expire_obj_updated.remark = ''
                 if form.cleaned_data['current_progress'] != old_progress:
                     expire_obj_updated.progress_update_date = models_operation.DateOperation().today
                 if request.POST.get('submit_name') == 'set_finish':

@@ -204,7 +204,8 @@ def field_choices_to_dict(field_choices, reverse=True):
     return dic
 
 
-def downloadWorkbook(file_name, columns, query_set):
+def downloadWorkbook(file_name, columns, query_set, **field_choice_sr):
+
     from io import BytesIO
     from django.utils.encoding import escape_uri_path
     from django.shortcuts import HttpResponse
@@ -212,9 +213,17 @@ def downloadWorkbook(file_name, columns, query_set):
     x_io = BytesIO()
     work_book = xlsxwriter.Workbook(x_io)
     work_sheet = work_book.add_worksheet()
+    field_index = list(columns.keys())#(*['#'], *list(columns.keys()))
     work_sheet.write_row('A1', (*['#'], *list(columns.values())))
     row_num = 1
     for row_data in data:
+        if field_choice_sr:
+            row_data = list(row_data)
+            col_num = 0
+            for f in field_index:
+                if field_choice_sr.get(f):
+                    row_data[col_num] = field_choice_sr.get(f)[str(row_data[col_num])]
+                col_num += 1
         work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
         row_num += 1
     work_book.close()

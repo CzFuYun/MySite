@@ -408,51 +408,51 @@ class ProjectDetailView(View):
         pass
 
 
-def downloadProjectList2(start_date, end_date):
-    import xlsxwriter
-    from io import BytesIO
-    cols = collections.OrderedDict(
-        **{
-            'project__customer__name': '项目名称',
-            'project__customer__industry__caption': '行业门类',
-            'project__customer__type_of_3311__level': '3311类型',
-            'project__is_green': '绿色金融',
-            'project__staff__sub_department__superior__caption': '经营部门',
-            'project__staff__name': '主办人员',
-            'project__business__superior__caption': '业务大类',
-            'project__business__caption': '具体业务',
-            'project__pretrial_doc__meeting__meeting_date': '预审日期',
-            'project__total_net': '总敞口',
-            'project__existing_net': '存量敞口',
-            'current_progress__caption': '当前进度',
-            'current_progress__status_num': '进度代号',
-            'project__reply_date': '批复日期',
-            'new_net_used': '新增敞口投放',
-            'project__is_defuse': '涉及化解',
-            'project__account_num': '折算户数',
-            'remark__content': '备注',
-        }
-    )
-    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-    project_details = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).values_list(*list(cols.keys())).order_by(
-        'project__staff__sub_department__superior__display_order',
-        'project__staff',
-        'project__business__display_order',
-    )
-    x_io = BytesIO()
-    work_book = xlsxwriter.Workbook(x_io)
-    work_sheet = work_book.add_worksheet()
-    work_sheet.write_row('A1', (*['#'], *list(cols.values())))
-    row_num = 1
-    for row_data in project_details:
-        work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
-        row_num += 1
-    work_book.close()
-    res = HttpResponse()
-    res['Content-Type'] = 'application/octet-stream'
-    res['Content-Disposition'] = 'filename="ProjectsDetails(' + start_date + '  ' + end_date + ').xlsx"'
-    res.write(x_io.getvalue())
-    return res
+# def downloadProjectList2(start_date, end_date):
+#     import xlsxwriter
+#     from io import BytesIO
+#     cols = collections.OrderedDict(
+#         **{
+#             'project__customer__name': '项目名称',
+#             'project__customer__industry__caption': '行业门类',
+#             'project__customer__type_of_3311__level': '3311类型',
+#             'project__is_green': '绿色金融',
+#             'project__staff__sub_department__superior__caption': '经营部门',
+#             'project__staff__name': '主办人员',
+#             'project__business__superior__caption': '业务大类',
+#             'project__business__caption': '具体业务',
+#             'project__pretrial_doc__meeting__meeting_date': '预审日期',
+#             'project__total_net': '总敞口',
+#             'project__existing_net': '存量敞口',
+#             'current_progress__caption': '当前进度',
+#             'current_progress__status_num': '进度代号',
+#             'project__reply_date': '批复日期',
+#             'new_net_used': '新增敞口投放',
+#             'project__is_defuse': '涉及化解',
+#             'project__account_num': '折算户数',
+#             'remark__content': '备注',
+#         }
+#     )
+#     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
+#     project_details = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).values_list(*list(cols.keys())).order_by(
+#         'project__staff__sub_department__superior__display_order',
+#         'project__staff',
+#         'project__business__display_order',
+#     )
+#     x_io = BytesIO()
+#     work_book = xlsxwriter.Workbook(x_io)
+#     work_sheet = work_book.add_worksheet()
+#     work_sheet.write_row('A1', (*['#'], *list(cols.values())))
+#     row_num = 1
+#     for row_data in project_details:
+#         work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
+#         row_num += 1
+#     work_book.close()
+#     res = HttpResponse()
+#     res['Content-Type'] = 'application/octet-stream'
+#     res['Content-Disposition'] = 'filename="ProjectsDetails(' + start_date + '  ' + end_date + ').xlsx"'
+#     res.write(x_io.getvalue())
+#     return res
 
 
 def downloadProjectList(start_date, end_date):

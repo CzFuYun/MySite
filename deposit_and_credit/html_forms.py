@@ -34,8 +34,15 @@ class ExpirePromptModelForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ExpirePromptModelForm, self).__init__(*args, **kwargs)
-        self.fields['staff_id'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static', 'init_value': self.instance.staff_id_id})
-        self.fields['current_progress'] = forms.ModelChoiceField(label=self.Meta.model.current_progress.field.verbose_name, queryset=PROGRESS)
         self.fields['pk'].initial = self.instance.id
+        self.fields['staff_id'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static', 'init_value': self.instance.staff_id_id})
+        self.fields['current_progress'] = forms.ModelChoiceField(label=self.Meta.model.current_progress.field.verbose_name, queryset=PROGRESS, required=False)
         self.fields['pre_approver'] = forms.ModelChoiceField(label=self.Meta.model.pre_approver.field.verbose_name, queryset=JGBS7_STAFFS, required=False)
         self.fields['approver'] = forms.ModelChoiceField(label=self.Meta.model.approver.field.verbose_name, queryset=JGBS7_STAFFS, required=False)
+
+    def clean_punishment(self):
+        n = self.cleaned_data['punishment']
+        if n < 0:
+            raise forms.ValidationError('不可为负值', code='punishment_invalid')
+        else:
+            return n
