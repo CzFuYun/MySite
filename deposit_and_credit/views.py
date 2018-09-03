@@ -398,7 +398,7 @@ def viewExpirePromptTable(request):
             expire_id, expire_after & expire_before, has_punishment, finish_after & finish_before
         ).order_by('staff_id__sub_department__superior__display_order', 'staff_id', 'expire_date')
         if request_dict.get('download'):
-            return utilities.downloadWorkbook('到期业务清单' + str(today), table_structure.expire_table_download, data_list, **table_structure.expire_table_sr_for_download)
+            return utilities.downloadWorkbook('到期业务清单' + str(today) + '.slsx', table_structure.expire_table_download, data_list, **table_structure.expire_table_sr_for_download)
         else:
             data_list = data_list.values(
                 'id',

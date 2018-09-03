@@ -484,7 +484,7 @@ def downloadProjectList(start_date, end_date):
         'project__staff',
         'project__business__display_order',
     )
-    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date, cols, project_details)
+    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.slsx', cols, project_details)
 
 
 def trackProjectExe(request):

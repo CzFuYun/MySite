@@ -46,7 +46,7 @@ class ProjectRepository(models.Model):
         (50, '总行否决'),
         (60, '获批后不再继续'),
         (70, '部分落地后终止'),
-        # (80, '全部落地'),
+        (80, '全部落地'),
         (90, '授信到期'),
     )
     whose_matter_choices = (
@@ -129,17 +129,23 @@ class ProjectRepository(models.Model):
         self.save(force_update=True)
 
     def close(self, close_reason, whose_matter, temply=True):
-        update_dict = {
-            'tmp_close_date': models_operation.DateOperation().today,
-            'close_reason': close_reason,
-            'whose_matter': whose_matter,
-        }
-        try:
-            if not temply:
-                update_dict['close_date'] = models_operation.DateOperation().today
-            self.update(**update_dict)
-        except:
-            return False
+        if int(close_reason) != 80:     # 若非完全落地关闭
+            update_dict = {
+                'tmp_close_date': models_operation.DateOperation().today,
+                'close_reason': close_reason,
+                'whose_matter': whose_matter,
+            }
+            try:
+                if not temply:
+                    update_dict['close_date'] = models_operation.DateOperation().today
+                self.update(**update_dict)
+            except:
+                return False
+        else:       # 完全落地关闭
+            pe = ProjectExecution.objects.filter(project=self).order_by('-photo_date').first()
+            pe.current_progress_id = 120
+            pe.save()
+            return True
         return True
 
     @classmethod

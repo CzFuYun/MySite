@@ -205,7 +205,6 @@ def field_choices_to_dict(field_choices, reverse=True):
 
 
 def downloadWorkbook(file_name, columns, query_set, **field_choice_sr):
-
     from io import BytesIO
     from django.utils.encoding import escape_uri_path
     from django.shortcuts import HttpResponse
