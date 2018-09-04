@@ -307,6 +307,7 @@ class ProjectExecution(models.Model):
             expire_credit_qs = ProjectRepository.objects.filter(
                 reply_date__isnull=False,
                 reply_date__lte=imp_date.delta_date(-365, photo_date),
+                tmp_close_date__isnull=True,
             )
             for ep in expire_credit_qs:
                 need_close = input('>>>项目【' + ep.project_name + '】，授信批复日【' + str(ep.reply_date) + '】，疑似到期，是否关闭？\n0.否\n1.是')

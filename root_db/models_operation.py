@@ -220,7 +220,7 @@ def createContributorAndUpdateSeries(file_name):
         else:
             expire_date_str = str(expire_date)
             if customer_id not in customer_expire_dict:     #customer_expire_dict.get(customer_id) != expire_date_str:     # 若到期提醒的数据库里不存在该提醒信息
-                if expire_date - timedelta(days=100) <= data_date and expire_date + timedelta(days=180) >= data_date:
+                if expire_date - timedelta(days=120) <= data_date and expire_date + timedelta(days=180) >= data_date:
                     expire_data_for_bulk_create.append(m.ExpirePrompt(**{
                         'customer_id': customer_id,
                         'expire_date': expire_date_str,

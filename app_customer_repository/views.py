@@ -458,7 +458,7 @@ class ProjectDetailView(View):
 def downloadProjectList(start_date, end_date):
     cols = collections.OrderedDict(
         **{
-            'project__customer__name': '项目名称',
+            'project__customer__name': '项目主体',
             'project__customer__industry__caption': '行业门类',
             'project__customer__type_of_3311__level': '3311类型',
             'project__is_green': '绿色金融',
@@ -476,6 +476,7 @@ def downloadProjectList(start_date, end_date):
             'project__is_defuse': '涉及化解',
             'project__account_num': '折算户数',
             'remark__content': '备注',
+            'current_progress__star__caption': 'star',
         }
     )
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)

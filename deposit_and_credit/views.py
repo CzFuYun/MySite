@@ -354,7 +354,7 @@ def viewExpirePromptTable(request):
         filter_condition += '}'
         return render(request, 'expire/expire_frame.html', {'filter': filter_condition, 'content_title': '业务到期提示'})
     elif request.method == 'POST':
-        request_dict = request.POST#getattr(request, request.method)
+        request_dict = request.POST
         table_col = copy.deepcopy(table_structure.expire_table)
         imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
@@ -375,7 +375,7 @@ def viewExpirePromptTable(request):
             data_date - timedelta(days=100)))
         expire_before = Q(
             expire_date__lte=request_dict.get('expire_before') if request_dict.get('expire_before') else str(
-                today + timedelta(days=180)))
+                today + timedelta(days=120)))
         if request_dict.get('download'):
             has_punishment_filter_condition = request_dict.getlist('has_punishment')
             if '1' in has_punishment_filter_condition and '0' in has_punishment_filter_condition:
