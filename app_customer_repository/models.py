@@ -203,9 +203,9 @@ class ProjectExecution(models.Model):
     def previous_exe(self):
         if self.id:     # 若本条记录确实存在于数据库
             today = models_operation.DateOperation().today
-            pe = ProjectExecution.objects.filter(project_id=self.project_id, photo_date__lt=today)
+            pe = ProjectExecution.objects.filter(project=self.project, photo_date__lt=today)
             if pe.exists():
-                return pe.order_by('-update_count', '-id').first()
+                return pe.order_by('-id').first()
         return None
 
     def update(self, pe_dict):
@@ -238,6 +238,7 @@ class ProjectExecution(models.Model):
                             print(field_name, '缺少更新方法')
                 else:
                     exec('self.' + field_name + '=new_value')
+        self.update_count = previous_exe.update_count + 1
         self.save()
 
     def _update_total_used(self, new_value):

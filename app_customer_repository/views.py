@@ -44,19 +44,7 @@ def test(request):
     #     'business__superior__caption',
     #     'account_num',
     # )
-    # models.ProjectExecution.takePhoto(None, '2018-08-01')
-    p = models.ProjectRepository.objects.get(id=47)
-    form = html_forms.ProjectModelForm(instance=p)
-    # form = html_forms.ProjectModelForm()
-    # form = html_forms.ProjectForm()
-
-    form_id = 'customer_adder'
-    form_action = addCustomer.__name__
-    # form_title = '新增客户'
-    # content_title = '新增客户'
-    enc_type = 'multipart/form-data'
-    # form_js = 'cust/customer_form_add.html'
-    return render(request, 'blank_form.html', locals())
+    models.ProjectExecution.takePhoto()
 
 
 def viewProjectRepository(request):
