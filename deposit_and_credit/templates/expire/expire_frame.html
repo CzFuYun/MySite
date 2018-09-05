@@ -67,6 +67,7 @@
                 this.innerText = index + 1;
             });
             if(FILTER.is_finished === '0'){
+                {#↓计算剩余天数#}
                 $('th:contains("到期日")').after($('<th width="2%">剩余</th>'));
                 $('td[expire_date]').each(function(index, elem){
                     let expire_date = elem.innerText;
@@ -80,6 +81,39 @@
                         textColor = '"text-success text-semibold"';
                     }
                     $(elem).after($('<td class=' + textColor + '>' + daysDelta + '</td>'));
+                });
+            {#    ↓渲染计划初审及计划批复日期颜色#}
+                let text_red = 'text-danger text-semibold',
+                    text_yellow = 'text-warning text-semibold';
+                $plan_chushen_td = $('td[plan_chushen]');
+                $plan_reply_td = $('td[plan_reply]');
+                $('td[status_num]').each(function(index, elem){
+                   let status_num = Number(elem.getAttribute('status_num'));
+                   if(status_num){
+                       if(status_num < 40){
+                           // 仍未初审
+                           let plan_chushen = $plan_chushen_td[index].innerText;
+                           if(plan_chushen !== 'null'){
+                               let dd = dateDif(TODAY, plan_chushen);
+                                if(dd >= 0){
+                                    $($plan_chushen_td[index]).addClass(text_red);
+                                }else if(dd >= -15){
+                                    $($plan_chushen_td[index]).addClass(text_yellow);
+                                }
+                           }
+                       }
+                       if(status_num < 100){
+                           let plan_reply = $plan_reply_td[index].innerText;
+                           if(plan_reply !== 'null'){
+                               let dd = dateDif(TODAY, plan_reply);
+                               if(dd >= 0){
+                                   $($plan_reply_td[index]).addClass(text_red);
+                               }else if(dd >= -15){
+                                   $($plan_reply_td[index]).addClass(text_yellow);
+                               }
+                           }
+                       }
+                   }
                 });
             }
         }

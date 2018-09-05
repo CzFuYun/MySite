@@ -526,8 +526,7 @@ def finishExpirePrompt(expire_obj):
     if not expire_obj.finish_date:
         today = models_operation.DateOperation().today
         expire_obj.finish_date = today
-        # expire_obj.save()
-        if expire_obj.punishment:
+        if expire_obj.punishment > 0 :
             staff = expire_obj.staff_id
             staff.setYellowRedCard()
         ret['success'] = True

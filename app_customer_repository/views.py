@@ -512,6 +512,7 @@ def trackProjectExe(request):
             'project__pre_approver__staff_id',
             'project__approver__name',
             'project__approver__staff_id',
+            'remark__create_date',
         ).order_by(
             'project__staff__sub_department__superior__display_order',
             'project__staff',
@@ -581,7 +582,7 @@ def trackProjectExe(request):
                 'index': 'remark__content',
                 'col_name': '备注',
                 'width': '30%',
-                'td_attr': {}
+                'td_attr': {'title': 'remark__create_date'}
             },
             {
                 'index': 'current_progress__star__caption',

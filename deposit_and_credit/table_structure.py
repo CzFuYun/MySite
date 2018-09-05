@@ -45,13 +45,13 @@ expire_table = {
         {
             'col_name': models.ExpirePrompt._meta.get_field('chushen').verbose_name,
             'width': '4%',
-            'td_attr': None
+            'td_attr': {'plan_chushen': ''}
         },
     'reply':
         {
             'col_name': models.ExpirePrompt._meta.get_field('reply').verbose_name,
             'width': '4%',
-            'td_attr': None
+            'td_attr': {'plan_reply': ''}
         },
     'current_progress__caption':
         {

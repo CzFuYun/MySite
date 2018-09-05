@@ -238,7 +238,10 @@ class ProjectExecution(models.Model):
                             print(field_name, '缺少更新方法')
                 else:
                     exec('self.' + field_name + '=new_value')
-        self.update_count = previous_exe.update_count + 1
+        try:
+            self.update_count = previous_exe.update_count + 1
+        except:
+            self.update_count = 0
         self.save()
 
     def _update_total_used(self, new_value):
@@ -406,10 +409,9 @@ class Progress(models.Model):
     @classmethod
     def getSuitableProgressQsForSubbusiness(cls, subbusiness):
         if type(subbusiness) == int:
-            suit_progress = cls.objects.filter(suit_for_business=subbusiness, status_num__lt=100)
+            return cls.objects.filter(suit_for_business=subbusiness, status_num__lt=100)
         elif type(subbusiness) == str:
-            suit_progress = cls.objects.filter(suit_for_business__caption=subbusiness, status_num__lt=100)
-        return suit_progress
+            return cls.objects.filter(suit_for_business__caption=subbusiness, status_num__lt=100)
 
 
 class Business(models.Model):
