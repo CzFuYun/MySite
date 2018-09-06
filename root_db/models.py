@@ -27,6 +27,26 @@ class Staff(models.Model):
         verbose_name_plural = '员工信息'
         # ordering = 'sub_department'
 
+    @classmethod
+    def bulkUpdate(cls, workbook_name):
+        from root_db.models_operation import getSimpleSerializationRule, getXlDataForOrmOperation
+        # 先清除到期红牌
+        cls.objects.filter(yellow_red_card__gt=1, red_card_expire_date__lte=models_operation.DateOperation().today).update(
+            red_card_expire_date=None, yellow_red_card=0
+        )
+        all_sr_dict = {}
+        all_sr_dict['sub_department_id'] = getSimpleSerializationRule(SubDepartment, 'sd_code', 'caption')
+        data_source_list = getXlDataForOrmOperation(workbook_name, 'sheet1')
+        data_for_bulk_create = []
+        for data_dict in data_source_list:
+            for field in data_dict:
+                field_sr = all_sr_dict.get(field)
+                if field_sr:
+                    value_before_serialize = data_dict[field]
+                    data_dict[field] = field_sr[value_before_serialize]
+            data_for_bulk_create.append(cls(**data_dict))
+        cls.objects.bulk_create(data_for_bulk_create)
+
     def setYellowRedCard(self):
         # 计算红黄牌，yellow_red_card  =0，未被警告；  =1，黄牌；  >1，红牌
         yellow_red_card = self.yellow_red_card

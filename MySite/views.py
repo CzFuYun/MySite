@@ -4,18 +4,22 @@ from root_db import models_operation
 from app_permission import views, settings
 
 
+def test(request):
+    pass
+
 
 def login(request):
     return views.login(request)
 
 
-def feedback(request):
-    feedback_type = request.GET.get('t')
-    return render(request, 'feedback.html')
-
 @views.checkPermission
 def home(request):
     return render(request, settings.HOME_PAGE)
+
+
+def feedback(request):
+    feedback_type = request.GET.get('t')
+    return render(request, 'feedback.html')
 
 
 def exportAccountedCompany(request):
@@ -38,8 +42,13 @@ def exportContributorAndSeries(request):
     models_operation.createContributorAndUpdateSeries(file_name)
     print('Success')
 
-def test(request):
-    pass
+
+def updateStaffInfo(request):
+    # http://139.17.1.35:8000/staffinfo.update
+    from root_db import models
+    file_name = r'E:\AAA报表定期更新\贡献度\@staff.xlsx'
+    models.Staff.bulkUpdate(file_name)
+    print('Success')
 
 
 def convertToUrl(request):

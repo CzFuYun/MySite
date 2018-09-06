@@ -519,6 +519,3 @@ class TargetTask(models.Model):
                     dept_target[department][business][target_type] = target_amount__sum
                 return dept_target
             return
-
-
-LAST_PHOTO_DATE = models_operation.DateOperation().last_data_date_str(ProjectExecution, 'photo_date')

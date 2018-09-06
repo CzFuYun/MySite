@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'accounted_company\.export', views.exportAccountedCompany),
     url(r'divided_company_account\.create', views.createDividedCompanyAccount),
     url(r'contributor_and_series\.export', views.exportContributorAndSeries),
+    url(r'staffinfo\.update', views.updateStaffInfo, name='updateStaffInfo'),
     url(r'test/', views.test),
     url(r'feedback', views.feedback, name='feedback'),
 ]

@@ -75,7 +75,7 @@ def selectProjectAction(request):
     elif action == '3':
         return downloadProjectList(start_date, end_date)
     elif action == '4':
-        if models_operation.DateOperation().date_dif(models.LAST_PHOTO_DATE) < 0:
+        if models_operation.DateOperation().date_dif(models_operation.DateOperation().last_data_date_str(models.ProjectExecution, 'photo_date')) < 0:
             return render(request, 'feedback.html', {'title': '数据尚未就绪', 'swal_type': 'error'})
         return trackProjectExe(request)
 
@@ -396,84 +396,51 @@ class ProjectDetailView(View):
         pass
 
 
-# def downloadProjectList2(start_date, end_date):
-#     import xlsxwriter
-#     from io import BytesIO
-#     cols = collections.OrderedDict(
-#         **{
-#             'project__customer__name': '项目名称',
-#             'project__customer__industry__caption': '行业门类',
-#             'project__customer__type_of_3311__level': '3311类型',
-#             'project__is_green': '绿色金融',
-#             'project__staff__sub_department__superior__caption': '经营部门',
-#             'project__staff__name': '主办人员',
-#             'project__business__superior__caption': '业务大类',
-#             'project__business__caption': '具体业务',
-#             'project__pretrial_doc__meeting__meeting_date': '预审日期',
-#             'project__total_net': '总敞口',
-#             'project__existing_net': '存量敞口',
-#             'current_progress__caption': '当前进度',
-#             'current_progress__status_num': '进度代号',
-#             'project__reply_date': '批复日期',
-#             'new_net_used': '新增敞口投放',
-#             'project__is_defuse': '涉及化解',
-#             'project__account_num': '折算户数',
-#             'remark__content': '备注',
-#         }
-#     )
-#     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-#     project_details = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).values_list(*list(cols.keys())).order_by(
-#         'project__staff__sub_department__superior__display_order',
-#         'project__staff',
-#         'project__business__display_order',
-#     )
-#     x_io = BytesIO()
-#     work_book = xlsxwriter.Workbook(x_io)
-#     work_sheet = work_book.add_worksheet()
-#     work_sheet.write_row('A1', (*['#'], *list(cols.values())))
-#     row_num = 1
-#     for row_data in project_details:
-#         work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
-#         row_num += 1
-#     work_book.close()
-#     res = HttpResponse()
-#     res['Content-Type'] = 'application/octet-stream'
-#     res['Content-Disposition'] = 'filename="ProjectsDetails(' + start_date + '  ' + end_date + ').xlsx"'
-#     res.write(x_io.getvalue())
-#     return res
-
-
 def downloadProjectList(start_date, end_date):
     cols = collections.OrderedDict(
         **{
-            'project__customer__name': '项目主体',
-            'project__customer__industry__caption': '行业门类',
-            'project__customer__type_of_3311__level': '3311类型',
-            'project__is_green': '绿色金融',
-            'project__staff__sub_department__superior__caption': '经营部门',
-            'project__staff__name': '主办人员',
-            'project__business__superior__caption': '业务大类',
-            'project__business__caption': '具体业务',
-            'project__pretrial_doc__meeting__meeting_date': '预审日期',
-            'project__total_net': '总敞口',
-            'project__existing_net': '存量敞口',
-            'current_progress__caption': '当前进度',
-            'current_progress__status_num': '进度代号',
-            'project__reply_date': '批复日期',
-            'new_net_used': '新增敞口投放',
-            'project__is_defuse': '涉及化解',
-            'project__account_num': '折算户数',
-            'remark__content': '备注',
-            'current_progress__star__caption': 'star',
+            'projectrepository__customer__name': '项目主体',
+            'projectrepository__customer__industry__caption': '行业门类',
+            'projectrepository__customer__type_of_3311__level': '3311类型',
+            'projectrepository__is_green': '绿色金融',
+            'projectrepository__staff__sub_department__superior__caption': '经营部门',
+            'projectrepository__staff__name': '主办人员',
+            'projectrepository__business__superior__caption': '业务大类',
+            'projectrepository__business__caption': '具体业务',
+            'projectrepository__pretrial_doc__meeting__meeting_date': '预审日期',
+            'projectrepository__total_net': '总敞口',
+            'projectrepository__existing_net': '存量敞口',
+            'projectrepository__projectexecution__current_progress__caption': '当前进度',
+            'projectrepository__projectexecution__current_progress__status_num': '进度代号',
+            'projectrepository__reply_date': '批复日期',
+            'projectrepository__projectexecution__new_net_used': '新增敞口投放',
+            'projectrepository__is_defuse': '涉及化解',
+            'projectrepository__account_num': '折算户数',
+            'projectrepository__projectexecution__remark__content': '备注',
+            'projectrepository__projectexecution__current_progress__star__caption': 'star',
+            'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
+            'customer__dividedcompanyaccount__divided_yd_avg__sum': '存款日均',
         }
     )
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-    project_details = models.ProjectExecution.objects.filter(project__in=project_qs, photo_date=exe_date).order_by(
-        'project__staff__sub_department__superior__display_order',
-        'project__staff',
-        'project__business__display_order',
-    )
-    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.slsx', cols, project_details)
+    project_details = models.CustomerRepository.objects.prefetch_related(
+        'customer__dividedcompanyaccount_set', 'projectrepository_set', 'projectrepository_set__projectexecution_set'
+    ).filter(
+        customer__dividedcompanyaccount__data_date=models_operation.DateOperation().last_data_date_str(rd_m.DividedCompanyAccount),
+        projectrepository__projectexecution__photo_date=exe_date,
+    ).order_by(
+        'projectrepository__staff__sub_department__superior__display_order',
+        'projectrepository__staff',
+        'projectrepository__business__display_order',
+    ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg'))
+    # ).values(
+    #     'projectrepository__total_net',
+    #     'projectrepository__project_name',
+    #     'projectrepository__projectexecution__current_progress__status_num',
+    #     'customer__dividedcompanyaccount__divided_amount',
+    #     'customer__dividedcompanyaccount__divided_yd_avg',
+    # )
+    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', cols, project_details)
 
 
 def trackProjectExe(request):
@@ -513,6 +480,7 @@ def trackProjectExe(request):
             'project__approver__name',
             'project__approver__staff_id',
             'remark__create_date',
+            'project__pretrial_doc__meeting__meeting_date'
         ).order_by(
             'project__staff__sub_department__superior__display_order',
             'project__staff',
@@ -562,6 +530,12 @@ def trackProjectExe(request):
                 }
             },
             {
+                'index': 'project__pretrial_doc__meeting__meeting_date',
+                'col_name': '预审日期',
+                'width': '4%',
+                'td_attr': {}
+            },
+            {
                 'index': 'current_progress__caption',
                 'col_name': '目前进度',
                 'width': '4%',
@@ -592,22 +566,22 @@ def trackProjectExe(request):
                     'is_focus': 'project__is_focus'
                 }
             },
-            {
-                'index': 'project__pre_approver__name',
-                'col_name': '初审',
-                'width': '4%',
-                'td_attr': {
-                    'pre_approver': 'project__pre_approver__staff_id'
-                }
-            },
-            {
-                'index': 'project__approver__name',
-                'col_name': '专审',
-                'width': '4%',
-                'td_attr': {
-                    'approver': 'project__approver__staff_id'
-                }
-            },
+            # {
+            #     'index': 'project__pre_approver__name',
+            #     'col_name': '初审',
+            #     'width': '4%',
+            #     'td_attr': {
+            #         'pre_approver': 'project__pre_approver__staff_id'
+            #     }
+            # },
+            # {
+            #     'index': 'project__approver__name',
+            #     'col_name': '专审',
+            #     'width': '4%',
+            #     'td_attr': {
+            #         'approver': 'project__approver__staff_id'
+            #     }
+            # },
         ]
         return render_to_response('proj_exe/project_exe_list.html', locals())
 
@@ -719,29 +693,4 @@ def delProject(request):
             form = html_forms.ProjectModelForm_del(request.POST)
             form.is_valid()
             return render(request, 'blank_form.html', locals())
-
-
-# Progress.objects.filter(id=11).values('suit_for_business__superior__caption')
-# SubBusiness.objects.filter(caption='项目贷款').values_list('progress__caption')
-# ProjectRepository.objects.filter().prefetch_related('customer__customer__contributor_set')
-
-# CustomerRepository.objects.prefetch_related(
-#     'customer__contributor_set', 'projectrepository_set', 'projectrepository_set__projectexecution_set'
-# ).filter(
-#     customer__contributor__data_date='2018-07-18', projectrepository__projectexecution__photo_date='2018-07-18',
-# ).values(
-#     'name',
-#     'is_strategy',
-#     'customer__contributor__net_total',
-#     'projectrepository__business__caption',
-#     'projectrepository__projectexecution__total_used',
-#     'projectrepository__projectexecution__new_net_used'
-# )
-
-# def ajaxTarget(request):
-#     if request.method == 'POST':
-#         start_date = request.POST.get('start_date')
-#         end_date = request.POST.get('end_date')
-#         ret = mo.getTarget(start_date, end_date)
-#         return HttpResponse(json.dumps(ret))
 
