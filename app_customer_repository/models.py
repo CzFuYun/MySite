@@ -9,7 +9,7 @@ industry_factor_rule = {
     'C': 1.5,
 }
 
-
+PHOTO_DATE = None
 
 class CustomerRepository(models.Model):
     stockholder_choices = (
@@ -297,6 +297,7 @@ class ProjectExecution(models.Model):
         else:
             photo_date_str = str(photo_date) if photo_date else str(imp_date.today)
             if imp_date.last_data_date_str(cls, 'photo_date') == photo_date_str:
+                print('已存在当日快照')
                 return
             if photo_date_str:
                 photo_date = imp_date.strToDate(photo_date_str)
@@ -378,12 +379,14 @@ class ProjectExecution(models.Model):
                 pe_photo_list.append(cls(**tmp))
             if pe_photo_list:
                 cls.objects.bulk_create(pe_photo_list)
-                last_photoed = photo_date_str
+                # last_photoed = photo_date_str
                 print('success')
             if attention:
                 print('请核实以下客户的真实用信情况：')
                 for a in attention:
                     print(a)
+            global PHOTO_DATE
+            PHOTO_DATE = photo_date
 
     @classmethod
     def lastExePhoto(cls):

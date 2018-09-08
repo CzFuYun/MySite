@@ -16,35 +16,8 @@ def test(request):
     # http://139.17.1.35:8000/cr/test
     # http://127.0.0.1:8000/cr/test
     print('start test')
-    # c = models.CustomerRepository.objects.filter(name__contains='经济发展')[0]
-    # b = models.SubBusiness.objects.filter(caption='承销')[0]
-    # new_p_dict = {}
-    # new_p_dict['customer'] = c
-    # new_p_dict['is_green'] = False
-    # new_p_dict['project_name'] = ''
-    # new_p_dict['business'] = b
-    # new_p_dict['total_net'] = 100000
-    # new_p_dict['existing_net'] = 0
-    # new_p = models.ProjectRepository(**new_p_dict)
-    # new_p.judge_is_focus()
-    # new_p.create_or_update(new_p_dict)
-    # models.TargetTask().calculate_target('2018-01-01', '2018-06-30')
-    # pr = models.ProjectRepository.objects.filter(close_date__isnull=True)
-    # for i in pr:
-    #     models.ProjectExecution.takePhoto(i)
-    # start_date = '2018-01-01'
-    # end_date = '2018-12-31'
-    # project_qs = models.ProjectRepository.objects.filter(
-    #     create_date__gte=start_date,
-    #     create_date__lte=end_date,
-    # ).values(
-    #     'id',
-    #     'staff__sub_department__superior_id',
-    #     'business__superior',
-    #     'business__superior__caption',
-    #     'account_num',
-    # )
     models.ProjectExecution.takePhoto()
+    print('finish test')
 
 
 def viewProjectRepository(request):
@@ -75,7 +48,7 @@ def selectProjectAction(request):
     elif action == '3':
         return downloadProjectList(start_date, end_date)
     elif action == '4':
-        if models_operation.DateOperation().date_dif(models_operation.DateOperation().last_data_date_str(models.ProjectExecution, 'photo_date')) < 0:
+        if models.PHOTO_DATE is None or models_operation.DateOperation().date_dif(models.PHOTO_DATE) < 0:
             return render(request, 'feedback.html', {'title': '数据尚未就绪', 'swal_type': 'error'})
         return trackProjectExe(request)
 
@@ -84,18 +57,6 @@ def viewProjectSummary(request):
     imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
-    # customer_id_list = []
-    # for i in p_exe_qs:
-    #     customer_id_list.append(i['project__customer__customer_id'])
-    # data_date = models_operation.getNeighbourDate(dac_m.Contributor, 0, exe_date)
-    # contribution = dac_m.Contributor.objects.filter(
-    #     data_date=data_date,
-    #     customer_id__in=customer_id_list,
-    #     customer__dividedcompanyaccount__data_date=data_date,
-    # ).values(
-    #     'customer_id',
-    #     'customer__dividedcompanyaccount__divided_yd_avg',
-    # ).annotate(Sum('customer__dividedcompanyaccount__divided_yd_avg'), Sum('net_total'))
     last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
     exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
     exe_data = models.ProjectExecution.objects.filter(
@@ -417,7 +378,7 @@ def downloadProjectList(start_date, end_date):
             'projectrepository__is_defuse': '涉及化解',
             'projectrepository__account_num': '折算户数',
             'projectrepository__projectexecution__remark__content': '备注',
-            'projectrepository__projectexecution__current_progress__star__caption': 'star',
+            'projectrepository__is_focus': '重点项目',
             'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
             'customer__dividedcompanyaccount__divided_yd_avg__sum': '存款日均',
         }
@@ -426,20 +387,13 @@ def downloadProjectList(start_date, end_date):
     project_details = models.CustomerRepository.objects.prefetch_related(
         'customer__dividedcompanyaccount_set', 'projectrepository_set', 'projectrepository_set__projectexecution_set'
     ).filter(
-        customer__dividedcompanyaccount__data_date=models_operation.DateOperation().last_data_date_str(rd_m.DividedCompanyAccount),
+        customer__dividedcompanyaccount__data_date=models_operation.DateOperation().neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
         projectrepository__projectexecution__photo_date=exe_date,
     ).order_by(
         'projectrepository__staff__sub_department__superior__display_order',
         'projectrepository__staff',
         'projectrepository__business__display_order',
     ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg'))
-    # ).values(
-    #     'projectrepository__total_net',
-    #     'projectrepository__project_name',
-    #     'projectrepository__projectexecution__current_progress__status_num',
-    #     'customer__dividedcompanyaccount__divided_amount',
-    #     'customer__dividedcompanyaccount__divided_yd_avg',
-    # )
     return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', cols, project_details)
 
 
