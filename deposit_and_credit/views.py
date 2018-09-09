@@ -160,7 +160,7 @@ def viewSeriesContributionHistory(request):
         return render(request, 'contrib/series_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         series_code = request.POST.get('series_code')
-        series_caption = request.POST.get('series_caption')
+        # series_caption = request.POST.get('series_caption')
         series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
         series_company_id_list = []
         for i in series_company_id_qs:
@@ -466,7 +466,7 @@ def viewExpirePromptTable(request):
 def editExpirePrompt(request):
     form_action = editExpirePrompt.__name__
     pk = getattr(request, request.method).get('pk')
-    content_title = '业务到期提示'
+    content_title = '业务到期-详情'
     if pk:
         expire_obj = dac_models.ExpirePrompt.objects.get(id=pk)
         if expire_obj.finish_date:

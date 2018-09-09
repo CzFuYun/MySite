@@ -42,13 +42,15 @@ def selectProjectAction(request):
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
     if action == '1':
-        return render(request, 'proj_rep/project_summary.html', {'opener_params': json.dumps({'start_date': start_date, 'end_date': end_date})})
+        return render(request, 'proj_rep/project_summary.html', {'content_title': '项目储备汇总数', 'opener_params': json.dumps({'start_date': start_date, 'end_date': end_date})})
     elif action == '2':
+        content_title = '项目储备清单'
         return render(request, 'proj_rep/project_list.html', locals())
     elif action == '3':
         return downloadProjectList(start_date, end_date)
     elif action == '4':
-        if models.PHOTO_DATE is None or models_operation.DateOperation().date_dif(models.PHOTO_DATE) < 0:
+        imp_date = models_operation.DateOperation()
+        if imp_date.date_dif(imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')) < 0:
             return render(request, 'feedback.html', {'title': '数据尚未就绪', 'swal_type': 'error'})
         return trackProjectExe(request)
 
@@ -399,6 +401,7 @@ def downloadProjectList(start_date, end_date):
 
 def trackProjectExe(request):
     if request.method == 'POST':
+        content_title = '项目进度'
         return render(request, 'proj_exe/project_exe_frame.html', locals())
     elif request.method == 'GET':
         exe_qs = models.ProjectExecution.lastExePhoto().filter(
@@ -641,7 +644,9 @@ def delProject(request):
         form = html_forms.ProjectModelForm_del(instance=project)
         return render(request, 'blank_form.html', locals())
     elif request.method == 'POST':
-        if project.close(request.POST.get('close_reason'), request.POST.get('whose_matter')):
+        remark_content = request.POST.get('remark')
+        models.ProjectExecution.objects.filter(project_id=project_id).order_by('-id').first()._update_remark(remark_content)
+        if project.close(request.POST.get('close_reason'), request.POST.get('whose_matter')):       # 成功关闭项目
             return render(request, 'feedback.html')
         else:
             form = html_forms.ProjectModelForm_del(request.POST)

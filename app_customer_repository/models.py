@@ -9,7 +9,6 @@ industry_factor_rule = {
     'C': 1.5,
 }
 
-PHOTO_DATE = None
 
 class CustomerRepository(models.Model):
     stockholder_choices = (
@@ -145,7 +144,6 @@ class ProjectRepository(models.Model):
             pe = ProjectExecution.objects.filter(project=self).order_by('-photo_date').first()
             pe.current_progress_id = 120
             pe.save()
-            return True
         return True
 
     @classmethod
@@ -385,8 +383,6 @@ class ProjectExecution(models.Model):
                 print('请核实以下客户的真实用信情况：')
                 for a in attention:
                     print(a)
-            global PHOTO_DATE
-            PHOTO_DATE = photo_date
 
     @classmethod
     def lastExePhoto(cls):

@@ -103,10 +103,17 @@ class CustomerModelForm_add(ModelForm):
 
 class ProjectModelForm_del(ModelForm):
     id = forms.CharField(widget=forms.TextInput(attrs={'hidden': 'hidden', 'readonly': 'readonly'}))
+    remark = forms.CharField(label='备注', required=False, widget=forms.Textarea(attrs={'rows': 5}))
 
     class Meta:
         model = models.ProjectRepository
         fields = ('id', 'close_reason', 'whose_matter', )
+
+    def __init__(self, *args, **kwargs):
+        super(ModelForm, self).__init__(*args, **kwargs)
+        project_id = self.instance.id
+        remark_id, remark_content = models.ProjectExecution.objects.filter(project_id=project_id).order_by('-id').values_list('remark__id', 'remark__content')[0]
+        self.fields['remark'].initial = remark_content
 
 
 class ProjectExeForm_update(ModelForm):
