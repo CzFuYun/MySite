@@ -72,7 +72,7 @@ $color2: #162a36; // Appears 2 times
     float:left;
     font-size:24px;
     height:50px;
-    margin-right:10px;
+    //margin-right:10px;
     margin:0;
     overflow:hidden;
     padding:13px;
@@ -88,7 +88,7 @@ $color2: #162a36; // Appears 2 times
     font-size:16px;
     height:40px;
     line-height:16px;
-    margin-top:5px;
+    //margin-top:5px;
     margin:0;
     outline:0;
     padding:8px;
@@ -113,56 +113,25 @@ $font-face {
   font-family: "linea-software-10";
   font-family: "linea-weather-10";
   font-style: normal;
-  font-style: normal;
-  font-style: normal;
-  font-style: normal;
-  font-style: normal;
-  font-style: normal;
-  font-style: normal;
-  font-weight: normal;
-  font-weight: normal;
-  font-weight: normal;
-  font-weight: normal;
-  font-weight: normal;
-  font-weight: normal;
-  font-weight: normal;
-  src:url("/fonts/linea-arrows-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-arrows-10.woff") format("woff"), url("/fonts/linea-arrows-10.ttf") format("truetype"), url("/fonts/linea-arrows-10.svg#linea-arrows-10") format("svg");
-  src:url("/fonts/linea-arrows-10.eot");
-  src:url("/fonts/linea-basic-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-basic-10.woff") format("woff"), url("/fonts/linea-basic-10.ttf") format("truetype"), url("/fonts/linea-basic-10.svg#linea-basic-10") format("svg");
-  src:url("/fonts/linea-basic-10.eot");
-  src:url("/fonts/linea-basic-elaboration-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-basic-elaboration-10.woff") format("woff"), url("/fonts/linea-basic-elaboration-10.ttf") format("truetype"), url("/fonts/linea-basic-elaboration-10.svg#linea-basic-elaboration-10") format("svg");
-  src:url("/fonts/linea-basic-elaboration-10.eot");
-  src:url("/fonts/linea-ecommerce-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-ecommerce-10.woff") format("woff"), url("/fonts/linea-ecommerce-10.ttf") format("truetype"), url("/fonts/linea-ecommerce-10.svg#linea-ecommerce-10") format("svg");
-  src:url("/fonts/linea-ecommerce-10.eot");
-  src:url("/fonts/linea-music-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-music-10.woff") format("woff"), url("/fonts/linea-music-10.ttf") format("truetype"), url("/fonts/linea-music-10.svg#linea-music-10") format("svg");
-  src:url("/fonts/linea-music-10.eot");
-  src:url("/fonts/linea-software-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-software-10.woff") format("woff"), url("/fonts/linea-software-10.ttf") format("truetype"), url("/fonts/linea-software-10.svg#linea-software-10") format("svg");
-  src:url("/fonts/linea-software-10.eot");
-  src:url("/fonts/linea-weather-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-weather-10.woff") format("woff"), url("/fonts/linea-weather-10.ttf") format("truetype"), url("/fonts/linea-weather-10.svg#linea-weather-10") format("svg");
-  src:url("/fonts/linea-weather-10.eot");
+  //src:url("/fonts/linea-arrows-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-arrows-10.woff") format("woff"), url("/fonts/linea-arrows-10.ttf") format("truetype"), url("/fonts/linea-arrows-10.svg#linea-arrows-10") format("svg");
+  //src:url("/fonts/linea-arrows-10.eot");
+  //src:url("/fonts/linea-basic-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-basic-10.woff") format("woff"), url("/fonts/linea-basic-10.ttf") format("truetype"), url("/fonts/linea-basic-10.svg#linea-basic-10") format("svg");
+  //src:url("/fonts/linea-basic-10.eot");
+  //src:url("/fonts/linea-basic-elaboration-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-basic-elaboration-10.woff") format("woff"), url("/fonts/linea-basic-elaboration-10.ttf") format("truetype"), url("/fonts/linea-basic-elaboration-10.svg#linea-basic-elaboration-10") format("svg");
+  //src:url("/fonts/linea-basic-elaboration-10.eot");
+  //src:url("/fonts/linea-ecommerce-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-ecommerce-10.woff") format("woff"), url("/fonts/linea-ecommerce-10.ttf") format("truetype"), url("/fonts/linea-ecommerce-10.svg#linea-ecommerce-10") format("svg");
+  //src:url("/fonts/linea-ecommerce-10.eot");
+  //src:url("/fonts/linea-music-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-music-10.woff") format("woff"), url("/fonts/linea-music-10.ttf") format("truetype"), url("/fonts/linea-music-10.svg#linea-music-10") format("svg");
+  //src:url("/fonts/linea-music-10.eot");
+  //src:url("/fonts/linea-software-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-software-10.woff") format("woff"), url("/fonts/linea-software-10.ttf") format("truetype"), url("/fonts/linea-software-10.svg#linea-software-10") format("svg");
+  //src:url("/fonts/linea-software-10.eot");
+  //src:url("/fonts/linea-weather-10.eot?#iefix") format("embedded-opentype"), url("/fonts/linea-weather-10.woff") format("woff"), url("/fonts/linea-weather-10.ttf") format("truetype"), url("/fonts/linea-weather-10.svg#linea-weather-10") format("svg");
+  //src:url("/fonts/linea-weather-10.eot");
 }
 [data-icon] {
   &:before {
     -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    content: attr(data-icon);
-    content: attr(data-icon);
-    content: attr(data-icon);
-    content: attr(data-icon);
-    content: attr(data-icon);
-    content: attr(data-icon);
     content: attr(data-icon);
     font-family: "linea-arrows-10" !important;
     font-family: "linea-basic-10" !important;
@@ -172,64 +141,16 @@ $font-face {
     font-family: "linea-software-10" !important;
     font-family: "linea-weather-10" !important;
     font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
     font-variant: normal !important;
     font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
     line-height: 1;
     speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
     text-transform: none !important;
   }
 }
 [class^="icon-"] {
   &:before {
     -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
-    -webkit-font-smoothing: antialiased;
     -webkit-font-smoothing: antialiased;
     font-family: "linea-arrows-10" !important;
     font-family: "linea-basic-10" !important;
@@ -239,46 +160,10 @@ $font-face {
     font-family: "linea-software-10" !important;
     font-family: "linea-weather-10" !important;
     font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-style: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
-    font-variant: normal !important;
     font-variant: normal !important;
     font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    font-weight: normal !important;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
-    line-height: 1;
     line-height: 1;
     speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    speak: none;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
-    text-transform: none !important;
     text-transform: none !important;
   }
 }
@@ -286,18 +171,6 @@ $font-face {
   icon-"] {
     &:before {
       -moz-osx-font-smoothing: grayscale;
-      -moz-osx-font-smoothing: grayscale;
-      -moz-osx-font-smoothing: grayscale;
-      -moz-osx-font-smoothing: grayscale;
-      -moz-osx-font-smoothing: grayscale;
-      -moz-osx-font-smoothing: grayscale;
-      -moz-osx-font-smoothing: grayscale;
-      -webkit-font-smoothing: antialiased;
-      -webkit-font-smoothing: antialiased;
-      -webkit-font-smoothing: antialiased;
-      -webkit-font-smoothing: antialiased;
-      -webkit-font-smoothing: antialiased;
-      -webkit-font-smoothing: antialiased;
       -webkit-font-smoothing: antialiased;
       font-family: "linea-arrows-10" !important;
       font-family: "linea-basic-10" !important;
@@ -307,46 +180,10 @@ $font-face {
       font-family: "linea-software-10" !important;
       font-family: "linea-weather-10" !important;
       font-style: normal !important;
-      font-style: normal !important;
-      font-style: normal !important;
-      font-style: normal !important;
-      font-style: normal !important;
-      font-style: normal !important;
-      font-style: normal !important;
-      font-variant: normal !important;
-      font-variant: normal !important;
-      font-variant: normal !important;
-      font-variant: normal !important;
-      font-variant: normal !important;
-      font-variant: normal !important;
       font-variant: normal !important;
       font-weight: normal !important;
-      font-weight: normal !important;
-      font-weight: normal !important;
-      font-weight: normal !important;
-      font-weight: normal !important;
-      font-weight: normal !important;
-      font-weight: normal !important;
-      line-height: 1;
-      line-height: 1;
-      line-height: 1;
-      line-height: 1;
-      line-height: 1;
-      line-height: 1;
       line-height: 1;
       speak: none;
-      speak: none;
-      speak: none;
-      speak: none;
-      speak: none;
-      speak: none;
-      speak: none;
-      text-transform: none !important;
-      text-transform: none !important;
-      text-transform: none !important;
-      text-transform: none !important;
-      text-transform: none !important;
-      text-transform: none !important;
       text-transform: none !important;
     }
   }
@@ -1489,7 +1326,7 @@ $font-face {
 }
 .icon-basic-printer {
   &:before {
-    content: ";
+    content: ";";
   }
 }
 .icon-basic-question {
@@ -2165,7 +2002,7 @@ $font-face {
 }
 .icon-basic-elaboration-mail-download {
   &:before {
-    content: ";
+    content: ";"
   }
 }
 .icon-basic-elaboration-mail-flagged {
@@ -3467,7 +3304,7 @@ $font-face {
 }
 .icon-software-vector-box {
   &:before {
-    content: ";
+    content: ";"
   }
 }
 .icon-software-vector-composite {
