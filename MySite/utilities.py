@@ -25,9 +25,9 @@ def uploadFile(request, target_dir):
 #                 else:
 #                     break
 
-def fileDownload(file_full_name):
+def downloadFile(file_full_name):
     # save_path = 'C:\\Users\\hp\\Downloads'
-    file_name = file_full_name.replace(os.path.join(os.path.dirname(file_full_name),''),"")
+    file_name = file_full_name.replace(os.path.join(os.path.dirname(file_full_name),''),'')
     with open(file_full_name, 'rb') as f:
         response = FileResponse(f)
     response['Content-Type'] = 'application/octet-stream'
@@ -99,15 +99,10 @@ class HtmlFormBody():
         self.form_subtitle = form_subtitle
 
 
-
-
-
 class FormInput():
     def __init__(self, tag, html_attribute_dict):
         self.tag = tag
         self.attribute = html_attribute_dict
-
-
 
 
 class FormMainInput(FormInput):
@@ -220,7 +215,7 @@ def downloadWorkbook(file_name, columns, data_list, **field_choice_sr):
     work_book = xlsxwriter.Workbook(x_io)
     work_sheet = work_book.add_worksheet()
     field_index = list(columns.keys())
-    work_sheet.write_row('A1', (*['#'], *list(columns.values())))
+    work_sheet.write_row('A1', ('#', *list(columns.values())))
     row_num = 1
     for data_dict in data_list:
         row_data = []

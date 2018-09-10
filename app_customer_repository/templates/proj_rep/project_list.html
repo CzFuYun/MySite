@@ -18,7 +18,7 @@
 
 
 {% block navbar_after_ul %}
-    <button class="btn waves-effect waves-light btn-success"><i class="mdi mdi-target"></i><a href="{% url 'addProject' %}" target="_blank" style="color: white">新增</a></button>
+    <button class="btn waves-effect waves-light btn-success" onclick="addProject()"><i class="mdi mdi-target"></i>新增</button>
     <button class="btn waves-effect waves-light btn-danger" onclick="delProject()"><i class="mdi mdi-bomb"></i>删除</button>
     <button class="btn waves-effect waves-light btn-warning" onclick="editProject()"><i class="mdi mdi-grease-pencil"></i>修改</button>
     <button class="btn waves-effect waves-light btn-info" onclick=""><i class="mdi mdi-code-braces"></i>详情</button>
@@ -41,7 +41,7 @@
     <script type="text/javascript">
         $(function(){
             refreshData();
-            $('#extra_function').append($('#business_selector'));
+            {#$('#extra_function').append($('#business_selector'));#}
 
         });
 
@@ -83,6 +83,15 @@
                 elem.innerText = '';
                 elem.append($radio[0]);
             });
+
+            $('td[pretrial_doc_id]').each(
+                function (index, elem) {
+                    $(this).css({
+                        'cursor': 'pointer'
+                    });
+                    this.setAttribute('onclick', 'viewPreDoc(this)')
+                }
+            );
 
             $('td[status_num]').each(function(index, elem){
                 let pro_text = elem.innerHTML;
@@ -135,6 +144,10 @@
             alert('请选择项目');
         }
 
+        function addProject(){
+            window.open("{% url 'addProject' %}", '_blank');
+        }
+
         function delProject(){
             let projectId = judgeSelectedProject();
             if(!projectId){
@@ -149,6 +162,13 @@
                 return;
             }
             window.open('{% url "editProject" %}?pk=' + projectId, '_blank');
+        }
+
+        function viewPreDoc(elem){
+            let preDocId = elem.getAttribute('pretrial_doc_id');
+            if(preDocId !== 'None'){
+                downloadFileByForm('{% url "downloadPreDoc" %}', {preDocId: preDocId})
+            }
         }
     </script>
 {% endblock %}

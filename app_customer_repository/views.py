@@ -3,7 +3,7 @@ from django.views.generic import View, DetailView
 from django.views.generic.edit import UpdateView
 from django.shortcuts import render, HttpResponse, render_to_response, redirect, reverse
 from django.db.models import Q, F, Sum
-from app_customer_repository import models, models_operation as mo, html_forms
+from app_customer_repository import models, models_operation as mo, html_forms, table_structure
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
 from root_db import models as rd_m
@@ -194,6 +194,9 @@ def viewProjectList(request):
         'projectexecution__new_net_used',
         'projectexecution__current_progress__status_num',
         'projectexecution__current_progress__caption',
+        'pretrial_doc__meeting__meeting_date',
+        'pretrial_doc_id',
+        'reply_date'
     ).order_by(
         'business__superior__display_order',
         'staff__sub_department__superior__display_order',
@@ -225,9 +228,7 @@ def viewProjectList(request):
             'index': 'sn',
             'col_name': '#',
             'width': '2%',
-            'td_attr': {
-                'project_id': 'id'
-            }
+            'td_attr': {'project_id': 'id'}
         },
         {
             'index': 'customer__name',
@@ -239,58 +240,55 @@ def viewProjectList(request):
             'index': 'staff__sub_department__superior__caption',
             'col_name': '经营单位',
             'width': '6%',
-            'td_attr': {
-                'dept_code': 'staff__sub_department__superior__code',
-            }
+            'td_attr': {'dept_code': 'staff__sub_department__superior__code',}
         },
         {
             'index': 'staff__name',
             'col_name': '客户经理',
             'width': '6%',
-            'td_attr': {
-                'staff': 'staff_id',
-                'yr_card': 'staff__yellow_red_card',
-            }
+            'td_attr': {'staff': 'staff_id', 'yr_card': 'staff__yellow_red_card',}
         },
         {
             'index': 'business__caption',
             'col_name': '业务种类',
             'width': '6%',
-            'td_attr': {
-                'sub_business': 'business_id'
-            }
+            'td_attr': {'sub_business': 'business_id'}
+        },
+        {
+            'index': 'pretrial_doc__meeting__meeting_date',
+            'col_name': '预审日期',
+            'width': '6%',
+            'td_attr': {'pretrial_doc_id': 'pretrial_doc_id'}
+        },
+        {
+            'index': 'reply_date',
+            'col_name': '批复日期',
+            'width': '6%',
+            'td_attr': {}
         },
         {
             'index': 'projectexecution__current_progress__caption',
             'col_name': '目前进度',
             'width': '6%',
-            'td_attr': {
-            'status_num': 'projectexecution__current_progress__status_num'
-            }
+            'td_attr': {'status_num': 'projectexecution__current_progress__status_num'}
         },
         {
             'index': 'total_net',
             'col_name': '总敞口',
             'width': '8%',
-            'td_attr': {
-                'total_net': 'total_net'
-            }
+            'td_attr': {'total_net': 'total_net'}
         },
         {
             'index': 'existing_net',
             'col_name': '原有敞口',
             'width': '8%',
-            'td_attr': {
-                'existing_net': 'existing_net'
-            }
+            'td_attr': {'existing_net': 'existing_net'}
         },
         {
             'index': 'projectexecution__new_net_used',
             'col_name': '新增敞口已投',
             'width': '8%',
-            'td_attr': {
-                'new_net_used': 'projectexecution__new_net_used'
-            }
+            'td_attr': {'new_net_used': 'projectexecution__new_net_used'}
         },
     ]
     return render_to_response('proj_rep/project_list_content.html', locals())
@@ -360,34 +358,9 @@ class ProjectDetailView(View):
 
 
 def downloadProjectList(start_date, end_date):
-    col_part1 = {
-        'customer__name': '项目主体',
-        'customer__industry__caption': '行业门类',
-        'customer__type_of_3311__level': '3311类型',
-        'is_green': '绿色金融',
-        'staff__sub_department__superior__caption': '经营部门',
-        'staff__name': '主办人员',
-        'business__superior__caption': '业务大类',
-        'business__caption': '具体业务',
-        'pretrial_doc__meeting__meeting_date': '预审日期',
-        'total_net': '总敞口',
-        'existing_net': '存量敞口',
-        'projectexecution__current_progress__caption': '当前进度',
-        'projectexecution__current_progress__status_num': '进度代号',
-        'reply_date': '批复日期',
-        'projectexecution__new_net_used': '新增敞口投放',
-        'is_defuse': '涉及化解',
-        'account_num': '折算户数',
-        'projectexecution__remark__content': '备注',
-        'is_focus': '重点项目',
-        'tmp_close_date': '临时关闭日期'
-    }
-    col_part2 = {
-        'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
-        'customer__dividedcompanyaccount__divided_yd_avg__sum': '存款日均',
-    }
+    col_part1 = table_structure.downloadProjectList_col_part1
+    col_part2 = table_structure.downloadProjectList_col_part2
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-
     # project_details = models.CustomerRepository.objects.prefetch_related(
     #     'projectrepository_set', 'projectrepository_set__projectexecution_set', 'customer__dividedcompanyaccount_set'
     # ).filter(
@@ -398,7 +371,6 @@ def downloadProjectList(start_date, end_date):
     #     'projectrepository__staff',
     #     'projectrepository__business__display_order',
     # ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg'))
-
     projects = project_qs.filter(projectexecution__photo_date=exe_date)
     project_details = projects.values(*('customer__customer_id', *col_part1.keys())).order_by(
         'staff__sub_department__superior__display_order',
@@ -417,9 +389,8 @@ def downloadProjectList(start_date, end_date):
         *('customer_id', *col_part2.keys())
     )
     combine_details = utilities.combineQueryValues((project_details, deposit_details), ('customer__customer_id', 'customer_id'))
-
-    cols = collections.OrderedDict(**col_part1, **col_part2)
-    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', cols, combine_details)
+    # cols = collections.OrderedDict(**col_part1, **col_part2)
+    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', collections.OrderedDict(**col_part1, **col_part2), combine_details)
 
 
 def trackProjectExe(request):
@@ -430,139 +401,12 @@ def trackProjectExe(request):
         exe_qs = models.ProjectExecution.lastExePhoto().filter(
             (Q(project__tmp_close_date__isnull=True) & Q(project__close_date__isnull=True))
             & Q(current_progress__status_num__lt=200)
-        ).values(
-            'id',
-            'project_id',
-            'project__customer__name',
-            'project__staff__sub_department__superior__caption',
-            'project__staff__sub_department__superior__code',
-            'project__staff__name',
-            'project__staff_id',
-            'project__staff__yellow_red_card',
-            'project__business__caption',
-            'project__is_focus',
-            'current_progress__status_num',
-            'current_progress__caption',
-            'project__total_net',
-            'project__existing_net',
-            'new_net_used',
-            'remark__content',
-            'project__customer__customer_id',
-            'current_progress__star__caption',
-            'project__plan_pretrial_date',
-            'project__plan_chushen',
-            'project__plan_zhuanshen',
-            'project__plan_xinshen',
-            'project__plan_reply',
-            'project__plan_luodi',
-            'project__pre_approver__name',
-            'project__pre_approver__staff_id',
-            'project__approver__name',
-            'project__approver__staff_id',
-            'remark__create_date',
-            'project__pretrial_doc__meeting__meeting_date'
-        ).order_by(
+        ).values(*table_structure.trackProjectExe_fields).order_by(
             'project__staff__sub_department__superior__display_order',
             'project__staff',
             'project__business__display_order',
         )
-        table_col = [
-            {
-                'index': None,
-                'col_name': '#',
-                'width': '2%',
-                'td_attr': {
-                    'exe_id': 'id',
-                    'project_id': 'project_id',
-                }
-            },
-            {
-                'index': 'project__customer__name',
-                'col_name': '客户名称',
-                'width': '13%',
-                'td_attr': {
-                    'customer_id': 'project__customer__customer_id'
-                }
-            },
-            {
-                'index': 'project__staff__sub_department__superior__caption',
-                'col_name': '经营单位',
-                'width': '4%',
-                'td_attr': {
-                    'dept_code': 'project__staff__sub_department__superior__code',
-                }
-            },
-            {
-                'index': 'project__staff__name',
-                'col_name': '客户经理',
-                'width': '4%',
-                'td_attr': {
-                    'staff': 'project__staff_id',
-                    'yr_card': 'project__staff__yellow_red_card',
-                }
-            },
-            {
-                'index': 'project__business__caption',
-                'col_name': '业务种类',
-                'width': '5%',
-                'td_attr': {
-                    # 'sub_business': 'business_id'
-                }
-            },
-            {
-                'index': 'project__pretrial_doc__meeting__meeting_date',
-                'col_name': '预审日期',
-                'width': '4%',
-                'td_attr': {}
-            },
-            {
-                'index': 'current_progress__caption',
-                'col_name': '目前进度',
-                'width': '4%',
-                'td_attr': {
-                    'status_num': 'current_progress__status_num',
-                    'total_net': 'project__total_net',
-                    'existing_net': 'project__existing_net',
-                    'new_net_used': 'new_net_used',
-                    'plan_20': 'project__plan_pretrial_date',
-                    'plan_40': 'project__plan_chushen',
-                    'plan_70': 'project__plan_zhuanshen',
-                    'plan_80': 'project__plan_xinshen',
-                    'plan_100': 'project__plan_reply',
-                    'plan_120': 'project__plan_luodi',
-                }
-            },
-            {
-                'index': 'remark__content',
-                'col_name': '备注',
-                'width': '30%',
-                'td_attr': {'title': 'remark__create_date'}
-            },
-            {
-                'index': 'current_progress__star__caption',
-                'col_name': 'STAR',
-                'width': '4%',
-                'td_attr': {
-                    'is_focus': 'project__is_focus'
-                }
-            },
-            # {
-            #     'index': 'project__pre_approver__name',
-            #     'col_name': '初审',
-            #     'width': '4%',
-            #     'td_attr': {
-            #         'pre_approver': 'project__pre_approver__staff_id'
-            #     }
-            # },
-            # {
-            #     'index': 'project__approver__name',
-            #     'col_name': '专审',
-            #     'width': '4%',
-            #     'td_attr': {
-            #         'approver': 'project__approver__staff_id'
-            #     }
-            # },
-        ]
+        table_col = table_structure.trackProjectExe_table_col
         return render_to_response('proj_exe/project_exe_list.html', locals())
 
 
@@ -676,3 +520,8 @@ def delProject(request):
             form.is_valid()
             return render(request, 'blank_form.html', locals())
 
+
+def downloadPreDoc(request):        # 下载预审表文档
+    pre_doc_id = request.POST.get('preDocId')
+    file_full_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0]
+    return utilities.downloadFile(file_full_name)
