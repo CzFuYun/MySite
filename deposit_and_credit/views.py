@@ -396,7 +396,7 @@ def viewExpirePromptTable(request):
                 has_punishment = Q(punishment__gte=0)
         data_list = dac_models.ExpirePrompt.objects.filter(
             expire_id, expire_after & expire_before, has_punishment, finish_after & finish_before
-        ).order_by('staff_id__sub_department__superior__display_order', 'staff_id', 'expire_date')
+        ).order_by('staff_id__sub_department__superior__display_order', 'staff_id', 'apply_type', 'expire_date')
         if request_dict.get('download'):
             return utilities.downloadWorkbook('到期业务清单' + str(today) + '.xlsx', table_structure.expire_table_download, data_list.values(*table_structure.expire_table_download.keys()), **table_structure.expire_table_sr_for_download)
         else:

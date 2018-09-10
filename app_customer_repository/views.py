@@ -380,6 +380,7 @@ def downloadProjectList(start_date, end_date):
         'account_num': '折算户数',
         'projectexecution__remark__content': '备注',
         'is_focus': '重点项目',
+        'tmp_close_date': '临时关闭日期'
     }
     col_part2 = {
         'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
