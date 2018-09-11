@@ -513,7 +513,7 @@ def delProject(request):
 
 
 def downloadPreDoc(request):        # 下载预审表文档
-    root_dir = r'E:\例会\预审会\预审表\'
+    root_dir = 'E:\\例会\\预审会\\预审表\\'
     pre_doc_id = request.POST.get('preDocId')
     file_full_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0]
     return utilities.downloadFile(file_full_name)

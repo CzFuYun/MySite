@@ -17,7 +17,7 @@
                     {% with td_attr=col.1.td_attr %}
                         {% for attr in td_attr %}
 
-                            {{ attr }}="{% getValue d td_attr.items.1 %}"
+                            {{ attr }}="{% getValue d td_attr.items.1 | default_if_none: td_attr.attr %}"
 
                         {% endfor %}
                     {% endwith %}
