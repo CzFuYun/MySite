@@ -129,7 +129,7 @@ function downloadFileByForm(url, data, method){
         var pair =this.split('=');
         inputs += '<input type="hidden" name="'+ pair[0] + '" value="' + pair[1] + '" />';
     });
-    $('<form action="' + url +'" method="' + (method || 'post') + '">' + inputs + '</form>').appendTo('body').submit().remove();
+    $('<form target="_blank" action="' + url +'" method="' + (method || 'post') + '">' + inputs + '</form>').appendTo('body').submit().remove();
 }
 
 function downloadSmallFile(urlList){

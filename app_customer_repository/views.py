@@ -360,17 +360,8 @@ class ProjectDetailView(View):
 def downloadProjectList(start_date, end_date):
     col_part1 = table_structure.downloadProjectList_col_part1
     col_part2 = table_structure.downloadProjectList_col_part2
+    imp_date = models_operation.DateOperation()
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-    # project_details = models.CustomerRepository.objects.prefetch_related(
-    #     'projectrepository_set', 'projectrepository_set__projectexecution_set', 'customer__dividedcompanyaccount_set'
-    # ).filter(
-    #     customer__dividedcompanyaccount__data_date=models_operation.DateOperation().neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
-    #     projectrepository__projectexecution__photo_date=exe_date,
-    # ).order_by(
-    #     'projectrepository__staff__sub_department__superior__display_order',
-    #     'projectrepository__staff',
-    #     'projectrepository__business__display_order',
-    # ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg'))
     projects = project_qs.filter(projectexecution__photo_date=exe_date)
     project_details = projects.values(*('customer__customer_id', *col_part1.keys())).order_by(
         'staff__sub_department__superior__display_order',
@@ -381,15 +372,15 @@ def downloadProjectList(start_date, end_date):
     for customer in projects.values_list('customer__customer_id').distinct():
         customer_list.append(customer[0])
     deposit_details = models.CustomerRepository.objects.prefetch_related(
-        'customer__dividedcompanyaccount_set',
+        'customer__dividedcompanyaccount_set', 'customer__contributor_set'
     ).filter(
+        customer__contributor__data_date=imp_date.neighbour_date_date_str(dac_m.Contributor, exe_date),
         customer__in=customer_list,
-        customer__dividedcompanyaccount__data_date=models_operation.DateOperation().neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
+        customer__dividedcompanyaccount__data_date=imp_date.neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
     ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg')).values(
         *('customer_id', *col_part2.keys())
     )
     combine_details = utilities.combineQueryValues((project_details, deposit_details), ('customer__customer_id', 'customer_id'))
-    # cols = collections.OrderedDict(**col_part1, **col_part2)
     return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', collections.OrderedDict(**col_part1, **col_part2), combine_details)
 
 
@@ -435,8 +426,8 @@ def setProjectReplied(request):
     elif request.method == 'POST':
         project_id = request.POST.get('id')
         project_obj = models.ProjectRepository.objects.get(id=project_id)
+        # ↓若需要modelform对数据库进行数据更新，则除了POST之外，也还需要一个instance
         form = html_forms.ProjectModelForm_set_replied(request.POST, instance=project_obj)
-        # ↑若需要modelform对数据库进行数据更新，则除了POST之外，也还需要一个instance
         if form.is_valid():
             form.save()
             pe = models.ProjectExecution.objects.filter(project_id=project_id).last()
@@ -522,6 +513,27 @@ def delProject(request):
 
 
 def downloadPreDoc(request):        # 下载预审表文档
+    root_dir = r'E:\例会\预审会\预审表\'
     pre_doc_id = request.POST.get('preDocId')
     file_full_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0]
     return utilities.downloadFile(file_full_name)
+
+
+def viewPretrialMeeting(request):
+    block = request.POST.get('block')
+    if block == 'body':
+        imp_date = models_operation.DateOperation()
+        start_date = imp_date.this_year_start_date_str
+        end_date = imp_date.this_year_end_date_str
+        return render_to_response('pre_meeting/pretrial_meeting_body.html', locals())
+    if block == 'js':
+        return render_to_response('pre_meeting/pretrial_meeting_js.html')
+
+
+def showPreMeetingList(request):
+    if request.method == 'GET':
+        content_title = '预审会'
+        return render(request, 'pre_meeting/pretrial_meeting_frame.html', locals())
+    elif request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')

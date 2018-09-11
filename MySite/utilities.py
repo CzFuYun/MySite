@@ -1,4 +1,7 @@
 import os, json, datetime, decimal, re, xlsxwriter
+from io import BytesIO
+from django.utils.encoding import escape_uri_path
+from django.shortcuts import HttpResponse
 from django.http import StreamingHttpResponse, FileResponse
 from django import forms
 from django.shortcuts import HttpResponse, render_to_response
@@ -28,10 +31,11 @@ def uploadFile(request, target_dir):
 def downloadFile(file_full_name):
     # save_path = 'C:\\Users\\hp\\Downloads'
     file_name = file_full_name.replace(os.path.join(os.path.dirname(file_full_name),''),'')
-    with open(file_full_name, 'rb') as f:
-        response = FileResponse(f)
+    file = open(file_full_name, 'rb')
+    response = FileResponse(file)
+    # file.close()
     response['Content-Type'] = 'application/octet-stream'
-    response['Content-Disposition'] = 'attachment;filename="{0}"'.format(file_name)
+    response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(file_name))
     return response
 
 
@@ -208,9 +212,6 @@ def downloadWorkbook(file_name, columns, data_list, **field_choice_sr):
     :param field_choice_sr:
     :return:
     '''
-    from io import BytesIO
-    from django.utils.encoding import escape_uri_path
-    from django.shortcuts import HttpResponse
     x_io = BytesIO()
     work_book = xlsxwriter.Workbook(x_io)
     work_sheet = work_book.add_worksheet()

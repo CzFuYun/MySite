@@ -22,4 +22,6 @@ urlpatterns = [
     url(r'projectexe\.edit', views.editProjectExe, name='editProjectExe'),
     url(r'projectreply\.set', views.setProjectReplied, name='setProjectReplied'),
     url(r'predoc\.download', views.downloadPreDoc, name='downloadPreDoc'),
+    url(r'pretrialmeeting\.view', views.viewPretrialMeeting, name='viewPretrialMeeting'),
+    url(r'premeetingList\.show', views.showPreMeetingList, name='showPreMeetingList'),
 ]

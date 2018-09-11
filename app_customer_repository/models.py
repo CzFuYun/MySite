@@ -165,9 +165,18 @@ class PretrialMeeting(models.Model):
 
 
 class PretrialDocument(models.Model):
+    result_choices = (
+        (10, '待预审'),
+        (12, '维持原方案'),
+        (14, '有条件通过'),
+        (20, '通过'),
+        (30, '续议'),
+        (40, '否决'),
+    )
     meeting = models.ForeignKey('PretrialMeeting', on_delete=models.PROTECT)
     document_name = models.CharField(max_length=128, blank=True, null=True)
     accept_date = models.DateField(auto_now_add=True, blank=True, null=True)
+    result = models.IntegerField(choices=result_choices, default=10)
 
     def __str__(self):
         return self.document_name + '@' + str(self.accept_date)

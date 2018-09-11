@@ -161,6 +161,7 @@ downloadProjectList_col_part1 = {
 }
 
 downloadProjectList_col_part2 = {
+    'customer__contributor__loan_rate': '贷款利率',
     'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
     'customer__dividedcompanyaccount__divided_yd_avg__sum': '存款日均',
 }
