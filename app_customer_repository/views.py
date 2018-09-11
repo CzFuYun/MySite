@@ -360,43 +360,65 @@ class ProjectDetailView(View):
 
 
 def downloadProjectList(start_date, end_date):
-    cols = collections.OrderedDict(
-        **{
-            'projectrepository__customer__name': '项目主体',
-            'projectrepository__customer__industry__caption': '行业门类',
-            'projectrepository__customer__type_of_3311__level': '3311类型',
-            'projectrepository__is_green': '绿色金融',
-            'projectrepository__staff__sub_department__superior__caption': '经营部门',
-            'projectrepository__staff__name': '主办人员',
-            'projectrepository__business__superior__caption': '业务大类',
-            'projectrepository__business__caption': '具体业务',
-            'projectrepository__pretrial_doc__meeting__meeting_date': '预审日期',
-            'projectrepository__total_net': '总敞口',
-            'projectrepository__existing_net': '存量敞口',
-            'projectrepository__projectexecution__current_progress__caption': '当前进度',
-            'projectrepository__projectexecution__current_progress__status_num': '进度代号',
-            'projectrepository__reply_date': '批复日期',
-            'projectrepository__projectexecution__new_net_used': '新增敞口投放',
-            'projectrepository__is_defuse': '涉及化解',
-            'projectrepository__account_num': '折算户数',
-            'projectrepository__projectexecution__remark__content': '备注',
-            'projectrepository__is_focus': '重点项目',
-            'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
-            'customer__dividedcompanyaccount__divided_yd_avg__sum': '存款日均',
-        }
-    )
+    col_part1 = {
+        'customer__name': '项目主体',
+        'customer__industry__caption': '行业门类',
+        'customer__type_of_3311__level': '3311类型',
+        'is_green': '绿色金融',
+        'staff__sub_department__superior__caption': '经营部门',
+        'staff__name': '主办人员',
+        'business__superior__caption': '业务大类',
+        'business__caption': '具体业务',
+        'pretrial_doc__meeting__meeting_date': '预审日期',
+        'total_net': '总敞口',
+        'existing_net': '存量敞口',
+        'projectexecution__current_progress__caption': '当前进度',
+        'projectexecution__current_progress__status_num': '进度代号',
+        'reply_date': '批复日期',
+        'projectexecution__new_net_used': '新增敞口投放',
+        'is_defuse': '涉及化解',
+        'account_num': '折算户数',
+        'projectexecution__remark__content': '备注',
+        'is_focus': '重点项目',
+    }
+    col_part2 = {
+        'customer__dividedcompanyaccount__divided_amount__sum': '存款余额',
+        'customer__dividedcompanyaccount__divided_yd_avg__sum': '存款日均',
+    }
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
-    project_details = models.CustomerRepository.objects.prefetch_related(
-        'customer__dividedcompanyaccount_set', 'projectrepository_set', 'projectrepository_set__projectexecution_set'
+
+    # project_details = models.CustomerRepository.objects.prefetch_related(
+    #     'projectrepository_set', 'projectrepository_set__projectexecution_set', 'customer__dividedcompanyaccount_set'
+    # ).filter(
+    #     customer__dividedcompanyaccount__data_date=models_operation.DateOperation().neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
+    #     projectrepository__projectexecution__photo_date=exe_date,
+    # ).order_by(
+    #     'projectrepository__staff__sub_department__superior__display_order',
+    #     'projectrepository__staff',
+    #     'projectrepository__business__display_order',
+    # ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg'))
+
+    projects = project_qs.filter(projectexecution__photo_date=exe_date)
+    project_details = projects.values(*('customer__customer_id', *col_part1.keys())).order_by(
+        'staff__sub_department__superior__display_order',
+        'staff',
+        'business__display_order',
+    )
+    customer_list = []
+    for customer in projects.values_list('customer__customer_id').distinct():
+        customer_list.append(customer[0])
+    deposit_details = models.CustomerRepository.objects.prefetch_related(
+        'customer__dividedcompanyaccount_set',
     ).filter(
+        customer__in=customer_list,
         customer__dividedcompanyaccount__data_date=models_operation.DateOperation().neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
-        projectrepository__projectexecution__photo_date=exe_date,
-    ).order_by(
-        'projectrepository__staff__sub_department__superior__display_order',
-        'projectrepository__staff',
-        'projectrepository__business__display_order',
-    ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg'))
-    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', cols, project_details)
+    ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg')).values(
+        *('customer_id', *col_part2.keys())
+    )
+    combine_details = utilities.combineQueryValues((project_details, deposit_details), ('customer__customer_id', 'customer_id'))
+
+    cols = collections.OrderedDict(**col_part1, **col_part2)
+    return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', cols, combine_details)
 
 
 def trackProjectExe(request):

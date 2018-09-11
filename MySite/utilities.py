@@ -204,26 +204,34 @@ def field_choices_to_dict(field_choices, reverse=True):
     return dic
 
 
-def downloadWorkbook(file_name, columns, query_set, **field_choice_sr):
+def downloadWorkbook(file_name, columns, data_list, **field_choice_sr):
+    '''
+
+    :param file_name:
+    :param columns:
+    :param data_list:
+    :param field_choice_sr:
+    :return:
+    '''
     from io import BytesIO
     from django.utils.encoding import escape_uri_path
     from django.shortcuts import HttpResponse
-    data = query_set.values_list(*list(columns.keys()))
     x_io = BytesIO()
     work_book = xlsxwriter.Workbook(x_io)
     work_sheet = work_book.add_worksheet()
-    field_index = list(columns.keys())#(*['#'], *list(columns.keys()))
+    field_index = list(columns.keys())
     work_sheet.write_row('A1', (*['#'], *list(columns.values())))
     row_num = 1
-    for row_data in data:
-        if field_choice_sr:
-            row_data = list(row_data)
-            col_num = 0
-            for f in field_index:
-                if field_choice_sr.get(f):
-                    row_data[col_num] = field_choice_sr.get(f)[str(row_data[col_num])]
-                col_num += 1
-        work_sheet.write_row(row_num, 0, (*[row_num], *row_data))
+    for data_dict in data_list:
+        row_data = []
+        for f in field_index:
+            sr = field_choice_sr.get(f)
+            if sr:
+                cell_data = sr.get(str(data_dict[f]))
+            else:
+                cell_data = data_dict.get(f)
+            row_data.append(cell_data)
+        work_sheet.write_row(row_num, 0, (row_num, *row_data))
         row_num += 1
     work_book.close()
     res = HttpResponse()
@@ -231,3 +239,30 @@ def downloadWorkbook(file_name, columns, query_set, **field_choice_sr):
     res['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(file_name))
     res.write(x_io.getvalue())
     return res
+
+
+def combineQueryValues(values, foundations):
+    '''
+
+    :param values: 由ORM values方法查询出的一组或多组结果，转化成列表传入
+    :param foundations:  合并依据，values中的查询字段名，转化成列表传入，列表长度与values的长度要一致
+    :return:
+    '''
+    import collections
+    value_found_dict_list = []
+    length = len(values)
+    for i in range(1, length):
+        found = foundations[i]
+        value_dict_list = values[i]
+        value_found_dict = collections.OrderedDict()
+        for value_dict in value_dict_list:
+            value_found_dict[value_dict[found]] = value_dict
+        value_found_dict_list.append(value_found_dict)
+    ret = []
+    for value in values[0]:
+        tmp = value
+        for i in range(1, length):
+            data = value_found_dict_list[i - 1].get(value[foundations[0]], {})
+            tmp = {**tmp, **data}
+            ret.append(tmp)
+    return ret
