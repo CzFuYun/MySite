@@ -165,9 +165,16 @@
         }
 
         function viewPreDoc(elem){
-            let preDocId = elem.getAttribute('pretrial_doc_id');
-            if(preDocId !== 'None'){
-                downloadFileByForm('{% url "downloadPreDoc" %}', {preDocId: preDocId})
+            let preDocId = Number(elem.getAttribute('pretrial_doc_id'));
+            if(preDocId){
+                $.post({
+                    url: '{% url "showPreDoc" %}',
+                    data: {preDocId: preDocId},
+                    dataType: 'json',
+                    success: function(response){
+                        openSmallFile([response]);
+                    }
+                });
             }
         }
     </script>

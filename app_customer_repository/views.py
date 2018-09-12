@@ -1,8 +1,8 @@
-import json, re, collections
+import json, re, collections, os
 from django.views.generic import View, DetailView
 from django.views.generic.edit import UpdateView
 from django.shortcuts import render, HttpResponse, render_to_response, redirect, reverse
-from django.db.models import Q, F, Sum
+from django.db.models import Q, F, Sum, Count
 from app_customer_repository import models, models_operation as mo, html_forms, table_structure
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
@@ -513,10 +513,20 @@ def delProject(request):
 
 
 def downloadPreDoc(request):        # 下载预审表文档
-    root_dir = 'E:\\例会\\预审会\\预审表\\'
+    file_dir = ['E:', '例会', '预审会', '预审表']
     pre_doc_id = request.POST.get('preDocId')
-    file_full_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0]
+    key_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0] + '.pdf'
+    file_full_name = os.path.join(*[*file_dir, *re.split(r'\\', key_name)])
     return utilities.downloadFile(file_full_name)
+
+
+def showPreDoc(request):
+    if request.method == 'POST':
+        pre_doc_id = request.POST.get('preDocId')
+        key_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0] + '.pdf'
+        return HttpResponse(json.dumps(str.join('/', (*('', 'static'), *re.split(r'\\', key_name)))))
+    elif request.method == 'GET':
+        pass
 
 
 def viewPretrialMeeting(request):
@@ -537,3 +547,81 @@ def showPreMeetingList(request):
     elif request.method == 'POST':
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
+        q_start = Q(meeting_date__gte=start_date) if start_date else Q(id__isnull=False)
+        q_end = Q(meeting_date__lte=end_date) if end_date else Q(id__isnull=False)
+        customer_name = request.POST.get('customer_name')
+        if customer_name:
+            doc_list = models.PretrialDocument.objects.filter(document_name__icontains=customer_name)
+            if doc_list.exists():
+                data_list = doc_list.filter(q_start & q_end).values(
+                    'document_name',
+                    'result',
+                    'meeting__caption',
+                    'meeting__meeting_date',
+                ).order_by(
+                    '-meeting__meeting_date',
+                )
+                table_col = collections.OrderedDict(**{
+
+                })
+            else:
+                return
+        else:
+            meeting_list = models.PretrialMeeting.objects.filter((q_start & q_end) | Q(meeting_date__isnull=True)).values(
+                'id',
+                'caption',
+                'meeting_date',
+            ).order_by(
+                'id'
+            )
+            doc_list = models.PretrialMeeting.objects.filter((q_start & q_end) | Q(meeting_date__isnull=True)).prefetch_related(
+                'pretrialdocument_set'
+            ).values(
+                'id',
+                'pretrialdocument',     # id
+                'pretrialdocument__department__caption',
+                'pretrialdocument__document_name'
+            ).order_by(
+                'pretrialdocument__department__display_order'
+            )
+            doc_dict = collections.OrderedDict()
+            for doc in doc_list:
+                meet_id = doc['id']
+                if doc_dict.get(meet_id) is None:
+                    doc_dict[meet_id] = {
+                        'meeting_id': meet_id,
+                        'docs': []
+                    }
+                doc_dict[meet_id]['docs'].append({
+                    'pretrialdocument':doc['pretrialdocument'],
+                    'pretrialdocument__document_name': doc['pretrialdocument__document_name'],
+                    'pretrialdocument__department__caption': doc['pretrialdocument__department__caption']
+                })
+            data_list = utilities.combineQueryValues([meeting_list, list(doc_dict.values())], ['id', 'meeting_id'])
+            table_col = collections.OrderedDict(**{
+                'row_num':
+                    {
+                        'col_name': '#',
+                        'width': '10%',
+                        'td_attr': {'!row_num': ''}
+                    },
+                'caption':
+                    {
+                        'col_name': '会议编号',
+                        'width': '20%',
+                        'td_attr': {}
+                    },
+                'meeting_date':
+                    {
+                        'col_name': '会议日期',
+                        'width': '20%',
+                        'td_attr': {}
+                    },
+                'pretrialdocument__count':
+                    {
+                        'col_name': '当期项目',
+                        'width': '20%',
+                        'td_attr': {'doc_list': 'docs'}
+                    }
+            })
+        return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))

@@ -121,20 +121,42 @@ function getValueFromOneKvp(kvp){
     }
 }
 
+function getDictFromPageLocation(){
+    let loca = location.search.substring(1),
+        dict = {};
+    $.each(loca.split('&'), function(){
+        var pair = this.split('=');
+        var key = pair[0],
+            value = pair[1];
+        try{
+            dict[key] = value;
+        }catch (e) {
+            if(typeof dict[key] === 'object'){
+                dict[key].push(value);
+            }else {
+                let v = dict[key];
+                dict[key] = [v, value];
+            }
+        }
+    });
+    return dict;
+}
+
 function downloadFileByForm(url, data, method){
     //data can be string of parameters or array/object
     data = typeof data === 'string' ? data : jQuery.param(data);
     var inputs ='';
     $.each(data.split('&'), function(){
-        var pair =this.split('=');
+        var pair = this.split('=');
         inputs += '<input type="hidden" name="'+ pair[0] + '" value="' + pair[1] + '" />';
     });
     $('<form target="_blank" action="' + url +'" method="' + (method || 'post') + '">' + inputs + '</form>').appendTo('body').submit().remove();
 }
 
-function downloadSmallFile(urlList){
+function openSmallFile(urlList){
     for(var i=0; i<urlList.length; i++){
-        $('<a href="' + urlList[i] + '" download></a>')[0].click();
+        let a = '<a href="' + urlList[i] + '" target="_blank"></a>';
+        $(a)[0].click();
     }
 }
 
@@ -344,7 +366,7 @@ function lockThead(tableParentDivId, tableId){
                 "border": "none",
                 "marginTop": 0,
                 "marginBottom": 0,
-            })
+            });
         }
     });
 }
@@ -388,7 +410,12 @@ function makeListHtml(tableCol, tableColOrder, dataList){
                     if(k === 'choice_to_display'){
                         let choicesDict = tdAttrDict[k];
                         tdValue = choicesDict[tdValue];
-                    }else {
+                    }else if(k.indexOf('!') === 0){
+                        htmlTable += (' ' + k.substring(1) + '="' + tdAttrDict[k] + '"');
+                    }else if(typeof data[tdAttrDict[k]] === 'object'){
+                        htmlTable += (' ' + k + '=\'' + JSON.stringify(data[tdAttrDict[k]])  + '\'');
+                    }
+                    else{
                         htmlTable += (' ' + k + '="' + data[tdAttrDict[k]] + '"');
                     }
                 }

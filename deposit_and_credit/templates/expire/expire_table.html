@@ -209,7 +209,7 @@
                 success: function(data){
                     if(data.success){
                         let file_name = data.data;
-                        downloadSmallFile(['/static/'+ file_name]);
+                        openSmallFile(['/static/'+ file_name]);
                     }else{
                         alert(data.error);
                     }

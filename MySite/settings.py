@@ -133,9 +133,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-from deposit_and_credit import settings as dac_settings
+
 STATIC_URL = '/static/'
+
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
-    dac_settings.EXPIRE_EXPLAIN_IMG_FOLDER
+    os.path.join('E:', '例会', '预审会', '预审表'),
 )

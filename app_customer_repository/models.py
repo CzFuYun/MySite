@@ -158,10 +158,12 @@ class ProjectRepository(models.Model):
             & (Q(close_date__isnull=True) | Q(close_date__lte=end_date)))
         return project_qs, exe_date
 
+
 class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
     notify_date = models.DateField(blank=True, null=True, verbose_name='通报日期')
     result = models.CharField(max_length=256, blank=True, null=True)
+    caption = models.CharField(max_length=32, blank=True, null=True)
 
 
 class PretrialDocument(models.Model):
@@ -177,6 +179,7 @@ class PretrialDocument(models.Model):
     document_name = models.CharField(max_length=128, blank=True, null=True)
     accept_date = models.DateField(auto_now_add=True, blank=True, null=True)
     result = models.IntegerField(choices=result_choices, default=10)
+    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.PROTECT)
 
     def __str__(self):
         return self.document_name + '@' + str(self.accept_date)

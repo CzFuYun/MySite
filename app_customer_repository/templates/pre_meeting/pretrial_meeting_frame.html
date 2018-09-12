@@ -25,15 +25,40 @@
 
         function refreshData(){
             buildList();
-            renderExeList();
+            renderList();
             lockThead('main_content');
         }
 
         function buildList(){
-
+            let postData = getDictFromPageLocation();
+            $.post({
+                url: '{% url "showPreMeetingList" %}',
+                data: postData,
+                dataType: 'json',
+                async:false,
+                success: function(response){
+                    let tableCol = response[0],
+                        tableColOrder = response[1],
+                        dataList = response[2];
+                    let table = makeListHtml(tableCol, tableColOrder, dataList);
+                    $('#main_content').html(table);
+                }
+            });
         }
 
-        function renderExeList() {
+        function renderList() {
+            $('td[row_num]').each(function(index, elem){
+                this.innerText = index + 1;
+            });
+
+            $('td[doc_list]').each(function(index, elem){
+                let docList = JSON.parse(this.getAttribute('doc_list'));
+                console.log(docList);
+                for(let i=0; i<docList.length; i++){
+
+                }
+            });
+
 
         }
 
