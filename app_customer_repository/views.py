@@ -578,9 +578,10 @@ def showPreMeetingList(request):
                 'pretrialdocument_set'
             ).values(
                 'id',
-                'pretrialdocument',     # id
+                'pretrialdocument',     # pretrialdocument_id
                 'pretrialdocument__department__caption',
-                'pretrialdocument__document_name'
+                'pretrialdocument__document_name',
+                'pretrialdocument__result',
             ).order_by(
                 'pretrialdocument__department__display_order'
             )
@@ -593,16 +594,17 @@ def showPreMeetingList(request):
                         'docs': []
                     }
                 doc_dict[meet_id]['docs'].append({
-                    'pretrialdocument':doc['pretrialdocument'],
+                    'pretrialdocument': doc['pretrialdocument'],
                     'pretrialdocument__document_name': doc['pretrialdocument__document_name'],
-                    'pretrialdocument__department__caption': doc['pretrialdocument__department__caption']
+                    'pretrialdocument__department__caption': doc['pretrialdocument__department__caption'],
+                    'pretrialdocument__result': doc['pretrialdocument__result'],
                 })
             data_list = utilities.combineQueryValues([meeting_list, list(doc_dict.values())], ['id', 'meeting_id'])
             table_col = collections.OrderedDict(**{
                 'row_num':
                     {
                         'col_name': '#',
-                        'width': '10%',
+                        'width': '5%',
                         'td_attr': {'!row_num': ''}
                     },
                 'caption':
@@ -620,8 +622,8 @@ def showPreMeetingList(request):
                 'pretrialdocument__count':
                     {
                         'col_name': '当期项目',
-                        'width': '20%',
-                        'td_attr': {'doc_list': 'docs'}
+                        'width': '40%',
+                        'td_attr': {'meeting_id': 'id', 'doc_list': 'docs' , '!result_choice': utilities.field_choices_to_dict(models.PretrialDocument.result_choices, False)}
                     }
             })
         return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))

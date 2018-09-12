@@ -52,11 +52,32 @@
             });
 
             $('td[doc_list]').each(function(index, elem){
-                let docList = JSON.parse(this.getAttribute('doc_list'));
-                console.log(docList);
-                for(let i=0; i<docList.length; i++){
-
+                $(this).addClass('text-nowrap');
+                let docListData = JSON.parse(this.getAttribute('doc_list')),
+                    choice = JSON.parse(this.getAttribute('result_choice')),
+                    docNum = docListData.length;
+                let docListHtml = '<a href="#" data-toggle="tooltip" meeting_id="' + this.getAttribute('meeting_id') + '" title="' + String(docNum) + '个项目"><i class="mdi mdi-gavel m-r-10" style="color:white"></i></a>';
+                for(let i=0; i<docNum; i++){
+                    let docId = docListData[i]['pretrialdocument'],
+                        dept = docListData[i]['pretrialdocument__department__caption'],
+                        customer = docListData[i]['pretrialdocument__document_name'] ? docListData[i]['pretrialdocument__document_name'].split(' - ')[1] : '',
+                        resultNum = Number(docListData[i]['pretrialdocument__result']),
+                        resultStr = choice[resultNum],
+                        icon = '';
+                    if(resultNum <= 10){
+                        icon = '<i class="mdi mdi-help-circle text-muted m-r-10"></i>';
+                    }else if(resultNum < 20){
+                        icon = '<i class="mdi mdi-star-half text-success m-r-10"></i>';
+                    }else if(resultNum < 30){
+                        icon = '<i class="mdi mdi-star text-success m-r-10"></i>';
+                    }else if(resultNum < 40){
+                        icon = '<i class="mdi mdi-star-outline text-warning m-r-10"></i>';
+                    }else {
+                        icon = '<i class="mdi mdi-star-off text-danger m-r-10"></i>';
+                    }
+                    docListHtml += '<a href="#" doc_id="' + docId + '" title="' + dept + ' - ' + customer + ' - ' + resultStr + '">' + icon + '</a>';
                 }
+                this.innerHTML = docListHtml;
             });
 
 

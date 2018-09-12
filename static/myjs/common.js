@@ -411,9 +411,13 @@ function makeListHtml(tableCol, tableColOrder, dataList){
                         let choicesDict = tdAttrDict[k];
                         tdValue = choicesDict[tdValue];
                     }else if(k.indexOf('!') === 0){
-                        htmlTable += (' ' + k.substring(1) + '="' + tdAttrDict[k] + '"');
+                        if(typeof tdAttrDict[k] === 'object'){
+                            htmlTable += (' ' + k.substring(1) + '=\'' + JSON.stringify(tdAttrDict[k]) + '\'');
+                        }else {
+                            htmlTable += (' ' + k.substring(1) + '="' + tdAttrDict[k] + '"');
+                        }
                     }else if(typeof data[tdAttrDict[k]] === 'object'){
-                        htmlTable += (' ' + k + '=\'' + JSON.stringify(data[tdAttrDict[k]])  + '\'');
+                        htmlTable += (' ' + k + '=\'' + JSON.stringify(data[tdAttrDict[k]]) + '\'');
                     }
                     else{
                         htmlTable += (' ' + k + '="' + data[tdAttrDict[k]] + '"');
