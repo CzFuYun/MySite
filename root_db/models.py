@@ -36,7 +36,7 @@ class Staff(models.Model):
         )
         all_sr_dict = {}
         all_sr_dict['sub_department_id'] = getSimpleSerializationRule(SubDepartment, 'sd_code', 'caption')
-        data_source_list = getXlDataForOrmOperation(workbook_name, 'sheet1')
+        data_source_list = getXlDataForOrmOperation(workbook_name, 'Sheet1')
         data_for_bulk_create = []
         for data_dict in data_source_list:
             for field in data_dict:
