@@ -25,6 +25,9 @@ class Permission(models.Model):
     widget_type = models.SmallIntegerField(choices=widget_type_choices, default=0)
     display_caption = models.CharField(max_length=32, null=True, blank=True)        # 在Menu或前端其他区域展示时的名称
 
+    def __str__(self):
+        return self.display_caption
+
 
 class MainMenuItem(models.Model):
     item = models.OneToOneField('Permission', on_delete=models.PROTECT)
@@ -43,6 +46,9 @@ class MainMenuItem(models.Model):
 class Role(models.Model):
     caption = models.CharField(max_length=32, unique=True)
     permissions = models.ManyToManyField('Permission', through='Role_Perm')
+
+    def __str__(self):
+        return self.caption
 
 
 class Role_Perm(models.Model):
