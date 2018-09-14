@@ -201,6 +201,9 @@ class ProjectExecution(models.Model):
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
+    def __str__(self):
+        return self.project.project_name
+
     @property
     def previous_update(self):
         previous_exe = self.previous_exe
@@ -234,7 +237,7 @@ class ProjectExecution(models.Model):
         for field in field_list:
             field_name = field.name
             new_value = pe_dict.get(field_name, None)
-            if new_value:
+            if not new_value is None:
                 if field_name in fields_to_compare:
                     try:
                         old_value = eval('previous_exe.' + fields_to_compare[field_name])
