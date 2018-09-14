@@ -15,7 +15,15 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+import xadmin
+from xadmin.plugins import xversion
+
 from MySite import views
+
+
+xadmin.autodiscover()
+xversion.register_models()
+
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -30,4 +38,5 @@ urlpatterns = [
     url(r'staffinfo\.update', views.updateStaffInfo, name='updateStaffInfo'),
     url(r'test/', views.test),
     url(r'feedback', views.feedback, name='feedback'),
+    url(r'x/', include('xAdmin.urls')),
 ]
