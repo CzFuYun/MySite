@@ -1,8 +1,10 @@
 import os
+
 from django.conf.urls import url, include
 from django.urls import path
 from django.contrib import admin
 from django.views.static import serve
+from MySite.settings import PERDOC_ROOT
 from . import views
 
 urlpatterns = [
@@ -24,7 +26,8 @@ urlpatterns = [
     url(r'projectexe\.edit', views.editProjectExe, name='editProjectExe'),
     url(r'projectreply\.set', views.setProjectReplied, name='setProjectReplied'),
     url(r'predoc\.download', views.downloadPreDoc, name='downloadPreDoc'),
-    # url(r'predoc\.show', serve, {'document_root': os.path.join(*['E:', '例会', '预审会', '预审表', 'static', 'images'])}),
+    url(r'predoc/', serve, {'document_root': PERDOC_ROOT}),
+    # url(r'predoc/', views.test),
     url(r'predoc\.show', views.showPreDoc, name='showPreDoc'),
     url(r'pretrialmeeting\.view', views.viewPretrialMeeting, name='viewPretrialMeeting'),
     url(r'premeetinglist\.show', views.showPreMeetingList, name='showPreMeetingList'),

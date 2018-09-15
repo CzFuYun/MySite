@@ -88,7 +88,7 @@
         function showPreDoc(elem){
             let preDocId = Number(elem.getAttribute('doc_id'));
             if(preDocId){
-                $.post({
+                $.get({
                     url: '{% url "showPreDoc" %}',
                     data: {preDocId: preDocId},
                     dataType: 'json',

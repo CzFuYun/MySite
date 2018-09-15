@@ -6,6 +6,7 @@ from django.db.models import Q, F, Sum, Count
 from app_customer_repository import models, models_operation as mo, html_forms, table_structure
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
+from MySite.settings import PERDOC_URL
 from root_db import models as rd_m
 # Create your views here.
 
@@ -521,12 +522,10 @@ def downloadPreDoc(request):        # 下载预审表文档
 
 
 def showPreDoc(request):
-    if request.method == 'POST':
-        pre_doc_id = request.POST.get('preDocId')
+    if request.method == 'GET':
+        pre_doc_id = request.GET.get('preDocId')
         key_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0] + '.pdf'
-        return HttpResponse(json.dumps(str.join('/', (*('', 'static'), *re.split(r'\\', key_name)))))
-    elif request.method == 'GET':
-        pass
+        return HttpResponse(json.dumps('/cr' + PERDOC_URL + '/'.join(re.split(r'\\', key_name))))
 
 
 def viewPretrialMeeting(request):
