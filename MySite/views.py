@@ -9,7 +9,7 @@ def test(request):
 
 
 def login(request):
-    return views.login(request)
+    return views.userLogin(request)
 
 
 @views.checkPermission

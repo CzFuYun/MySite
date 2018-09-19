@@ -1,13 +1,16 @@
 import json
+
 from django.urls import resolve
 from django.shortcuts import render, HttpResponse, redirect, reverse
+from django.contrib.auth import authenticate, login
+
 from app_permission import models, settings, permission_auth
 
 
 # ↓static ##############################################################################################################
 def checkPermission(func):
     def inner(request, *args, **kwargs):
-        user_id = request.session.get(settings.USER_ID, None)
+        user_id = request.user.username
         if user_id:
             user_obj = models.UserProfile.objects.filter(**{settings.USER_ID: user_id})
             if user_obj:
@@ -30,15 +33,16 @@ def checkPermission(func):
     return inner
 
 
-def login(request):
+def userLogin(request):
     '''用户登录时的视图函数'''
     if request.method == 'POST':
-        user_id = request.POST.get(settings.USER_ID)
+        username = request.POST.get(settings.USER_ID)
         password = request.POST.get(settings.PASSWORD)
-        user_obj = models.UserProfile.objects.get(**{settings.USER_ID: user_id, settings.PASSWORD: password})
-        if user_obj:
+        user = authenticate(request, username=username, password=password)
+        if user:
             request.session.set_expiry(settings.SESSION_AGE)
-            request.session[settings.USER_ID] = user_id
+            request.session[settings.USER_ID] = username
+            login(request, user)
             return redirect(reverse(settings.HOME_URL_NAME))
     return render(request, settings.LOGIN_PAGE)
 # ↑static ##############################################################################################################

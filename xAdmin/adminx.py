@@ -7,10 +7,9 @@ from app_customer_repository import models as cr_m
 
 
 class BaseSetting:
-    enable_themes = True
-    use_bootswatch = True
-
-xadmin.site.register(views.BaseAdminView, BaseSetting)
+    # enable_themes = True
+    # use_bootswatch = True
+    pass
 
 
 class GlobalSetting:
@@ -18,10 +17,8 @@ class GlobalSetting:
     site_footer = "华夏银行常州分行公司业务部"
     menu_style = "accordion"
 
-xadmin.site.register(views.CommAdminView, GlobalSetting)
 
-
-# class UsersAdmin:
+# class UserProfileAdmin:
 #     list_display = ('user_id', 'password', 'roles', )
 #     readonly_fields = ('password', )
 #     # style_fields = {'roles': 'checkbox-inline', }     # 报错
@@ -38,7 +35,7 @@ xadmin.site.register(views.CommAdminView, GlobalSetting)
 #             self.readonly_fields = []
 #         return self.readonly_fields
 #
-# xadmin.site.register(p_m.Users, UsersAdmin)
+# xadmin.site.register(p_m.UserProfile, UserProfileAdmin)
 # class UserProfileAdmin(UserAdmin):
 #     pass
 #
@@ -48,8 +45,6 @@ xadmin.site.register(views.CommAdminView, GlobalSetting)
 class ProjectAdmin:
     list_display = ('customer', 'staff', 'tmp_close_date', 'close_reason', )
 
-xadmin.site.register(cr_m.ProjectRepository, ProjectAdmin)
-
 
 class PretrialDocumentAdmin:
     list_display = ('customer_name', 'department', 'reason', 'net_total', 'agree_net', 'result', 'meeting', )
@@ -57,11 +52,14 @@ class PretrialDocumentAdmin:
     list_filter = ('meeting__meeting_date', 'reason', )
     # list_export_fields = ('', '',)
 
-xadmin.site.register(cr_m.PretrialDocument, PretrialDocumentAdmin)
-
 
 class PretrialMeetingAdmin:
     list_display = ('caption', 'meeting_date', )
     list_per_page = 20
 
+
+xadmin.site.register(views.BaseAdminView, BaseSetting)
+xadmin.site.register(views.CommAdminView, GlobalSetting)
+xadmin.site.register(cr_m.ProjectRepository, ProjectAdmin)
+xadmin.site.register(cr_m.PretrialDocument, PretrialDocumentAdmin)
 xadmin.site.register(cr_m.PretrialMeeting, PretrialMeetingAdmin)

@@ -12,17 +12,7 @@ class UserProfile(AbstractUser):
         null=True,
         on_delete=models.PROTECT
     )
-    # username = models.CharField(max_length=64)
     roles = models.ManyToManyField('Role')      # 一个用户可能拥有多重角色
-
-
-# class UserAccount(AbstractUser):
-#     nick_name = models.CharField(max_length=32, blank=True, null=True)
-#     # staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT)
-#     photo = models.ImageField(upload_to='image/%Y/%m', blank=True, null=True)
-#
-#     def __str__(self):
-#         return self.nick_name
 
 
 class Permission(models.Model):
