@@ -512,21 +512,20 @@ def delProject(request):
             return render(request, 'blank_form.html', locals())
 
 
-def downloadPreDoc(request):        # 下载预审表文档
-    file_dir = ['E:', '例会', '预审会', '预审表']
-    pre_doc_id = request.POST.get('preDocId')
-    key_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0] + '.pdf'
-    file_full_name = os.path.join(*[*file_dir, *re.split(r'\\', key_name)])
-    return utilities.downloadFile(file_full_name)
+# def downloadPreDoc(request):        # 下载预审表文档
+#     file_dir = ['E:', '例会', '预审会', '预审表']
+#     pre_doc_id = request.POST.get('preDocId')
+#     key_name = re.split(r'\\', models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0])
+#     file_full_name = os.path.join(*[*file_dir, key_name[0], '预审表 - ' + key_name[1] + '.pdf'])
+#     return utilities.downloadFile(file_full_name)
 
 
 def showPreDoc(request):
-    if request.method == 'POST':
-        pre_doc_id = request.POST.get('preDocId')
-        key_name = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('document_name')[0][0] + '.pdf'
-        return HttpResponse(json.dumps(str.join('/', (*('', 'static'), *re.split(r'\\', key_name)))))
-    elif request.method == 'GET':
-        pass
+    if request.method == 'GET':
+        pre_doc_id = request.GET.get('preDocId')
+        pre_doc = models.PretrialDocument.objects.filter(id=pre_doc_id).values_list('meeting__caption', 'customer_name').first()
+        doc_full_name = '/'.join(('', 'static', pre_doc[0], pre_doc[1])) + '.pdf'
+        return HttpResponse(json.dumps(doc_full_name))
 
 
 def viewPretrialMeeting(request):
@@ -554,7 +553,7 @@ def showPreMeetingList(request):
             doc_list = models.PretrialDocument.objects.filter(document_name__icontains=customer_name)
             if doc_list.exists():
                 data_list = doc_list.filter(q_start & q_end).values(
-                    'document_name',
+                    'customer_name',
                     'result',
                     'meeting__caption',
                     'meeting__meeting_date',
@@ -580,7 +579,7 @@ def showPreMeetingList(request):
                 'id',
                 'pretrialdocument',     # pretrialdocument_id
                 'pretrialdocument__department__caption',
-                'pretrialdocument__document_name',
+                'pretrialdocument__customer_name',
                 'pretrialdocument__result',
             ).order_by(
                 'pretrialdocument__department__display_order'
@@ -595,7 +594,7 @@ def showPreMeetingList(request):
                     }
                 doc_dict[meet_id]['docs'].append({
                     'pretrialdocument': doc['pretrialdocument'],
-                    'pretrialdocument__document_name': doc['pretrialdocument__document_name'],
+                    'pretrialdocument__customer_name': doc['pretrialdocument__customer_name'],
                     'pretrialdocument__department__caption': doc['pretrialdocument__department__caption'],
                     'pretrialdocument__result': doc['pretrialdocument__result'],
                 })
