@@ -47,9 +47,9 @@ class ProjectAdmin:
 
 
 class PretrialDocumentAdmin:
-    list_display = ('customer_name', 'department', 'reason', 'net_total', 'agree_net', 'result', 'meeting', )
+    list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'agree_net', 'result', 'meeting', )
     list_per_page = 20
-    list_filter = ('meeting__meeting_date', 'reason', )
+    list_filter = ('meeting__caption', 'meeting__meeting_date', 'reason', )
     # list_export_fields = ('', '',)
 
 

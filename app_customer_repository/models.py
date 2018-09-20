@@ -171,7 +171,7 @@ class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
     notify_date = models.DateField(blank=True, null=True, verbose_name='通报日期')
     result = models.CharField(max_length=256, blank=True, null=True)
-    caption = models.CharField(max_length=32, blank=True, null=True)
+    caption = models.CharField(max_length=32, default='待预审')
 
     class Meta:
         verbose_name = '预审会'
@@ -199,10 +199,10 @@ class PretrialDocument(models.Model):
         (4, '其他'),
     )
     meeting = models.ForeignKey('PretrialMeeting', on_delete=models.PROTECT, verbose_name='预审会')
-    customer_name = models.CharField(max_length=128, blank=True, null=True, verbose_name='预审表')
-    accept_date = models.DateField(auto_now_add=True, blank=True, null=True, verbose_name='受理日期')
+    customer_name = models.CharField(max_length=128, null=True, verbose_name='客户名称（全称）')
+    accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
     result = models.IntegerField(choices=result_choices, default=10, verbose_name='审议结果')
-    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.PROTECT, verbose_name='经营部门')
+    department = models.ForeignKey('root_db.Department', null=True, on_delete=models.PROTECT, verbose_name='经营部门')
     reason = models.IntegerField(choices=reason_choices, default=0, verbose_name='上会原因')
     remark = models.TextField(blank=True, null=True, verbose_name='备注')
     order = models.IntegerField(default=0, verbose_name='上会顺位')
@@ -216,6 +216,7 @@ class PretrialDocument(models.Model):
     class Meta:
         verbose_name = '预审项目'
         verbose_name_plural = verbose_name
+        ordering = ['order', '-accept_date', 'department__display_order']
 
     def __str__(self):
         return self.customer_name

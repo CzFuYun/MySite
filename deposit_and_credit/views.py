@@ -360,22 +360,19 @@ def viewExpirePromptTable(request):
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
-        expire_id = Q(id=request_dict.get('expire_id')) if request_dict.get('expire_id') else Q(id__gt=0)
+        expire_id = Q(id=request_dict.get('expire_id')) if request_dict.get('expire_id') else Q(id__isnull=False)
         is_finished = True if request_dict.get('is_finished') == '1' else False
         if is_finished:
             finish_after = Q(
-                finish_date__gte=request_dict.get('finish_after') if request_dict.get('finish_after') else '1990-01-01')
+                finish_date__gte=request_dict.get('finish_after')) if request_dict.get('finish_after') else Q(id__isnull=False)
             finish_before = Q(
-                finish_date__lte=request_dict.get('finish_before') if request_dict.get('finish_before') else str(today))
+                finish_date__lte=request_dict.get('finish_before')) if request_dict.get('finish_before') else Q(id__isnull=False)
         else:
             finish_after = Q(finish_date__isnull=True)
             finish_before = Q(finish_date__isnull=True)
             table_col.pop('finish_date')
-        expire_after = Q(expire_date__gte=request_dict.get('expire_after') if request_dict.get('expire_after') else str(
-            data_date - timedelta(days=100)))
-        expire_before = Q(
-            expire_date__lte=request_dict.get('expire_before') if request_dict.get('expire_before') else str(
-                today + timedelta(days=120)))
+        expire_after = Q(expire_date__gte=request_dict.get('expire_after')) if request_dict.get('expire_after') else Q(id__isnull=False)
+        expire_before = Q(expire_date__lte=request_dict.get('expire_before')) if request_dict.get('expire_before') else Q(id__isnull=False)
         if request_dict.get('download'):
             has_punishment_filter_condition = request_dict.getlist('has_punishment')
             if '1' in has_punishment_filter_condition and '0' in has_punishment_filter_condition:
@@ -526,9 +523,12 @@ def finishExpirePrompt(expire_obj):
     if not expire_obj.finish_date:
         today = models_operation.DateOperation().today
         expire_obj.finish_date = today
-        if expire_obj.punishment > 0 :
+        if expire_obj.punishment >= 100 :
             staff = expire_obj.staff_id
             staff.setYellowRedCard()
+        else:
+            expire_obj.punishment = 0
+            expire_obj.save()
         ret['success'] = True
         return ret
     else:
