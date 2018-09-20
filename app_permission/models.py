@@ -1,15 +1,28 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+
 from app_permission import settings
 
 # ↓static ##############################################################################################################
-class UserProfile(models.Model):
+class UserProfile(AbstractUser):
     user_id = models.OneToOneField(
         to=settings.USER_RESOURCE_MODEL,
         to_field=settings.USER_ID_RESOURCE_FIELD,
+        blank=True,
+        null=True,
         on_delete=models.PROTECT
     )
-    password = models.CharField(max_length=16)
+    # username = models.CharField(max_length=64)
     roles = models.ManyToManyField('Role')      # 一个用户可能拥有多重角色
+
+
+# class UserAccount(AbstractUser):
+#     nick_name = models.CharField(max_length=32, blank=True, null=True)
+#     # staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT)
+#     photo = models.ImageField(upload_to='image/%Y/%m', blank=True, null=True)
+#
+#     def __str__(self):
+#         return self.nick_name
 
 
 class Permission(models.Model):

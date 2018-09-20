@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'xAdmin',
 ]
 
+AUTH_USER_MODEL = 'app_permission.UserProfile'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
