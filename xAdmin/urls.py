@@ -3,5 +3,5 @@ import xadmin
 
 
 urlpatterns = [
-    url(r'', xadmin.site.urls),
+    url(r'', xadmin.site.urls, name='xadmin'),
 ]

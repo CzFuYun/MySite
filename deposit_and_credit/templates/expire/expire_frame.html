@@ -129,13 +129,6 @@
         }
 
         function showExpireEditor(elem){
-            if(FILTER.is_finished.includes('1')){
-                swal({
-                    title: '已办结，不可修改',
-                    type: 'error',
-                });
-                return;
-            }
             let pk = elem.getAttribute('expire_id');
             if(!pk){
                 return false;

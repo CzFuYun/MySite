@@ -192,9 +192,9 @@ class PretrialDocument(models.Model):
         (40, '否决'),
     )
     reason_choices = (
-        (0, '未知'),
+        (0, 'unknown'),
         (1, '新增额度'),
-        # (2, '存量新增'),
+        (2, '平移'),
         (3, '担保变更'),
         (4, '其他'),
     )

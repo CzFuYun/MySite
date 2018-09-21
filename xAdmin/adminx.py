@@ -1,9 +1,5 @@
 import xadmin
 from xadmin import views
-from xadmin.plugins.auth import UserAdmin
-
-from app_permission import models as p_m
-from app_customer_repository import models as cr_m
 
 
 class BaseSetting:
@@ -42,24 +38,8 @@ class GlobalSetting:
 # xadmin.site.register(p_m.UserProfile, UserProfileAdmin)
 
 
-class ProjectAdmin:
-    list_display = ('customer', 'staff', 'tmp_close_date', 'close_reason', )
 
-
-class PretrialDocumentAdmin:
-    list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'agree_net', 'result', 'meeting', )
-    list_per_page = 20
-    list_filter = ('meeting__caption', 'meeting__meeting_date', 'reason', )
-    # list_export_fields = ('', '',)
-
-
-class PretrialMeetingAdmin:
-    list_display = ('caption', 'meeting_date', )
-    list_per_page = 20
 
 
 xadmin.site.register(views.BaseAdminView, BaseSetting)
 xadmin.site.register(views.CommAdminView, GlobalSetting)
-xadmin.site.register(cr_m.ProjectRepository, ProjectAdmin)
-xadmin.site.register(cr_m.PretrialDocument, PretrialDocumentAdmin)
-xadmin.site.register(cr_m.PretrialMeeting, PretrialMeetingAdmin)

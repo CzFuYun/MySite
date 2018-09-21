@@ -359,14 +359,14 @@ def viewExpirePromptTable(request):
         imp_date = models_operation.DateOperation()
         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
         today = imp_date.today
-        data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
+        # data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
         expire_id = Q(id=request_dict.get('expire_id')) if request_dict.get('expire_id') else Q(id__isnull=False)
         is_finished = True if request_dict.get('is_finished') == '1' else False
         if is_finished:
             finish_after = Q(
-                finish_date__gte=request_dict.get('finish_after')) if request_dict.get('finish_after') else Q(id__isnull=False)
+                finish_date__gte=request_dict.get('finish_after')) if request_dict.get('finish_after') else Q(finish_date__isnull=False)
             finish_before = Q(
-                finish_date__lte=request_dict.get('finish_before')) if request_dict.get('finish_before') else Q(id__isnull=False)
+                finish_date__lte=request_dict.get('finish_before')) if request_dict.get('finish_before') else Q(finish_date__isnull=False)
         else:
             finish_after = Q(finish_date__isnull=True)
             finish_before = Q(finish_date__isnull=True)
@@ -466,7 +466,7 @@ def editExpirePrompt(request):
     content_title = '业务到期-详情'
     if pk:
         expire_obj = dac_models.ExpirePrompt.objects.get(id=pk)
-        if expire_obj.finish_date:
+        if expire_obj.finish_date and not request.user.is_superuser:
             return render(request, 'feedback.html', {'swal_type': 'error', 'title': '已办结，不可修改'})
         form_title = expire_obj.customer.name
         if request.method == 'GET':
