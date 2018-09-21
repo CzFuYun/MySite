@@ -29,33 +29,40 @@ from . import models_operation
 
 
 class Contributor(models.Model):
+    approve_line_choices = (
+        ('', '无贷'),
+        ('地区', '地区'),
+        ('小微', '小微'),
+    )
     customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
     department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='经营部门')
-    approve_line = models.CharField(max_length=8, default='', verbose_name='审批条线')
-    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT)
-    loan_rate = models.DecimalField(max_digits=8, decimal_places=4, default=0, verbose_name='加权利率（%）')
-    loan_interest = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款年息（万元）')
-    loan = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款含ABS余额（万元）')
-    net_BAB = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='银票净额（万元）')
-    net_TF = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贸易融资净额（万元）')
-    net_GL = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='保函净额（万元）')
-    net_total = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='一般用信净额（万元）')
-    lr_BAB = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='全额银票（万元）')
-    expire_date = models.DateField(auto_now_add=False, null=True, blank=True)
-    invest_banking = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='投行业务（万元）')
+    approve_line = models.CharField(max_length=8, choices=approve_line_choices, default='', verbose_name='审批条线')
+    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='客户经理')
+    loan_rate = models.DecimalField(max_digits=8, decimal_places=4, default=0, verbose_name='加权利率')
+    loan_interest = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款年息')
+    loan = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款含ABS余额')
+    net_BAB = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='银票净额')
+    net_TF = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贸易融资净额')
+    net_GL = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='保函净额')
+    net_total = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='一般用信净额')
+    lr_BAB = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='全额银票')
+    expire_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='业务到期')
+    invest_banking = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='投行业务')
     invest_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='投行到期日')
     ABS_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='ABS到期日')
     defuse_expire = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='化解到期日')
     data_date = models.DateField(auto_now_add=False, null=True, blank=True)
-    saving_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄余额（万元）')
-    saving_yd_avg = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄日均（万元）')
-    is_green_finance = models.BooleanField(default=False)
+    saving_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄余额')
+    saving_yd_avg = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='储蓄日均')
+    is_green_finance = models.BooleanField(default=False, verbose_name='绿色金融')
 
     def __str__(self):
         return self.customer.name
 
     class Meta:
-        verbose_name_plural = '回报客户清单'
+        verbose_name = '贡献度名单'
+        verbose_name_plural = verbose_name
+        ordering = ['-data_date', 'department__display_order', '-customer__series__gov_plat_lev']
 
 
 class ContributionTrees(models.Model):

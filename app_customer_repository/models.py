@@ -28,6 +28,10 @@ class CustomerRepository(models.Model):
     tax_years = models.CharField(max_length=64, blank=True, null=True, verbose_name='纳税大户年份')
     inter_clearing_years = models.CharField(max_length=64, blank=True, null=True, verbose_name='国结大户年份')
 
+    class Meta:
+        verbose_name = '客户库'
+        verbose_name_plural = verbose_name
+
     def __str__(self):
         return self.name
 
@@ -82,6 +86,10 @@ class ProjectRepository(models.Model):
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='专审')
+
+    class Meta:
+        verbose_name = '项目库'
+        verbose_name_plural = verbose_name
 
     def __str__(self):
         return self.project_name
@@ -163,7 +171,15 @@ class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
     notify_date = models.DateField(blank=True, null=True, verbose_name='通报日期')
     result = models.CharField(max_length=256, blank=True, null=True)
-    caption = models.CharField(max_length=32, blank=True, null=True)
+    caption = models.CharField(max_length=32, default='待预审')
+
+    class Meta:
+        verbose_name = '预审会'
+        verbose_name_plural = verbose_name
+        ordering = ('-id', )
+
+    def __str__(self):
+        return self.caption
 
 
 class PretrialDocument(models.Model):
@@ -175,14 +191,35 @@ class PretrialDocument(models.Model):
         (30, '续议'),
         (40, '否决'),
     )
-    meeting = models.ForeignKey('PretrialMeeting', on_delete=models.PROTECT)
-    document_name = models.CharField(max_length=128, blank=True, null=True)
-    accept_date = models.DateField(auto_now_add=True, blank=True, null=True)
-    result = models.IntegerField(choices=result_choices, default=10)
-    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.PROTECT)
+    reason_choices = (
+        (0, 'unknown'),
+        (1, '新增额度'),
+        (2, '平移'),
+        (3, '担保变更'),
+        (4, '其他'),
+    )
+    meeting = models.ForeignKey('PretrialMeeting', on_delete=models.PROTECT, verbose_name='预审会')
+    customer_name = models.CharField(max_length=128, null=True, verbose_name='客户名称（全称）')
+    accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
+    result = models.IntegerField(choices=result_choices, default=10, verbose_name='审议结果')
+    department = models.ForeignKey('root_db.Department', null=True, on_delete=models.PROTECT, verbose_name='经营部门')
+    reason = models.IntegerField(choices=reason_choices, default=0, verbose_name='上会原因')
+    remark = models.TextField(blank=True, null=True, verbose_name='备注')
+    order = models.IntegerField(default=0, verbose_name='上会顺位')
+    net_total = models.IntegerField(default=0, verbose_name='申报总敞口（万元）')
+    exist_net = models.IntegerField(default=0, verbose_name='已有敞口（万元）')
+    agree_net = models.IntegerField(default=0, verbose_name='同意敞口（万元）')
+    guarantee = models.TextField(blank=True, null=True, verbose_name='担保方式')
+    is_defuse = models.NullBooleanField(blank=True, null=True, verbose_name='涉及化解')
+    is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
+
+    class Meta:
+        verbose_name = '预审项目'
+        verbose_name_plural = verbose_name
+        ordering = ['order', '-accept_date', 'department__display_order']
 
     def __str__(self):
-        return self.document_name + '@' + str(self.accept_date)
+        return self.customer_name
 
     # @classmethod
     # def no_meeting_linked(cls):
@@ -200,6 +237,10 @@ class ProjectExecution(models.Model):
     remark = models.ForeignKey('ProjectRemark', default=0, on_delete=models.PROTECT, verbose_name='备注')
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
+
+    class Meta:
+        verbose_name = '项目管理'
+        verbose_name_plural = verbose_name
 
     def __str__(self):
         return self.project.project_name

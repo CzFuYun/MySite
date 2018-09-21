@@ -153,11 +153,9 @@ function downloadFileByForm(url, data, method){
     $('<form target="_blank" action="' + url +'" method="' + (method || 'post') + '">' + inputs + '</form>').appendTo('body').submit().remove();
 }
 
-function openSmallFile(urlList){
-    for(var i=0; i<urlList.length; i++){
-        let a = '<a href="' + urlList[i] + '" target="_blank"></a>';
-        $(a)[0].click();
-    }
+function openSmallFile(url){
+    let a = '<a href="' + url + '" target="_blank"></a>';
+    $(a)[0].click();
 }
 
 function getElemLocation(elem, offsetX, offsetY){

@@ -9,7 +9,7 @@ def test(request):
 
 
 def login(request):
-    return views.login(request)
+    return views.userLogin(request)
 
 
 @views.checkPermission
@@ -23,28 +23,28 @@ def feedback(request):
 
 
 def exportAccountedCompany(request):
-    # http://139.17.1.35:8000/accounted_company.export
+    # http://127.0.0.1:8000/accounted_company.export
     file_name = r'E:\AAA报表定期更新\贡献度\@AccountedCompany.xlsx'
     models_operation.updateOrCreateCompany(file_name)
     print('Success')
 
 
 def createDividedCompanyAccount(request):
-    # http://139.17.1.35:8000/divided_company_account.create
+    # http://127.0.0.1:8000/divided_company_account.create
     file_name = r'E:\AAA报表定期更新\贡献度\@DividedCompanyAccount.xlsx'
     models_operation.createDividedCompanyAccount(file_name)
     print('Success')
 
 
 def exportContributorAndSeries(request):
-    # http://139.17.1.35:8000/contributor_and_series.export
+    # http://127.0.0.1:8000/contributor_and_series.export
     file_name = r'E:\AAA报表定期更新\贡献度\@Contributor.xlsx'
     models_operation.createContributorAndUpdateSeries(file_name)
     print('Success')
 
 
 def updateStaffInfo(request):
-    # http://139.17.1.35:8000/staffinfo.update
+    # http://127.0.0.1:8000/staffinfo.update
     from root_db import models
     file_name = r'E:\AAA报表定期更新\贡献度\@staff.xlsx'
     models.Staff.bulkUpdate(file_name)

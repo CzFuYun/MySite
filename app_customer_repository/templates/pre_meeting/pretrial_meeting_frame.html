@@ -63,7 +63,7 @@
                     for(let i=0; i<docNum; i++){
                         let docId = docListData[i]['pretrialdocument'],
                             dept = docListData[i]['pretrialdocument__department__caption'],
-                            customer = docListData[i]['pretrialdocument__document_name'] ? docListData[i]['pretrialdocument__document_name'].split(' - ')[1] : '',
+                            customer = docListData[i]['pretrialdocument__customer_name'] ? docListData[i]['pretrialdocument__customer_name'] : '',
                             resultNum = Number(docListData[i]['pretrialdocument__result']),
                             resultStr = choice[resultNum],
                             icon = '';
@@ -93,7 +93,7 @@
                     data: {preDocId: preDocId},
                     dataType: 'json',
                     success: function(response){
-                        openSmallFile([response]);
+                        openSmallFile(response);
                     }
                 });
             }

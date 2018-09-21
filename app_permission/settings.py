@@ -4,7 +4,7 @@ MENU_ALL_ITEMS = 'menu_all_items'
 MENU_PERMITTED_ITEMS = 'menu_permitted_items'
 
 # 用户表中，用户id的字段名：
-USER_ID = 'user_id'
+USER_ID = 'username'
 # 用户表中，密码的字段名：
 PASSWORD = 'password'
 # Permission表的表名

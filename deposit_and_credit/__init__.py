@@ -1,0 +1,1 @@
+default_app_config = 'deposit_and_credit.apps.DepositConfig'

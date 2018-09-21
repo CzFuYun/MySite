@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'xAdmin',
 ]
 
+AUTH_USER_MODEL = 'app_permission.UserProfile'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -134,7 +136,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
