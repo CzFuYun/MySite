@@ -6,7 +6,6 @@ from django.db.models import Q, F, Sum, Count
 from app_customer_repository import models, models_operation as mo, html_forms, table_structure
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
-from MySite.settings import PERDOC_URL
 from root_db import models as rd_m
 # Create your views here.
 

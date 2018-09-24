@@ -16,11 +16,12 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from django.views.generic import TemplateView
+from django.views.static import serve
 
 import xadmin
 from xadmin.plugins import xversion
 
-from MySite import views
+from MySite import views, settings
 
 
 xadmin.autodiscover()
@@ -41,4 +42,5 @@ urlpatterns = [
     url(r'test/', views.test),
     url(r'feedback', views.feedback, name='feedback'),
     url(r'x/', include('xAdmin.urls')),
+    url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]

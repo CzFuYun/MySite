@@ -1,11 +1,16 @@
 import xadmin
 from xadmin import views
 
-from .models import ProjectRepository, PretrialDocument, PretrialMeeting
+from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialMeeting
+
+
+class CustomerAdmin:
+    pass
 
 
 class ProjectAdmin:
     list_display = ('customer', 'staff', 'tmp_close_date', 'close_reason', )
+    # search_fields = ['staff__name']
 
 
 class PretrialDocumentAdmin:
@@ -21,6 +26,7 @@ class PretrialMeetingAdmin:
     list_per_page = 20
 
 
+xadmin.site.register(CustomerRepository, CustomerAdmin)
 xadmin.site.register(ProjectRepository, ProjectAdmin)
 xadmin.site.register(PretrialDocument, PretrialDocumentAdmin)
 xadmin.site.register(PretrialMeeting, PretrialMeetingAdmin)

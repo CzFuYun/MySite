@@ -199,7 +199,7 @@ class PretrialDocument(models.Model):
         (4, '其他'),
     )
     meeting = models.ForeignKey('PretrialMeeting', on_delete=models.PROTECT, verbose_name='预审会')
-    customer_name = models.CharField(max_length=128, null=True, verbose_name='客户名称（全称）')
+    customer_name = models.CharField(max_length=128, null=True, verbose_name='客户名称')
     accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
     result = models.IntegerField(choices=result_choices, default=10, verbose_name='审议结果')
     department = models.ForeignKey('root_db.Department', null=True, on_delete=models.PROTECT, verbose_name='经营部门')
@@ -212,6 +212,7 @@ class PretrialDocument(models.Model):
     guarantee = models.TextField(blank=True, null=True, verbose_name='担保方式')
     is_defuse = models.NullBooleanField(blank=True, null=True, verbose_name='涉及化解')
     is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
+    document_file = models.FileField(upload_to='media/pre_doc/%Y/%m', blank=True, null=True, verbose_name='预审表')
 
     class Meta:
         verbose_name = '预审项目'
