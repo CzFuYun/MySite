@@ -93,6 +93,9 @@ class ExpirePrompt(models.Model):
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='xvshouxin_pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='xvshouxin_approver', verbose_name='专审')
 
+    def __str__(self):
+        return self.customer
+
     def toDict(self):
         fields = []
         d = {}

@@ -3,7 +3,7 @@ from django.db.models import Sum
 import xadmin
 from xadmin import views
 
-from .models import Contributor
+from .models import Contributor, ExpirePrompt
 from root_db.models import DividedCompanyAccount
 
 class ContributorAdmin:
@@ -44,4 +44,12 @@ class ContributorAdmin:
         return instance.customer.series.gov_plat_lev
     getGovLevel.short_description = '平台等级'
 
+
+class ExpirePromptAdmin:
+    ordering = ['staff_id__sub_department__superior__display_order', 'staff_id']
+    list_filter = ['expire_date', 'finish_date']
+    list_display = ['customer', 'staff_id', 'expire_date', 'remark']
+
+
 xadmin.site.register(Contributor, ContributorAdmin)
+xadmin.site.register(ExpirePrompt, ExpirePromptAdmin)

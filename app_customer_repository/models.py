@@ -212,7 +212,7 @@ class PretrialDocument(models.Model):
     guarantee = models.TextField(blank=True, null=True, verbose_name='担保方式')
     is_defuse = models.NullBooleanField(blank=True, null=True, verbose_name='涉及化解')
     is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
-    document_file = models.FileField(upload_to='media/pre_doc/%Y/%m', blank=True, null=True, verbose_name='预审表')
+    document_file = models.FileField(upload_to='pre_doc/%Y/%m', blank=True, null=True, verbose_name='预审表')
 
     class Meta:
         verbose_name = '预审项目'

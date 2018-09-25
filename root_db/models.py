@@ -157,7 +157,10 @@ class AccountedCompany(models.Model):
     inter_settle = models.IntegerField(default=0, verbose_name='国际结算量')
 
     def __str__(self):
-        return self.name
+        try:
+            return self.name
+        except:
+            return 'None'
 
     class Meta:
         verbose_name_plural = '已开户对公客户'

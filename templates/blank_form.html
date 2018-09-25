@@ -22,25 +22,25 @@
         <div id="{{ form_id|default:'form' }}_header" class="card-header card-outline-info">
             <h3 class="card-title" style="margin: 0 auto; line-height: 50px;">{{ form_title }}</h3>
         </div>
-<form id="{{ form_id|default:'form' }}" method="post" action="{% url form_action %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
-        <div id="{{ form_id|default:'form' }}_body" class="card-body">
+        <form id="{{ form_id|default:'form' }}" method="post" action="{% url form_action %}" enctype="{{ enc_type|default:'multipart/form-data' }}">
+            <div id="{{ form_id|default:'form' }}_body" class="card-body">
 
-                    {% csrf_token %}
-                    {{ form.as_p }}
+                        {% csrf_token %}
+                        {{ form.as_p }}
 
-            {% block form_body %}{% endblock %}
-        </div>
-        <div id="{{ form_id|default:'form' }}_foot" class="card-body text-right">
-            <hr>
-            <div class="form-group">
-                <button id="{{ form_id|default:'form' }}_submit" type="submit" class="btn btn-success" name="submit_name" value="submit"><i class="mdi mdi-check"></i>确认</button>
-                <button id="{{ form_id|default:'form' }}_close" type="button" class="btn btn-inverse" onclick="window.close()"><i class="mdi mdi-close"></i>关闭</button>
-                {% block form_button %}{% endblock %}
+                {% block form_body %}{% endblock %}
+            </div>
+            <div id="{{ form_id|default:'form' }}_foot" class="card-body text-right">
+                <hr>
+                <div class="form-group">
+                    <button id="{{ form_id|default:'form' }}_submit" type="submit" class="btn btn-success" name="submit_name" value="submit"><i class="mdi mdi-check"></i>确认</button>
+                    <button id="{{ form_id|default:'form' }}_close" type="button" class="btn btn-inverse" onclick="window.close()"><i class="mdi mdi-close"></i>关闭</button>
+                    {% block form_button %}{% endblock %}
+
+                </div>
 
             </div>
-
-        </div>
-</form>
+        </form>
     </div>
 
 {% endblock %}

@@ -9,7 +9,7 @@ class BaseSetting:
 
 
 class GlobalSetting:
-    site_title = "自助填报系统"
+    site_title = "信息共享系统"
     site_footer = "华夏银行常州分行公司业务部"
     menu_style = "accordion"
 

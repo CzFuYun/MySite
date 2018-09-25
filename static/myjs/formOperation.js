@@ -248,6 +248,16 @@ function modifyForm(form){
             $(elem).addClass('form-control');
         }
     );
+    $('input[type=date]', $form).each(
+        function(index, elem){
+            try{
+                let date = elem.getAttribute('value').replace(/\D/g,'-');
+                elem.setAttribute('value', date);
+            }catch(e){
+                console.log(e);
+            }
+        }
+    );
     $('textarea', $form).each(
         function(index, elem){
             $(elem).addClass('form-control');
