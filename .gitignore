@@ -109,3 +109,4 @@ venv.bak/
 .idea/*
 
 deposit_and_credit/expire_explain/
+media/

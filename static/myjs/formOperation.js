@@ -246,15 +246,16 @@ function modifyForm(form){
     $('input', $form).each(
         function(index, elem){
             $(elem).addClass('form-control');
-        }
-    );
-    $('input[type=date]', $form).each(
-        function(index, elem){
-            try{
-                let date = elem.getAttribute('value').replace(/\D/g,'-');
-                elem.setAttribute('value', date);
-            }catch(e){
-                console.log(e);
+            if(elem.type === 'date'){
+                try{
+                    let dateStr = elem.getAttribute('value');
+                    if(dateStr){
+                        let date = new Date(dateStr);
+                        elem.setAttribute('value', date.Format('yyyy-MM-dd'));
+                    }
+                }catch(e){
+                    console.log(e);
+                }
             }
         }
     );
