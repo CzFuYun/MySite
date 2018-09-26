@@ -43,6 +43,7 @@ class PretrialDocumentWaitForMeetingAdmin:
     list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file', 'make_vote')
     list_per_page = 20
     list_editable = ['net_total', 'reason']
+    # reversion_enable = True
 
     def queryset(self):
         qs = super(PretrialDocumentWaitForMeetingAdmin, self).queryset()

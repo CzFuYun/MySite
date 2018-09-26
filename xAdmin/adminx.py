@@ -3,8 +3,8 @@ from xadmin import views
 
 
 class BaseSetting:
-    # enable_themes = True
-    # use_bootswatch = True
+    enable_themes = True
+    use_bootswatch = True
     pass
 
 

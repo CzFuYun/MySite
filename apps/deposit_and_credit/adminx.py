@@ -47,7 +47,7 @@ class ContributorAdmin:
 
 class ExpirePromptAdmin:
     ordering = ['staff_id__sub_department__superior__display_order', 'staff_id']
-    list_filter = ['expire_date', 'finish_date']
+    list_filter = ['expire_date', 'finish_date', 'current_progress']
     list_display = ['customer', 'staff_id', 'expire_date', 'remark']
 
 
