@@ -60,7 +60,7 @@ class ProjectRepository(models.Model):
     )
     customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT, verbose_name='客户')
     project_name = models.CharField(max_length=64, verbose_name='项目名称')
-    staff = models.ForeignKey('root_db.Staff', on_delete=models.PROTECT, verbose_name='客户经理')
+    staff = models.ForeignKey('root_db.Staff', to_field='staff_id', on_delete=models.PROTECT, verbose_name='客户经理')
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
     is_green = models.BooleanField(verbose_name='绿色金融')
     is_focus = models.BooleanField(default=False, verbose_name='重点项目')

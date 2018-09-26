@@ -40,6 +40,7 @@ urlpatterns = [
     url(r'contributor_and_series\.export', views.exportContributorAndSeries),
     url(r'staffinfo\.update', views.updateStaffInfo, name='updateStaffInfo'),
     url(r'test/', views.test),
+    url(r'pk/', views.getPkName, name='getPkName'),
     url(r'feedback', views.feedback, name='feedback'),
     url(r'x/', include('xAdmin.urls')),
     url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),

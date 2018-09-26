@@ -147,6 +147,7 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
     os.path.join('E:', '例会', '预审会', '预审表'),
+    os.path.join(BASE_DIR, 'extra_apps', 'xadmin', 'static'),
 )
 
 

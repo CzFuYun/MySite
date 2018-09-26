@@ -81,4 +81,5 @@ class RelateFieldPlugin(BaseAdminPlugin):
                             widget=(style == 'fk-ajax' and ForeignKeySearchWidget or ForeignKeySelectWidget)(db_field.remote_field, self.admin_view, using=db))
         return attrs
 
+
 site.register_plugin(RelateFieldPlugin, ModelFormAdminView)

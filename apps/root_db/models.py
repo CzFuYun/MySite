@@ -21,12 +21,14 @@ class Staff(models.Model):
     yellow_red_card = models.IntegerField(default=0, verbose_name='授信到期黄红牌')
     red_card_expire_date = models.DateField(blank=True, null=True, verbose_name='红牌到期日')
 
-    def __str__(self):
-        return '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
-
     class Meta:
-        verbose_name_plural = '员工信息'
+        # unique_together = ['sub_department', 'name']
+        verbose_name = '员工'
+        verbose_name_plural = verbose_name
         # ordering = 'sub_department'
+
+    def __str__(self):
+        return self.sub_department.caption + self.name       # '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
 
     @classmethod
     def bulkUpdate(cls, workbook_name):

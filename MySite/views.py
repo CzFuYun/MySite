@@ -1,5 +1,7 @@
-import json
+import json, importlib
+
 from django.shortcuts import render, HttpResponse, reverse, render_to_response
+
 from root_db import models_operation
 from app_permission import views, settings
 
@@ -65,6 +67,18 @@ def convertToUrl(request):
         ajax_result['error'] = '无对应url映射'
     return HttpResponse(json.dumps(ajax_result))
 
+
+def getPkName(request):
+    model_cls = request.GET.get('modelClass')
+    app, mod = model_cls.split('.')
+    models_module = importlib.import_module(app + '.models')
+    for i in dir(models_module):
+        if i.lower() == mod:
+            mod = i
+            break
+    mod = getattr(models_module, mod)
+    pk_name = mod._meta.pk.name
+    return HttpResponse(pk_name)
 
 # def getHtmlForm(request):
 #     if request.method == 'GET':
