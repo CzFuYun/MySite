@@ -220,7 +220,7 @@ class PretrialDocument(models.Model):
         ordering = ['order', '-accept_date', 'department__display_order']
 
     def __str__(self):
-        return '预审表 - ' + self.customer_name
+        return self.customer_name + str(self.accept_date)
 
     # @classmethod
     # def no_meeting_linked(cls):

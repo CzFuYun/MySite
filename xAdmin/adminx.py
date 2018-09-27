@@ -24,7 +24,7 @@ class GlobalSetting:
 #     list_export = ('xls', 'xml', 'csv', 'json', )
 #     list_export_fields = ('user_id', 'roles', )
 #     list_filter = ('user_id', )
-#     # search_fields = ('user_id', )     # 报错
+#
 #
 #     def get_readonly_fields(self):
 #         if self.user.is_superuser:

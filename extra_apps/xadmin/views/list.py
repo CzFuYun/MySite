@@ -67,12 +67,14 @@ class ResultItem(object):
 
     @property
     def label(self):
-        text = mark_safe(
-            self.text) if self.allow_tags else conditional_escape(self.text)
+        text = mark_safe(self.text) if self.allow_tags else conditional_escape(self.text)
         if force_text(text) == '':
             text = mark_safe('&nbsp;')
         for wrap in self.wraps:
-            text = mark_safe(wrap % text)
+            try:
+                text = mark_safe(wrap % text)
+            except:
+                text = mark_safe(wrap.replace('">%s</', '">' + text + '</'))
         return text
 
     @property

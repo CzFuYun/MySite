@@ -18,15 +18,15 @@ class CustomerAdmin:
 
 
 class ProjectAdmin:
-    list_display = ('customer', 'staff', 'tmp_close_date', 'close_reason', )
+    list_display = ['customer', 'staff', 'tmp_close_date', 'close_reason']
     # search_fields = ['staff__name']
 
 
 class PretrialDocumentAdmin:
-    list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'agree_net', 'result', 'meeting', 'show_file')
+    list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'agree_net', 'result', 'meeting', 'show_file']
     list_per_page = 50
-    list_filter = ('meeting__caption', 'meeting__meeting_date', 'reason', )
-    search_fields = ('customer_name',)
+    list_filter = ['meeting__caption', 'meeting__meeting_date', 'reason']
+    search_fields = ['customer_name']
     # list_export_fields = ('', '',)
     relfield_style = 'fk-ajax'
 
@@ -40,7 +40,7 @@ class PretrialDocumentAdmin:
 
 
 class PretrialDocumentWaitForMeetingAdmin:
-    list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file', 'make_vote')
+    list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file', 'make_vote']
     list_per_page = 20
     list_editable = ['net_total', 'reason']
     # reversion_enable = True
@@ -61,9 +61,15 @@ class PretrialDocumentWaitForMeetingAdmin:
     make_vote.short_description = 'Action'
 
 
+class PretrialDocumentInLine:
+    model = PretrialDocument
+    extra = 0
+
+
 class PretrialMeetingAdmin:
-    list_display = ('caption', 'meeting_date', )
+    list_display = ['caption', 'meeting_date']
     list_per_page = 20
+    inlines = [PretrialDocumentInLine]
 
 
 xadmin.site.register(CustomerRepository, CustomerAdmin)

@@ -15,6 +15,5 @@ class AccountedCompanyAdmin:
     relfield_style = 'fk-ajax'
 
 
-
 xadmin.site.register(Staff, StaffAdmin)
 xadmin.site.register(AccountedCompany, AccountedCompanyAdmin)
