@@ -5,7 +5,7 @@ from . import models_operation
 
 # class DepartmentDeposit(models.Model):
 #     data_date = models.DateField(null=True, blank=True)
-#     sub_department = models.ForeignKey(m.SubDepartment, to_field='sd_code', on_delete=models.PROTECT)
+#     sub_department = models.ForeignKey(m.SubDepartment, to_field='sd_code', on_delete=models.CASCADE)
 #     amount = models.BigIntegerField(default=0, verbose_name='余额（万元）')
 #     md_avg = models.BigIntegerField(default=0, verbose_name='月日均（万元）')
 #     sd_avg = models.BigIntegerField(default=0, verbose_name='季日均（万元）')
@@ -18,7 +18,7 @@ from . import models_operation
 ########################################################################################################################
 # class IndustryDeposit(models.Model):
 #     data_date = models.DateField(null=True, blank=True)
-#     industry = models.ForeignKey(m.Industry, to_field='code', default=1, on_delete=models.PROTECT)
+#     industry = models.ForeignKey(m.Industry, to_field='code', default=1, on_delete=models.CASCADE)
 #     amount = models.BigIntegerField(default=0, verbose_name='余额（万元）')
 #     md_avg = models.BigIntegerField(default=0, verbose_name='月日均（万元）')
 #     sd_avg = models.BigIntegerField(default=0, verbose_name='季日均（万元）')
@@ -34,10 +34,10 @@ class Contributor(models.Model):
         ('地区', '地区'),
         ('小微', '小微'),
     )
-    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
-    department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.PROTECT, verbose_name='经营部门')
+    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.CASCADE, verbose_name='客户')
+    department = models.ForeignKey('root_db.Department', null=True, blank=True, on_delete=models.CASCADE, verbose_name='经营部门')
     approve_line = models.CharField(max_length=8, choices=approve_line_choices, default='', verbose_name='审批条线')
-    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='客户经理')
+    staff = models.ForeignKey('root_db.Staff', null=True, blank=True, on_delete=models.CASCADE, verbose_name='客户经理')
     loan_rate = models.DecimalField(max_digits=8, decimal_places=4, default=0, verbose_name='加权利率')
     loan_interest = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款年息')
     loan = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name='贷款含ABS余额')
@@ -76,22 +76,22 @@ class ExpirePrompt(models.Model):
         (2, '暂缓'),
         (3, '退出'),
     )
-    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='客户')
-    staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
+    customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.CASCADE, verbose_name='客户')
+    staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='客户经理')
     expire_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='到期日')
     remark = models.CharField(max_length=512, default='', blank=True, null=True, verbose_name='备注')
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
     created_at = models.DateField(auto_now_add=True)
     apply_type = models.IntegerField(choices=apply_type_choices, default=1, verbose_name='续做')
-    current_progress = models.ForeignKey('app_customer_repository.Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='系统进度')
+    current_progress = models.ForeignKey('app_customer_repository.Progress', blank=True, null=True, on_delete=models.CASCADE, verbose_name='系统进度')
     chushen = models.DateField(blank=True, null=True, verbose_name='预计初审')
     reply = models.DateField(blank=True, null=True, verbose_name='预计批复')
     cp_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
     progress_update_date = models.DateField(blank=True, null=True)
     remark_update_date = models.DateField(blank=True, null=True)
-    pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='xvshouxin_pre_approver', verbose_name='初审')
-    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='xvshouxin_approver', verbose_name='专审')
+    pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_pre_approver', verbose_name='初审')
+    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_approver', verbose_name='专审')
 
     def __str__(self):
         return self.customer

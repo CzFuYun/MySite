@@ -49,10 +49,10 @@ HOME_URL_NAME = 'home'
 HOME_PAGE = 'home.html'
 # 主菜单图标,key:权限描述 value:前端样式的class
 MENU_ICONS = {
-    'root_显示主页': 'mdi mdi-home',
-    'root_客户及项目': 'mdi mdi-message',
-    'root_存款及用信': 'mdi mdi-coin',
-    'root_信息共享': '',
+    'root_显示主页': 'fa fa-home',
+    'root_客户及项目': 'fa fa-map-marker',
+    'root_存款及用信': 'fa fa-cny',
+    'root_信息共享': 'fa fa-share-alt',
 }
 
 

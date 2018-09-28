@@ -1,15 +1,16 @@
 import json, os, copy
 # import datetime as python_datetime
 from decimal import Decimal
+
 from django.shortcuts import render, HttpResponse, redirect, reverse, render_to_response
 from django.db.models import Q, Sum, F
 # from django.forms.models import model_to_dict
 from django.utils.timezone import datetime, timedelta
-# from MySite import utilities
+
+from MySite import utilities
 from root_db import models as rd_models
 from deposit_and_credit import models as dac_models, models_operation, settings, html_forms, table_structure
 from app_permission.views import checkPermission
-from MySite import utilities
 # import collections
 
 
@@ -81,7 +82,7 @@ def viewContribution(request):
         return HttpResponse('')
     if block == 'body':
         data_date = models_operation.DateOperation().last_data_date_str(dac_models.Contributor)
-        return render_to_response('contrib/contribution_body.html', {'department': request.user_dep, 'data_date': data_date})
+        return render_to_response('contrib/contribution_body.html', {'department': request.user.user_id.sub_department.superior_id, 'data_date': data_date})
     if block == 'js':
         return render_to_response('contrib/contribution_js.html')
 
@@ -108,6 +109,7 @@ def viewContributionTable(request):
             'opener_params': json.dumps(opener_params),
             'data_date': opener_params['data_date'],
             'department_list': rd_models.Department.getBusinessDept(utilities.return_as['choice']),
+            'user_dept': request.user.user_id.sub_department.superior_id
         })
 
 
@@ -120,6 +122,24 @@ def ajaxContribution(request):
         tree = json.dumps(temp)
         dac_models.ContributionTrees(data_date=data_date, contribution_tree=tree).save()
     return HttpResponse(tree)
+
+
+def downloadContributionData(request):
+    data_date = request.GET.get('dataDate')
+    dept = request.user.user_id.sub_department.superior.pk
+    if dept != 'JGBS':
+        q_dept = Q(department=dept)
+    else:
+        q_dept = Q(department__is_null=False)
+    data_list = dac_models.Contributor.objects.filter(data_date=data_date, customer__dividedcompanyaccount__data_date=data_date).filter(q_dept).annotate(
+        Sum('customer__dividedcompanyaccount__divided_amount'),
+        Sum('customer__dividedcompanyaccount__divided_yd_avg')
+    ).order_by(
+        'department__display_order',
+        '-customer__series__gov_plat_lev',
+        'customer__series',
+    )
+    return utilities.downloadWorkbook('贡献度数据' + data_date + '.xlsx', table_structure.contribution_download, data_list.values(*table_structure.contribution_download.keys()))
 
 
 def ajaxDeptOrder(request):
@@ -160,12 +180,10 @@ def viewSeriesContributionHistory(request):
         return render(request, 'contrib/series_contribution_history.html', {'opener_params': json.dumps({'null': 'null'})})
     elif request.method == 'POST':
         series_code = request.POST.get('series_code')
-        # series_caption = request.POST.get('series_caption')
         series_company_id_qs = rd_models.Series.objects.get(code=series_code).accountedcompany_set.values_list('customer_id')
         series_company_id_list = []
         for i in series_company_id_qs:
-            series_company_id_list.append(i[0])
-            # customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
+            series_company_id_list.append(i[0])            # customer_deposit_daily_amount = rd_models.DividedCompanyAccount.objects.filter(customer_id=customer_id).values_list('data_date').annotate(Sum('divided_amount')).order_by('data_date')
         daily_deposit_amounts = models_operation.getCustomerDailyDataForHighChartsLine(
             series_company_id_list,
             rd_models.DividedCompanyAccount,
@@ -186,7 +204,6 @@ def ajaxCustomerCreditHistory(request):
         customer_id = request.POST.get('customer_id')
         daily_credit_amounts = models_operation.getCustomerDailyDataForHighChartsLine([customer_id], dac_models.Contributor, 'net_total', 'customer__name')
         return HttpResponse(json.dumps(daily_credit_amounts))
-
 
 
 def viewDepartmentContributionHistory(request):
@@ -225,6 +242,7 @@ def viewDepartmentContributionHistory(request):
                 series_by_date[date][customer].append(float(i[j]) if type(i[j]) == Decimal else i[j])
         return HttpResponse(json.dumps(series_by_date))
 
+
 # @checkPermission
 def viewExpirePrompt(request):
     # imp_date = models_operation.DateOperation()
@@ -234,112 +252,6 @@ def viewExpirePrompt(request):
         return render_to_response('expire/expire_body.html')
     if block == 'js':
         return render_to_response('expire/expire_js.html')
-
-
-# def viewExpirePromptTable(request):
-#     if request.method == 'GET':
-#         filter_dict = request.GET
-#         filter_condition = '{'
-#         for f in filter_dict:
-#             if len(filter_dict.getlist(f)) <= 1:
-#                 filter_condition += ('"' + f + '":"' + filter_dict[f] + '",')
-#             else:
-#                 filter_condition += ('"' + f + '":"' + str(filter_dict.getlist(f)) + '",')
-#         filter_condition += '}'
-#         return render(request, 'expire/expire_table.html', {'filter': filter_condition})
-#     elif request.method == 'POST':
-#         imp_date = models_operation.DateOperation()
-#         data_date_str = imp_date.last_data_date_str(dac_models.Contributor)
-#         today = imp_date.today
-#         data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
-#         expire_id = Q(id=request.POST.get('expire_id')) if request.POST.get('expire_id') else Q(id__gt=0)
-#         is_finished = True if request.POST.get('is_finished') == '1' else False
-#         if is_finished:
-#             finish_after = Q(
-#                 finish_date__gte=request.POST.get('finish_after') if request.POST.get('finish_after') else '1990-01-01')
-#             finish_before = Q(
-#                 finish_date__lte=request.POST.get('finish_before') if request.POST.get('finish_before') else str(today))
-#         else:
-#             finish_after = Q(finish_date__isnull=True)
-#             finish_before = Q(finish_date__isnull=True)
-#         expire_after = Q(expire_date__gte=request.POST.get('expire_after') if request.POST.get('expire_after') else str(
-#             data_date - timedelta(days=100)))
-#         expire_before = Q(
-#             expire_date__lte=request.POST.get('expire_before') if request.POST.get('expire_before') else str(
-#                 today + timedelta(days=180)))
-#         has_punishment = Q(punishment__gt=0) if '1' in request.POST.getlist('has_punishment') else Q(punishment=0)
-#         non_punishment = Q(punishment=0) if '0' in request.POST.getlist('has_punishment') else Q(punishment__gt=0)
-#         expire_qs = dac_models.ExpirePrompt.objects.filter(
-#             expire_id, expire_after & expire_before, has_punishment | non_punishment, finish_after & finish_before
-#         ).values_list(
-#             'customer_id',
-#             'id',
-#             'remark',
-#             'punishment',
-#             'staff_id',
-#             'finish_date',
-#             'expire_date',
-#             'staff_id__yellow_red_card',
-#             'staff_id__red_card_expire_date',
-#         )
-#         expire_customers = []
-#         customer_expire_data_dict = {}
-#         for i in expire_qs:
-#             customer_id = i[0]
-#             expire_customers.append(customer_id)
-#             customer_expire_data_dict[customer_id] = [
-#                 i[1],
-#                 i[2],
-#                 i[3],
-#                 i[4],
-#                 i[5],
-#                 i[6],
-#                 i[7],
-#                 i[8],
-#             ]
-#         customer_qs = dac_models.Contributor.objects.filter(
-#             customer_id__in=expire_customers,
-#             data_date=data_date_str
-#         ).values_list(
-#             'customer_id',
-#             'customer__name',
-#             'department_id',
-#             'department__caption',
-#             'staff_id',
-#             'staff__name',
-#             'expire_date',
-#         ).order_by('department__display_order', 'staff__name', 'expire_date')
-#         ret = []
-#         display_num = 0
-#         for i in customer_qs:
-#             display_num += 1
-#             customer_id = i[0]
-#             staff_id = i[4]
-#             staff_name = i[5]
-#             staff_id_in_expire_prompt = customer_expire_data_dict[customer_id][3]
-#             expire_date = customer_expire_data_dict[customer_id][5]
-#             if staff_id_in_expire_prompt != staff_id and staff_id_in_expire_prompt:
-#                 staff_id = staff_id_in_expire_prompt
-#                 staff_name = rd_models.Staff.objects.filter(staff_id=staff_id_in_expire_prompt)[0].name
-#             tmp = {
-#                 'display_num': display_num,
-#                 'expire_prompt_id': customer_expire_data_dict[customer_id][0],
-#                 'customer_id': customer_id,
-#                 'customer_name': i[1],
-#                 'dept_id': i[2],
-#                 'dept_caption': i[3],
-#                 'staff_id': staff_id,
-#                 'staff_name': staff_name,
-#                 'expire_date': str(expire_date) if expire_date else str(i[6]),
-#                 'days_remain': ((i[6] if i[6] else expire_date) - today).days,
-#                 'remark': customer_expire_data_dict[customer_id][1],
-#                 'punishment': customer_expire_data_dict[customer_id][2],
-#                 'finish_date': str(customer_expire_data_dict[customer_id][4]),
-#                 'yellow_red_card': customer_expire_data_dict[customer_id][6],
-#                 'red_card_expire_date': str(customer_expire_data_dict[customer_id][7]),
-#             }
-#             ret.append(tmp)
-#         return HttpResponse(json.dumps(ret))
 
 
 def viewExpirePromptTable(request):
@@ -422,42 +334,6 @@ def viewExpirePromptTable(request):
                 # 'approver__name',
             )
             return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
-
-
-# def editExpirePrompt(request):
-#     ajax_result = {
-#         'success': False,
-#         'error': None,
-#     }
-#     expire_id = request.POST.get('expire_id')
-#     q = dac_models.ExpirePrompt.objects.filter(id=expire_id)
-#     if q[0].finish_date:
-#         ajax_result['error'] = '已办结，不可编辑'
-#     else:
-#         file_obj = request.FILES.get('explain')
-#         if file_obj:
-#             file_full_name = os.path.join(settings.EXPIRE_EXPLAIN_IMG_FOLDER, file_obj.name)
-#             try:
-#                 tmp_file = open(file_full_name)
-#             except:
-#                 with open(file_full_name, 'wb') as f:
-#                     for i in file_obj:
-#                         f.write(i)
-#                 q.update(**{'explain': file_obj.name})
-#                 ajax_result['success'] = True
-#             else:
-#                 tmp_file.close()
-#                 ajax_result['success'] = False
-#                 ajax_result['error'] = '已存在同名文件'
-#                 return HttpResponse(json.dumps(ajax_result))
-#         expire_dict = {}
-#         expire_dict['expire_date'] = request.POST.get('expire_date')
-#         expire_dict['staff_id'] = request.POST.get('staff')
-#         expire_dict['punishment'] = int(request.POST.get('punishment'))
-#         expire_dict['remark'] = request.POST.get('remark')
-#         if q.update(**expire_dict):
-#             ajax_result['success'] = True and (ajax_result['success'] or not file_obj)
-#     return HttpResponse(json.dumps(ajax_result))
 
 
 def editExpirePrompt(request):

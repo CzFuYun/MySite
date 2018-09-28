@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'contribution\.view', views.viewContribution, name='viewContribution'),
     url(r'contributiontable\.view', views.viewContributionTable, name='viewContributionTable'),
     url(r'contribution\.ajax', views.ajaxContribution, name='ajaxContribution'),
+    url(r'contributiondata\.download', views.downloadContributionData, name='downloadContributionData'),
     url(r'deptorder\.ajax', views.ajaxDeptOrder, name='ajaxDeptOrder'),
     url(r'staff\.ajax', views.ajaxStaff, name='ajaxStaffName'),
     url(r'customercontributionhistory\.view', views.viewCustomerContributionHistory, name='viewCustomerContributionHistory'),

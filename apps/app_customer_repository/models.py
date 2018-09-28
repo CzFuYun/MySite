@@ -18,12 +18,12 @@ class CustomerRepository(models.Model):
     )
     name = models.CharField(max_length=128, unique=True, verbose_name='企业名称')
     simple_name = models.CharField(max_length=32, unique=True, verbose_name='企业简称')
-    customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, verbose_name='核心客户号', on_delete=models.PROTECT)
+    customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, on_delete=models.CASCADE, verbose_name='核心客户号')
     credit_file = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
-    department = models.ForeignKey('root_db.Department', on_delete=models.PROTECT, verbose_name='管户部门')
-    type_of_3311 = models.ForeignKey('root_db.TypeOf3311', on_delete=models.PROTECT, verbose_name='3311类型')
+    department = models.ForeignKey('root_db.Department', on_delete=models.CASCADE, verbose_name='管户部门')
+    type_of_3311 = models.ForeignKey('root_db.TypeOf3311', on_delete=models.CASCADE, verbose_name='3311类型')
     is_strategy = models.BooleanField(verbose_name='是否战略客户')
-    industry = models.ForeignKey('root_db.Industry', on_delete=models.PROTECT, verbose_name='行业门类')
+    industry = models.ForeignKey('root_db.Industry', on_delete=models.CASCADE, verbose_name='行业门类')
     stockholder = models.IntegerField(choices=stockholder_choices, verbose_name='控股方式')
     tax_years = models.CharField(max_length=64, blank=True, null=True, verbose_name='纳税大户年份')
     inter_clearing_years = models.CharField(max_length=64, blank=True, null=True, verbose_name='国结大户年份')
@@ -58,13 +58,13 @@ class ProjectRepository(models.Model):
         (20, '监管原因'),
         (30, '客户原因'),
     )
-    customer = models.ForeignKey('CustomerRepository', on_delete=models.PROTECT, verbose_name='客户')
+    customer = models.ForeignKey('CustomerRepository', on_delete=models.CASCADE, verbose_name='客户')
     project_name = models.CharField(max_length=64, verbose_name='项目名称')
-    staff = models.ForeignKey('root_db.Staff', to_field='staff_id', on_delete=models.PROTECT, verbose_name='客户经理')
+    staff = models.ForeignKey('root_db.Staff', to_field='staff_id', on_delete=models.CASCADE, verbose_name='客户经理')
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
     is_green = models.BooleanField(verbose_name='绿色金融')
     is_focus = models.BooleanField(default=False, verbose_name='重点项目')
-    pretrial_doc = models.ForeignKey('PretrialDocument', blank=True, null=True, on_delete=models.PROTECT, verbose_name='预审表')
+    pretrial_doc = models.ForeignKey('PretrialDocument', blank=True, null=True, on_delete=models.CASCADE, verbose_name='预审表')
     create_date = models.DateField(auto_now_add=True, verbose_name='创建日期')
     plan_pretrial_date =  models.DateField(blank=True, null=True, verbose_name='计划预审')
     plan_chushen =  models.DateField(blank=True, null=True, verbose_name='计划初审')
@@ -72,7 +72,7 @@ class ProjectRepository(models.Model):
     plan_xinshen =  models.DateField(blank=True, null=True, verbose_name='计划信审')
     plan_reply =  models.DateField(blank=True, null=True, verbose_name='计划批复')
     plan_luodi =  models.DateField(blank=True, null=True, verbose_name='计划投放')
-    business = models.ForeignKey('SubBusiness', on_delete=models.PROTECT, verbose_name='业务品种')
+    business = models.ForeignKey('SubBusiness', on_delete=models.CASCADE, verbose_name='业务品种')
     total_net = models.IntegerField(default=0, verbose_name='总敞口')
     existing_net = models.IntegerField(default=0, verbose_name='存量敞口')
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
@@ -84,8 +84,8 @@ class ProjectRepository(models.Model):
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True, verbose_name='关闭理由')
     whose_matter = models.IntegerField(choices=whose_matter_choices, blank=True, null=True, verbose_name='责任方')
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
-    pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='pre_approver', verbose_name='初审')
-    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, related_name='approver', verbose_name='专审')
+    pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='pre_approver', verbose_name='初审')
+    approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='approver', verbose_name='专审')
 
     class Meta:
         verbose_name = '项目库'
@@ -198,11 +198,11 @@ class PretrialDocument(models.Model):
         (3, '担保变更'),
         (4, '其他'),
     )
-    meeting = models.ForeignKey('PretrialMeeting', on_delete=models.PROTECT, verbose_name='预审会')
+    meeting = models.ForeignKey('PretrialMeeting', on_delete=models.CASCADE, verbose_name='预审会')
     customer_name = models.CharField(max_length=128, null=True, verbose_name='客户名称')
     accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
     result = models.IntegerField(choices=result_choices, default=10, verbose_name='审议结果')
-    department = models.ForeignKey('root_db.Department', null=True, on_delete=models.PROTECT, verbose_name='经营部门')
+    department = models.ForeignKey('root_db.Department', null=True, on_delete=models.CASCADE, verbose_name='经营部门')
     reason = models.IntegerField(choices=reason_choices, default=0, verbose_name='上会原因')
     remark = models.TextField(blank=True, null=True, verbose_name='备注')
     order = models.IntegerField(default=0, verbose_name='上会顺位')
@@ -239,11 +239,11 @@ class PretrialDocumentWaitForMeeting(PretrialDocument):
 
 
 class ProjectExecution(models.Model):
-    project = models.ForeignKey('ProjectRepository', on_delete=models.PROTECT, verbose_name='项目')
-    current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.PROTECT, verbose_name='进度')
+    project = models.ForeignKey('ProjectRepository', on_delete=models.CASCADE, verbose_name='项目')
+    current_progress = models.ForeignKey('Progress', blank=True, null=True, on_delete=models.CASCADE, verbose_name='进度')
     total_used = models.IntegerField(default=0, verbose_name='累计投放敞口')          # 含本次
     new_net_used = models.IntegerField(default=0, verbose_name='累计投放新增敞口')      # 自动计算，含本次
-    remark = models.ForeignKey('ProjectRemark', default=0, on_delete=models.PROTECT, verbose_name='备注')
+    remark = models.ForeignKey('ProjectRemark', default=0, on_delete=models.CASCADE, verbose_name='备注')
     update_count = models.IntegerField(default=0, verbose_name='已更新次数')      # 以便捷的跳到上一次，用于比对进度等
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
@@ -461,7 +461,7 @@ class Progress(models.Model):
     caption = models.CharField(max_length=32)
     status_num = models.IntegerField(default=0)
     display_order = models.IntegerField(default=0)
-    star = models.ForeignKey('Stars', blank=True, null=True, on_delete=models.PROTECT)
+    star = models.ForeignKey('Stars', blank=True, null=True, on_delete=models.CASCADE)
     suit_for_business = models.ManyToManyField('SubBusiness')
 
     class Meta:
@@ -496,7 +496,7 @@ class Business(models.Model):
 
 class SubBusiness(models.Model):
     caption = models.CharField(max_length=32)
-    superior = models.ForeignKey('Business', on_delete=models.PROTECT)
+    superior = models.ForeignKey('Business', on_delete=models.CASCADE)
     display_order = models.IntegerField(default=0)
     is_focus = models.BooleanField(default=False, verbose_name='是否重点产品')
     acc_factor = models.FloatField(default=0, verbose_name='折算户数系数')
@@ -537,8 +537,8 @@ class TargetTask(models.Model):
         (10, '计划户数'),
         (20, '计划金额'),
     )
-    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.PROTECT)
-    business = models.ForeignKey('Business', blank=True, null=True, on_delete=models.PROTECT)
+    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.CASCADE)
+    business = models.ForeignKey('Business', blank=True, null=True, on_delete=models.CASCADE)
     target_amount = models.FloatField(blank=True, null=True)
     target_type = models.IntegerField(choices=target_type_choices, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)

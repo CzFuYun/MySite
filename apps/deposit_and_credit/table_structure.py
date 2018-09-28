@@ -95,3 +95,24 @@ expire_table_download = collections.OrderedDict(**{
 expire_table_sr_for_download = {
     'apply_type': utilities.field_choices_to_dict(models.ExpirePrompt.apply_type_choices, False)
 }
+
+
+contribution_download = collections.OrderedDict(**{
+    'approve_line': '途径',
+    'customer__name': '客户名称',
+    'department__caption': '经营部门',
+    'customer__industry__code': '行业门类',
+    'loan_rate': '加权利率',
+    'loan': '贷款余额',
+    'net_BAB': '银票敞口余额',
+    'net_TF': '贸易融资敞口余额',
+    'net_GL': '保函敞口余额',
+    'invest_banking': '投行项目',
+    'saving_amount': '储蓄余额',
+    'saving_yd_avg': '储蓄日均',
+    'customer__dividedcompanyaccount__divided_amount__sum': '对公存款余额',
+    'customer__dividedcompanyaccount__divided_yd_avg__sum': '对公存款日均',
+    'customer__series__caption': '系列',
+    'customer__series__gov_plat_lev': '平台级别',
+    'defuse_expire': '化解到期日'
+})

@@ -246,6 +246,8 @@ function buildDeptContribCard(filter_condict, dept_code, depart_contrib, fragmen
         dept_sum = {};
     let dept_card = document.createElement('div');
     dept_card.setAttribute('class', 'card');
+    dept_card.setAttribute('dept', dept_code);
+    dept_card.id = 'contribution_' + dept_code;
     let series_customer_data = sortDict(depart_contrib['series_customer_data'], false);
     for(let series in series_customer_data){
         let series_sum = buildSeriesCard(series.split('$')[1], series_customer_data[series], dept_card, filter_condict);
@@ -253,8 +255,9 @@ function buildDeptContribCard(filter_condict, dept_code, depart_contrib, fragmen
         if(series_sum){
             for(let s in series_sum){
                 let sum_operation = TABLE_STRUCTURE[s].value_for_sum_td;
-                if(sum_operation === TS_RULE.no_need_sum || sum_operation === TS_RULE.keep_originally_value)
+                if(sum_operation === TS_RULE.no_need_sum || sum_operation === TS_RULE.keep_originally_value){
                     continue;
+                }
                 else if(sum_operation === TS_RULE.col_accumulation){
                     // {#if(!dept_has_content)#}
                     // {#    dept_sum[s] = 0;#}
@@ -372,16 +375,8 @@ function buildContribTable(filter_condict, ordered_dept){
         depts_sum = {},
         branch_sum = {},
         req_dept = filter_condict['department'];
-    if(req_dept === 'JGBS' || req_dept === 'all'){
-        contrib_tree = whole_contrib_tree;
-        // dept_selector = document.createElement('div');
-        // dept_selector.id = 'dept_selector';
-        // dept_selector.className = 'card-body';
-        // dept_selector.innerHTML = '<h4>经营部门：</h4>';
-        $('#right_sidebar_body').append(dept_selector);
-    }else{
-        contrib_tree[req_dept] = whole_contrib_tree[req_dept];
-    }
+    contrib_tree = whole_contrib_tree;
+    $('#right_sidebar_body').append(dept_selector);
     for(let od in ordered_dept){
         let dept_code = ordered_dept[od],
             dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[od]], frag);

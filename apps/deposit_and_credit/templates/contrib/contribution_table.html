@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block navbar_after_ul %}
+    <button class="btn waves-effect waves-light btn-info" onclick="downloadContributionData()"><i class="mdi mdi-arrow-down-bold"></i>下载</button>
     <div id="dept_selector" class="btn-group">
         <button class="btn btn-warning dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">支行</button>
         <div class="dropdown-menu" x-placement="bottom-start" style="position: absolute; transform: translate3d(0px, 36px, 0px); top: 0; left: 0; will-change: transform;">
@@ -26,6 +27,7 @@
 <script type="text/javascript" src="/static/js/highcharts.js"></script>
 <script type="text/javascript" src="/static/myjs/contribution_table.js"></script>
 <script type="text/javascript">
+    var USER_DEPT = "{{ user_dept|default:'' }}";
 
     function viewCustomerContributionHistory(elem){
         let newWindow = window.open('{% url "viewCustomerContributionHistory" %}');
@@ -67,6 +69,7 @@
             ordered_dept.push(i);
         buildContribTable(filter_condict, ordered_dept);
         extraSortRule();
+        hideOtherDept();
     });
 
     function showHelp(){
@@ -88,6 +91,23 @@
 
     function extraSortRule(){
         $('[series_code=钟楼经开区]').parent().before($('[series_code=钟楼新城]').parent());
+    }
+
+    function hideOtherDept(){
+        if(USER_DEPT !== 'JGBS'){
+            $('div .card[id^=contribution_]').each(
+                function(){
+                    if(this.getAttribute('dept') !== USER_DEPT){
+                        this.style.display = 'none';
+                    }
+                }
+            )
+        }
+    }
+
+    function downloadContributionData(){
+        let dataDate = OPENER_PARAMS.data_date;
+        downloadFileByForm('{% url "downloadContributionData" %}', 'dataDate=' + dataDate, 'get')
     }
 
 </script>

@@ -10,11 +10,12 @@ from app_permission import settings, models
 # ↓static ##############################################################################################################
 register = template.Library()
 
+
 def getMenuTree(request):
-    menu_tree = request.session.get('menu_tree')
-    if menu_tree:
-        return json.loads(menu_tree)
-    user_id = request.session[settings.USER_ID]
+    # menu_tree = request.session.get('menu_tree')
+    # if menu_tree:
+    #     return json.loads(menu_tree)
+    user_id = request.user.username
     user_obj = models.UserProfile.objects.get(**{settings.USER_ID: user_id})
     # 取到用户角色的全部权限
     user_perms = user_obj.roles.values_list(
@@ -59,8 +60,9 @@ def getMenuTree(request):
             menu_tree.append(v)
     # print(menu_tree)
     # [{'id': 1, 'description': '全行存款概览', 'url_name': 'viewOverViewBranch', 'display_caption': '全行存款概览', 'parent': None, 'children': [{'id': 2, 'description': 'yyy', 'url_name': 'ajaxOverViewBranch', 'display_caption': None, 'parent': 1, 'children': []}, {'id': 3, 'description': 'xxx', 'url_name': 'ajaxAnnotateDeposit', 'display_caption': None, 'parent': 1, 'children': []}]}]
-    request.session['menu_tree'] = json.dumps(menu_tree)
+    # request.session['menu_tree'] = json.dumps(menu_tree)
     return menu_tree
+
 
 @register.simple_tag
 def buildMenu(request):
@@ -109,6 +111,7 @@ def buildMenu(request):
     return mark_safe(menu_html)
 # ↑static ##############################################################################################################
 # ↓common ##############################################################################################################
+
 
 @register.simple_tag
 def getValue(dic, key):

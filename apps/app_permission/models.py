@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 
 from app_permission import settings
 
@@ -10,7 +10,7 @@ class UserProfile(AbstractUser):
         to_field=settings.USER_ID_RESOURCE_FIELD,
         blank=True,
         null=True,
-        on_delete=models.PROTECT
+        on_delete=models.CASCADE
     )
     roles = models.ManyToManyField('Role')      # 一个用户可能拥有多重角色
 
@@ -33,8 +33,8 @@ class Permission(models.Model):
 
 
 class MainMenuItem(models.Model):
-    item = models.OneToOneField('Permission', on_delete=models.PROTECT)
-    parent_perm = models.ForeignKey('Permission', null=True, on_delete=models.PROTECT, related_name='parent_item')
+    item = models.OneToOneField('Permission', on_delete=models.CASCADE)
+    parent_perm = models.ForeignKey('Permission', null=True, on_delete=models.CASCADE, related_name='parent_item')
     display_order = models.SmallIntegerField(null=True, blank=True)      # 在菜单栏的先后顺序，根条目必填
 
     def __str__(self):
@@ -55,8 +55,8 @@ class Role(models.Model):
 
 
 class Role_Perm(models.Model):
-    role_id = models.ForeignKey('Role', to_field='id', on_delete=models.PROTECT)
-    permission_id = models.ForeignKey('Permission', to_field='id', on_delete=models.PROTECT)
+    role_id = models.ForeignKey('Role', to_field='id', on_delete=models.CASCADE)
+    permission_id = models.ForeignKey('Permission', to_field='id', on_delete=models.CASCADE)
 # ↑static ##############################################################################################################
 
 

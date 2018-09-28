@@ -14,7 +14,7 @@ class Staff(models.Model):
     staff_id = models.CharField(max_length=8, primary_key=True, verbose_name='工号')
     name = models.CharField(blank=True, null=True, max_length=16, verbose_name='姓名')
     staff_level = models.SmallIntegerField(blank=True, null=True, verbose_name='行员等级')
-    sub_department = models.ForeignKey(to='SubDepartment', to_field='sd_code', on_delete=models.DO_NOTHING, verbose_name='部门（细分）')     # 细分部门，例如溧阳大客户部应记作LY_2
+    sub_department = models.ForeignKey(to='SubDepartment', to_field='sd_code', on_delete=models.CASCADE, verbose_name='部门（细分）')     # 细分部门，例如溧阳大客户部应记作LY_2
     phone_number = models.CharField(max_length=16, null=True, blank=True)
     cellphone_number = models.CharField(max_length=16, null=True, blank=True)
     oa = models.CharField(max_length=8, null=True, blank=True)
@@ -134,7 +134,7 @@ class Department(models.Model):
 class SubDepartment(models.Model):
     sd_code = models.CharField(primary_key=True, max_length=8, verbose_name='部门编号')
     caption = models.CharField(max_length=32, unique=True, verbose_name='部门名称')
-    superior = models.ForeignKey('Department', to_field='code', on_delete=models.DO_NOTHING, verbose_name='所属部门')
+    superior = models.ForeignKey('Department', to_field='code', on_delete=models.CASCADE, verbose_name='所属部门')
 
     def __str__(self):
         return self.caption
@@ -147,12 +147,12 @@ class SubDepartment(models.Model):
 class AccountedCompany(models.Model):
     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
     name = models.CharField(max_length=128, verbose_name='账户名称')
-    district = models.ForeignKey('District', default=1, on_delete=models.DO_NOTHING, verbose_name='区域')
-    customer_type = models.ForeignKey('CustomerType', default=1, on_delete=models.DO_NOTHING, verbose_name='客户类别')
-    scale = models.ForeignKey('Scale', default=1, on_delete=models.DO_NOTHING, verbose_name='规模')
-    industry = models.ForeignKey('Industry', to_field='code', default=1, on_delete=models.DO_NOTHING, verbose_name='行业门类')
-    series = models.ForeignKey('Series', to_field='code', default='NONE', null=True, blank=True, on_delete=models.DO_NOTHING, verbose_name='企业系列')
-    type_of_3311 = models.ForeignKey('TypeOf3311', default=1,  on_delete=models.DO_NOTHING, verbose_name='3311类型')
+    district = models.ForeignKey('District', default=1, on_delete=models.CASCADE, verbose_name='区域')
+    customer_type = models.ForeignKey('CustomerType', default=1, on_delete=models.CASCADE, verbose_name='客户类别')
+    scale = models.ForeignKey('Scale', default=1, on_delete=models.CASCADE, verbose_name='规模')
+    industry = models.ForeignKey('Industry', to_field='code', default=1, on_delete=models.CASCADE, verbose_name='行业门类')
+    series = models.ForeignKey('Series', to_field='code', default='NONE', null=True, blank=True, on_delete=models.CASCADE, verbose_name='企业系列')
+    type_of_3311 = models.ForeignKey('TypeOf3311', default=1,  on_delete=models.CASCADE, verbose_name='3311类型')
     has_base_acc = models.BooleanField(default=False, verbose_name='是否基本户')
     has_credit = models.BooleanField(default=False, verbose_name='是否有贷户')
     sum_settle = models.IntegerField(default=0, verbose_name='累计结算量')
@@ -191,7 +191,7 @@ class AccountedCompany(models.Model):
 class Series(models.Model):
     code = models.CharField(primary_key=True, max_length=8, verbose_name='代号')
     caption = models.CharField(max_length=32, unique=True, verbose_name='名称')
-    gov_plat_lev = models.ForeignKey(to='GovernmentPlatformLevel', default=1, on_delete=models.DO_NOTHING, verbose_name='平台级别')
+    gov_plat_lev = models.ForeignKey(to='GovernmentPlatformLevel', default=1, on_delete=models.CASCADE, verbose_name='平台级别')
 
     def __str__(self):
         return self.caption
@@ -282,13 +282,13 @@ class DividedCompanyAccount(models.Model):
     '''
     单条分配数据
     '''
-    customer = models.ForeignKey('AccountedCompany', on_delete=models.DO_NOTHING, verbose_name='客户')
+    customer = models.ForeignKey('AccountedCompany', on_delete=models.CASCADE, verbose_name='客户')
     account_id = models.CharField(max_length=64, verbose_name='账号')
-    beneficiary = models.ForeignKey('Staff', on_delete=models.DO_NOTHING, verbose_name='员工')
-    department = models.ForeignKey('Department', to_field='code', on_delete=models.DO_NOTHING, verbose_name='部门（综合）')
-    sub_department = models.ForeignKey('SubDepartment', to_field='sd_code', on_delete=models.DO_NOTHING, verbose_name='部门（细分）')
-    deposit_type = models.ForeignKey(to='DepositType', on_delete=models.DO_NOTHING, default=1, verbose_name='存款类型')
-    rate_type = models.ForeignKey(to='RateType', on_delete=models.DO_NOTHING, default=1, verbose_name='存款口径')
+    beneficiary = models.ForeignKey('Staff', on_delete=models.CASCADE, verbose_name='员工')
+    department = models.ForeignKey('Department', to_field='code', on_delete=models.CASCADE, verbose_name='部门（综合）')
+    sub_department = models.ForeignKey('SubDepartment', to_field='sd_code', on_delete=models.CASCADE, verbose_name='部门（细分）')
+    deposit_type = models.ForeignKey(to='DepositType', on_delete=models.CASCADE, default=1, verbose_name='存款类型')
+    rate_type = models.ForeignKey(to='RateType', on_delete=models.CASCADE, default=1, verbose_name='存款口径')
     rate = models.FloatField(default=0, verbose_name='利率（%）')
     transfer_price = models.FloatField(default=0, verbose_name='资金转移价（%）')
     rate_spread = models.FloatField(default=0, verbose_name='利差（%）')
@@ -297,7 +297,7 @@ class DividedCompanyAccount(models.Model):
     acc_open_date = models.DateField(null=True, blank=True, auto_now_add=False, verbose_name='开户日期')
     start_date = models.DateField(null=True, blank=True, auto_now_add=False, verbose_name='起始日期')
     exp_date = models.DateField(null=True, blank=True, auto_now_add=False, verbose_name='到期日期')
-    acc_status = models.ForeignKey(to='AccountStatus', default=1, on_delete=models.DO_NOTHING, verbose_name='账户状态')
+    acc_status = models.ForeignKey(to='AccountStatus', default=1, on_delete=models.CASCADE, verbose_name='账户状态')
     data_date = models.DateField(auto_now_add=False, verbose_name='数据日期')
     divided_amount = models.IntegerField(default=0, verbose_name='分配余额（万元）')
     divided_md_avg = models.IntegerField(default=0, verbose_name='本月分配日均（万元）')
@@ -387,15 +387,15 @@ class CreditLedger(models.Model):
         (2, '总行'),
     )
     data_date = models.DateField(auto_now_add=True, verbose_name='数据日期')
-    department = models.ForeignKey('Department', to_field='code', default='NONE', on_delete=models.PROTECT, verbose_name='营销部门')
-    staff = models.ForeignKey('Staff', default=1, on_delete=models.DO_NOTHING, verbose_name='客户经理')
-    customer = models.ForeignKey('AccountedCompany', on_delete=models.DO_NOTHING, verbose_name='客户名称')
-    economic_prop = models.ForeignKey('EconomicProperty', default=1, on_delete=models.DO_NOTHING, verbose_name='经济性质')
+    department = models.ForeignKey('Department', to_field='code', default='NONE', on_delete=models.CASCADE, verbose_name='营销部门')
+    staff = models.ForeignKey('Staff', default=1, on_delete=models.CASCADE, verbose_name='客户经理')
+    customer = models.ForeignKey('AccountedCompany', on_delete=models.CASCADE, verbose_name='客户名称')
+    economic_prop = models.ForeignKey('EconomicProperty', default=1, on_delete=models.CASCADE, verbose_name='经济性质')
     credit_type = models.SmallIntegerField(choices=credit_type_choices, default=1, verbose_name='授信种类')
-    credit_rate = models.ForeignKey('CreditRate', default=1, on_delete=models.DO_NOTHING, verbose_name='信用评级')
+    credit_rate = models.ForeignKey('CreditRate', default=1, on_delete=models.CASCADE, verbose_name='信用评级')
     apply_fanci = models.IntegerField(default=1, verbose_name='申报金额')
     approved_by = models.SmallIntegerField(default=1, verbose_name='审批行处')
-    credit_prop = models.ForeignKey('CreditProperty', default=1, on_delete=models.DO_NOTHING, verbose_name='授信性质')
+    credit_prop = models.ForeignKey('CreditProperty', default=1, on_delete=models.CASCADE, verbose_name='授信性质')
     guar_type = models.CharField(max_length=32, verbose_name='担保方式')
     approved_date = models.DateField(blank=True, null=True, verbose_name='审批日期')
     exp_date = models.DateField(blank=True, null=True, verbose_name='授信到期日')
@@ -450,22 +450,22 @@ class CreditLedger(models.Model):
 
 
 #######################################################################################################################
-class AccountedPerson(models.Model):
-    customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
-    name = models.CharField(max_length=128, verbose_name='账户名称')
-    origin = models.ForeignKey('AccountedCompany', to_field='customer_id', null=True, blank=True, on_delete=models.PROTECT, verbose_name='派生自')
-
-
-#######################################################################################################################
-class DividedPersonalAccount(models.Model):
-    customer = models.ForeignKey('AccountedPerson', on_delete=models.PROTECT, verbose_name='客户')
-    beneficiary = models.ForeignKey('Staff', null=True, blank=True, on_delete=models.PROTECT, verbose_name='员工')
-    rate_type = models.ForeignKey(to='RateType', on_delete=models.DO_NOTHING, default=1, verbose_name='存款口径')
-    data_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='数据日期')
-    divided_amount = models.IntegerField(default=0, verbose_name='分配余额（万元）')
-    divided_md_avg = models.IntegerField(default=0, verbose_name='本月分配日均（万元）')
-    divided_sd_avg = models.IntegerField(default=0, verbose_name='本季分配日均（万元）')
-    divided_yd_avg = models.IntegerField(default=0, verbose_name='本年分配日均（万元）')
+# class AccountedPerson(models.Model):
+#     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
+#     name = models.CharField(max_length=128, verbose_name='账户名称')
+#     origin = models.ForeignKey('AccountedCompany', to_field='customer_id', null=True, blank=True, on_delete=models.CASCADE, verbose_name='派生自')
+#
+#
+# #######################################################################################################################
+# class DividedPersonalAccount(models.Model):
+#     customer = models.ForeignKey('AccountedPerson', on_delete=models.CASCADE, verbose_name='客户')
+#     beneficiary = models.ForeignKey('Staff', null=True, blank=True, on_delete=models.CASCADE, verbose_name='员工')
+#     rate_type = models.ForeignKey(to='RateType', on_delete=models.CASCADE, default=1, verbose_name='存款口径')
+#     data_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='数据日期')
+#     divided_amount = models.IntegerField(default=0, verbose_name='分配余额（万元）')
+#     divided_md_avg = models.IntegerField(default=0, verbose_name='本月分配日均（万元）')
+#     divided_sd_avg = models.IntegerField(default=0, verbose_name='本季分配日均（万元）')
+#     divided_yd_avg = models.IntegerField(default=0, verbose_name='本年分配日均（万元）')
 
 
 
