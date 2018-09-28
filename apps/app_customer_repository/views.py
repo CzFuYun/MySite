@@ -1,8 +1,11 @@
 import json, re, collections, os
+
 from django.views.generic import View, DetailView
 from django.views.generic.edit import UpdateView
 from django.shortcuts import render, HttpResponse, render_to_response, redirect, reverse
 from django.db.models import Q, F, Sum, Count
+
+from app_permission.views import checkPermission
 from app_customer_repository import models, models_operation as mo, html_forms, table_structure
 from deposit_and_credit import models_operation, models as dac_m
 from MySite import utilities
@@ -626,3 +629,8 @@ def showPreMeetingList(request):
                     }
             })
         return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
+
+
+@checkPermission
+def voteAtPreMeeting(request):
+    pass

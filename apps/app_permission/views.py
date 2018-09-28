@@ -32,7 +32,7 @@ def checkPermission(func):
                         operation = cls_extra_auth(request, user_obj[0])
                         if operation.is_allowed:
                             return func(request, *args, **kwargs)
-            return redirect(reverse('login'))
+            return render(request, 'feedback.html', {'title': '无该权限', 'swal_type': 'error'})
     return inner
 
 

@@ -29,7 +29,7 @@ class Permission(models.Model):
     display_caption = models.CharField(max_length=32, null=True, blank=True)        # 在Menu或前端其他区域展示时的名称
 
     def __str__(self):
-        return self.display_caption
+        return self.description
 
 
 class MainMenuItem(models.Model):
@@ -57,6 +57,15 @@ class Role(models.Model):
 class Role_Perm(models.Model):
     role_id = models.ForeignKey('Role', to_field='id', on_delete=models.CASCADE)
     permission_id = models.ForeignKey('Permission', to_field='id', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = '角色与权限'
+        verbose_name_plural = verbose_name
+        unique_together = ['role_id', 'permission_id']
+        ordering = ['role_id', 'permission_id']
+
+    def __str__(self):
+        return self.role_id.caption + '——' + self.permission_id.description
 # ↑static ##############################################################################################################
 
 

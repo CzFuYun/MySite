@@ -4,6 +4,7 @@ from xadmin import views
 
 from MySite.settings import MEDIA_URL
 from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting
+from app_permission import models
 
 
 def showFile(instance):
@@ -54,9 +55,10 @@ class PretrialDocumentWaitForMeetingAdmin:
     show_file.short_description = '预审表'
 
     def make_vote(self, instance):
-        if instance.result <= 10:
-            doc_id = str(instance.id)
-            return mark_safe('<a href="' + '?' + 'doc_id=' + doc_id + '" target="_blank">投票</a>')
+        if self.user.is_superuser or self.request.session['permitted_url_names']:
+            if instance.result <= 10:
+                doc_id = str(instance.id)
+                return mark_safe('<a href="' + '?' + 'doc_id=' + doc_id + '" target="_blank">投票</a>')
         return ''
     make_vote.short_description = 'Action'
 
