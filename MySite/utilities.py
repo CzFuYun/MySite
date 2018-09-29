@@ -1,10 +1,12 @@
 import os, json, datetime, decimal, re, xlsxwriter
 from io import BytesIO
 from django.utils.encoding import escape_uri_path
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, reverse
 from django.http import StreamingHttpResponse, FileResponse
 from django import forms
 from django.shortcuts import HttpResponse, render_to_response
+from django.utils.safestring import mark_safe
+
 
 return_as = {
     'choice': 1,
@@ -262,3 +264,23 @@ def combineQueryValues(values, foundations):
             tmp = {**tmp, **data}
             ret.append(tmp)
     return ret
+
+
+class XadminExtraAction:
+    def parse_extra_action(self, extra_action):
+        self.list_display = [*self.list_display, 'Action']
+        self.action_tag = []
+        permitted_url_names = self.request.session.get('permitted_url_names')
+        for url_name, text in extra_action.items():
+            if self.user.is_superuser or url_name in permitted_url_names:
+                self.action_tag.append('<a href="' + reverse(url_name) + '?pk={0}">' + text + '</a>')
+
+    def Action(self, instance):
+        if self.action_tag:
+            pk = str(instance.id)
+            a_tags = ''
+            for a in self.action_tag:
+                a_tags += a.format(pk)
+            return mark_safe(a_tags)
+        else:
+            return ''

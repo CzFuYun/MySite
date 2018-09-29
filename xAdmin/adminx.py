@@ -3,14 +3,14 @@ from xadmin import views
 
 
 class BaseSetting:
-    enable_themes = True
-    use_bootswatch = True
+    # enable_themes = True
+    # use_bootswatch = True
     pass
 
 
 class GlobalSetting:
     site_title = "信息共享系统"
-    site_footer = "华夏银行常州分行公司业务部"
+    site_footer = "华夏银行常州分行—公司业务部"
     menu_style = "accordion"
 
 

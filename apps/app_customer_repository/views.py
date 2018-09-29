@@ -631,6 +631,11 @@ def showPreMeetingList(request):
         return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
 
 
-@checkPermission
-def voteAtPreMeeting(request):
-    pass
+
+class VoteAtPreMeetingView(View):
+    def get(self, request):
+        pass
+
+    @checkPermission
+    def post(self, request):
+        pass

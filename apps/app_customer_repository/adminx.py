@@ -1,8 +1,13 @@
+from copy import deepcopy
+from collections import namedtuple
+
 from django.utils.safestring import mark_safe
+from django.shortcuts import reverse
 import xadmin
 from xadmin import views
 
 from MySite.settings import MEDIA_URL
+from MySite.utilities import XadminExtraAction
 from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting
 from app_permission import models
 
@@ -40,11 +45,19 @@ class PretrialDocumentAdmin:
     show_file.short_description = '预审表'
 
 
-class PretrialDocumentWaitForMeetingAdmin:
-    list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file', 'make_vote']
+class PretrialDocumentWaitForMeetingAdmin(XadminExtraAction):
+    list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file']
     list_per_page = 20
     list_editable = ['net_total', 'reason']
     # reversion_enable = True
+
+    def __init__(self, *args, **kwargs):
+        super(PretrialDocumentWaitForMeetingAdmin, self).__init__(*args, **kwargs)
+        self.parse_extra_action({
+            'voteAtPreMeeting': '投票',
+            # 'submitPreDoc': '提交',
+            # 'regressPreDoc': '退回',
+        })
 
     def queryset(self):
         qs = super(PretrialDocumentWaitForMeetingAdmin, self).queryset()
@@ -53,14 +66,6 @@ class PretrialDocumentWaitForMeetingAdmin:
     def show_file(self, instance):
         return showFile(instance)
     show_file.short_description = '预审表'
-
-    def make_vote(self, instance):
-        if self.user.is_superuser or self.request.session['permitted_url_names']:
-            if instance.result <= 10:
-                doc_id = str(instance.id)
-                return mark_safe('<a href="' + '?' + 'doc_id=' + doc_id + '" target="_blank">投票</a>')
-        return ''
-    make_vote.short_description = 'Action'
 
 
 class PretrialDocumentInLine:
