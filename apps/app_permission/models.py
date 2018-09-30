@@ -1,9 +1,23 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser, Group#, Permission
 
 from app_permission import settings
 
 # ↓static ##############################################################################################################
+class MainMenuItem(models.Model):
+    item = models.OneToOneField('Permission', on_delete=models.CASCADE)
+    parent_perm = models.ForeignKey('Permission', null=True, on_delete=models.CASCADE, related_name='parent_item')
+    display_order = models.SmallIntegerField(null=True, blank=True)      # 在菜单栏的先后顺序，根条目必填
+
+    def __str__(self):
+        caption_list = [self.item.display_caption, ]
+        p = self.parent_perm
+        while p:
+            caption_list.insert(0, p.item.display_caption)
+            p = p.parent_perm
+        return '-'.join(caption_list)
+
+
 class UserProfile(AbstractUser):
     user_id = models.OneToOneField(
         to=settings.USER_RESOURCE_MODEL,
@@ -30,20 +44,6 @@ class Permission(models.Model):
 
     def __str__(self):
         return self.description
-
-
-class MainMenuItem(models.Model):
-    item = models.OneToOneField('Permission', on_delete=models.CASCADE)
-    parent_perm = models.ForeignKey('Permission', null=True, on_delete=models.CASCADE, related_name='parent_item')
-    display_order = models.SmallIntegerField(null=True, blank=True)      # 在菜单栏的先后顺序，根条目必填
-
-    def __str__(self):
-        caption_list = [self.item.display_caption, ]
-        p = self.parent_perm
-        while p:
-            caption_list.insert(0, p.item.display_caption)
-            p = p.parent_perm
-        return '-'.join(caption_list)
 
 
 class Role(models.Model):
