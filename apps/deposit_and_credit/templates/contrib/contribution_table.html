@@ -1,5 +1,5 @@
 {% extends 'blank.html' %}
-
+{% load staticfiles %}
 {% block extra_css %}
 <link href="/static/assets/plugins/css-chart/css-chart.css" rel="stylesheet">
 {% endblock %}
@@ -25,7 +25,7 @@
 {% block extra_js %}
 <script type="text/javascript" src="/static/myjs/common.js"></script>
 <script type="text/javascript" src="/static/js/highcharts.js"></script>
-<script type="text/javascript" src="/static/myjs/contribution_table.js"></script>
+<script type="text/javascript" src="{% static 'myjs/contribution_table.js' %}"></script>
 <script type="text/javascript">
     var USER_DEPT = "{{ user_dept|default:'' }}";
 

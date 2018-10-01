@@ -371,15 +371,13 @@ function buildContribTable(filter_condict, ordered_dept){
     let whole_contrib_tree = getContributionTree(filter_condict['data_date']),
         frag = document.createDocumentFragment(),
         dept_selector,
-        contrib_tree = {},
         depts_sum = {},
         branch_sum = {},
         req_dept = filter_condict['department'];
-    contrib_tree = whole_contrib_tree;
     $('#right_sidebar_body').append(dept_selector);
     for(let od in ordered_dept){
         let dept_code = ordered_dept[od],
-            dept_sum = buildDeptContribCard(filter_condict, dept_code, contrib_tree[ordered_dept[od]], frag);
+            dept_sum = buildDeptContribCard(filter_condict, dept_code, whole_contrib_tree[ordered_dept[od]], frag);
         if(!dept_sum)
             continue;
         // {#console.log(dept_sum);#}
