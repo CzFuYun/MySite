@@ -10,56 +10,50 @@ from app_permission import settings, models
 # ↓static ##############################################################################################################
 register = template.Library()
 
+RGX_MENU_ITEM_SUFFIX = re.compile(r'（.+?）$')
+
+MENU_ICONS = {
+    '显示主页': 'fa fa-home',
+    '客户及项目': 'fa fa-map-marker',
+    '存款及用信': 'fa fa-cny',
+    '信息共享': 'fa fa-share-alt',
+}
 
 def getMenuTree(request):
-    # menu_tree = request.session.get('menu_tree')
-    # if menu_tree:
-    #     return json.loads(menu_tree)
-    user_id = request.user.username
-    user_obj = models.UserProfile.objects.get(**{settings.USER_ID: user_id})
-    # 取到用户角色的全部权限
-    user_perms = user_obj.roles.values_list(
-        settings.ROLE_PERMISSIONS + '__' + 'id',
-        settings.ROLE_PERMISSIONS + '__' + settings.PERMISSION_DESCRIPTION,
-        settings.ROLE_PERMISSIONS + '__' + settings.PERMISSION_URL_NAME,
-        settings.ROLE_PERMISSIONS + '__' + settings.PERMISSION_DISPLAY_CAPTION
+    menu_tree = request.session.get('menu_tree')
+    if menu_tree:
+        return json.loads(menu_tree)
+    menu_items = request.user.groups.values_list(
+        'permissions__mainmenuitem__item__name',
+        'permissions__mainmenuitem__item__codename',
+        'permissions__mainmenuitem__parent_perm__name',
+        # 'permissions__mainmenuitem__parent_perm__codename'
     ).distinct().order_by('permissions__mainmenuitem__display_order')
-    user_perms_list = []
-    for up in user_perms:
-        user_perms_list.append(
-            {
-                'perm_id': up[0],
-                settings.PERMISSION_DESCRIPTION: up[1],
-                settings.PERMISSION_URL_NAME: up[2],
-                settings.PERMISSION_DISPLAY_CAPTION: up[3],
-            }
-        )
-    # print(user_perms_list)
-    menu_items_dict = {}
-    for upl in user_perms_list:
-        menu_item = models.MainMenuItem.objects.filter(**{
-            settings.MENU_ITEM + '__' + settings.PERMISSION_DESCRIPTION: upl[settings.PERMISSION_DESCRIPTION]
-        })
+    menu_struct = {}
+    for item in menu_items:
+        if item[0] is None:
+            continue
+        display = RGX_MENU_ITEM_SUFFIX.sub('', item[0], 0)
         try:
-            _url = reverse(upl[settings.PERMISSION_URL_NAME])
+            url = reverse(item[1])
         except:
-            _url = '#'
-        if menu_item:
-            upl['url'] = _url
-            upl['parent'] = menu_item[0].parent_perm_id
-            upl['children'] = []
-            menu_items_dict[upl['perm_id']] = upl
-    # print(menu_items_dict)        #{1: {'id': 1, 'description': '全行存款概览', 'url_name': 'viewOverViewBranch', 'display_caption': '全行存款概览', 'parent': None, 'children': []}, 2: {'id': 2, 'description': 'yyy', 'url_name': 'ajaxOverViewBranch', 'display_caption': None, 'parent': 1, 'children': []}, 3: {'id': 3, 'description': 'xxx', 'url_name': 'ajaxAnnotateDeposit', 'display_caption': None, 'parent': 1, 'children': []}}
+            url = '#'
+        parent_display = item[2] and RGX_MENU_ITEM_SUFFIX.sub('', item[2], 0)
+        menu_struct[display] = {
+            'display': display,
+            'url': url,
+            'parent_display': parent_display,
+            # 'parent_urlname': item[3],
+            'children_items': []
+        }
     menu_tree = []
     # 算法原理参考《循环实现评论结构》
-    for k, v in menu_items_dict.items():
-        p_id = v['parent']
-        if p_id:
-            menu_items_dict[p_id]['children'].append(v)
+    for k, v in menu_struct.items():
+        parent = v['parent_display']
+        if parent:
+            menu_struct[parent]['children_items'].append(v)
         else:
             menu_tree.append(v)
-    # print(menu_tree)
-    # [{'id': 1, 'description': '全行存款概览', 'url_name': 'viewOverViewBranch', 'display_caption': '全行存款概览', 'parent': None, 'children': [{'id': 2, 'description': 'yyy', 'url_name': 'ajaxOverViewBranch', 'display_caption': None, 'parent': 1, 'children': []}, {'id': 3, 'description': 'xxx', 'url_name': 'ajaxAnnotateDeposit', 'display_caption': None, 'parent': 1, 'children': []}]}]
     # request.session['menu_tree'] = json.dumps(menu_tree)
     return menu_tree
 
@@ -86,25 +80,25 @@ def buildMenu(request):
     for mt in menu_tree:
         menu_html += menu_bar_item_model.format(
             href=mt['url'],
-            icon=settings.MENU_ICONS.get(mt[settings.PERMISSION_DESCRIPTION], ''),
-            display=mt[settings.PERMISSION_DISPLAY_CAPTION]
+            icon=MENU_ICONS.get(mt['display'], ''),
+            display=mt['display']
         )
-        menu_item_lv1 = mt['children']
+        menu_item_lv1 = mt['children_items']
         if menu_item_lv1:
             menu_html += '<ul aria-expanded="false" class="collapse">'
             for mi_lv1 in menu_item_lv1:
-                menu_item_lv2 = mi_lv1['children']
+                menu_item_lv2 = mi_lv1.get('children_items')
                 if menu_item_lv2:
-                    menu_html += menu_item_has_child_model.format(href=mi_lv1['url'],
-                                                                  display=mi_lv1[settings.PERMISSION_DISPLAY_CAPTION])
+                    menu_html += menu_item_has_child_model.format(href=mi_lv1.get('url', '#'),
+                                                                  display=mi_lv1.get('display', 'mi_lv1 None'))
                     menu_html += '<ul aria-expanded="false" class="collapse">'
                     for mi_lv2 in menu_item_lv2:
                         menu_html += menu_item_model.format(href="'" + mi_lv2['url'] + "'",
-                                                            display=mi_lv2[settings.PERMISSION_DISPLAY_CAPTION])
+                                                            display=mi_lv2['display'])
                     menu_html += '</ul>'  # 二级子菜单的闭合标签
                 else:
-                    menu_html += menu_item_model.format(href="'" + mi_lv1['url'] + "'",
-                                                        display=mi_lv1[settings.PERMISSION_DISPLAY_CAPTION])
+                    menu_html += menu_item_model.format(href="'" + mi_lv1.get('url', '#') + "'",
+                                                        display=mi_lv1.get('display', 'mi_lv1 None'))
             menu_html += '</ul>'  # 一级子菜单的闭合标签
         menu_html += '</li>'  # 根菜单项的闭合标签
     menu_html += '</ul></nav></div></aside>'  # 菜单栏的闭合标签

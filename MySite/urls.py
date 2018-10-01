@@ -29,9 +29,9 @@ xversion.register_models()
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'login/', views.login, name='login'),
-    url(r'home/', views.home, name='home'),
+    # url(r'^admin/', admin.site.urls),
+    url(r'login/$', views.login, name='login'),
+    url(r'home/$', views.home, name='home'),
     url(r'url\.convert', views.convertToUrl),
     url(r'dc/', include('deposit_and_credit.urls'), name='deposit_and_credit'),
     url(r'cr/', include('app_customer_repository.urls')),

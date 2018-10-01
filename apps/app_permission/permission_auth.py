@@ -13,13 +13,6 @@ class ExtraAuth:
     '''
     def __init__(self, request, user_obj=None):
         self.request = request
-        #
-        # if user_obj:
-        #     self.user_obj = user_obj
-        # else:
-        #     user_id = request.session.get(settings.USER_ID)
-        #     self.user_obj = models.UserProfile.objects.get(**{settings.USER_ID: user_id})
-        #
         self.staff = request.user.user_id
         self.auth_function = getattr(self, '_' + request.method.lower())
 

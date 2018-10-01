@@ -1,26 +1,26 @@
 # ↓static ##############################################################################################################
-PERMITTED_URLS = 'permitted_urls'
-MENU_ALL_ITEMS = 'menu_all_items'
-MENU_PERMITTED_ITEMS = 'menu_permitted_items'
+# PERMITTED_URLS = 'permitted_urls'
+# MENU_ALL_ITEMS = 'menu_all_items'
+# MENU_PERMITTED_ITEMS = 'menu_permitted_items'
 
 # 用户表中，用户id的字段名：
-USER_ID = 'username'
+# USER_ID = 'username'
 # 用户表中，密码的字段名：
-PASSWORD = 'password'
+# PASSWORD = 'password'
 # Permission表的表名
-PERMISSION_TABLE = 'permission'
+# PERMISSION_TABLE = 'permission'
 # Permission表中权限描述的字段名称
-PERMISSION_DESCRIPTION = 'description'
+# PERMISSION_DESCRIPTION = 'name'
 # Permission表中权限的url别名的字段名称：
-PERMISSION_URL_NAME = 'url_name'
+# PERMISSION_URL_NAME = 'url_name'
 # Permission表中权限显示名的字段名称：
-PERMISSION_DISPLAY_CAPTION = 'display_caption'
+# PERMISSION_DISPLAY_CAPTION = 'name'
 # Role表中，所具备的权限，字段名：
-ROLE_PERMISSIONS = 'permissions'
+# ROLE_PERMISSIONS = 'permissions'
 # MainMenuItem表中，item字段名：
-MENU_ITEM = 'item'
+# MENU_ITEM = 'item'
 # MainMenuItem表中，parent字段名：
-MENU_ITEM_PARENT = 'parent_perm'
+# MENU_ITEM_PARENT = 'parent_perm'
 
 # session有效期（秒）：
 SESSION_AGE = 16 * 3600
@@ -29,9 +29,9 @@ SESSION_AGE = 16 * 3600
 
 
 # ↓dynamic #############################################################################################################
-# 静态文件夹的名称：
-STATIC_FOLDER_NAME = 'static'
-
+# # 静态文件夹的名称：
+# STATIC_FOLDER_NAME = 'static'
+#
 
 # 用户来源：
 USER_RESOURCE_MODEL = 'root_db.Staff'
@@ -47,13 +47,7 @@ LOGIN_PAGE = 'login.html'
 HOME_URL_NAME = 'home'
 # 主页的名称：
 HOME_PAGE = 'home.html'
-# 主菜单图标,key:权限描述 value:前端样式的class
-MENU_ICONS = {
-    'root_显示主页': 'fa fa-home',
-    'root_客户及项目': 'fa fa-map-marker',
-    'root_存款及用信': 'fa fa-cny',
-    'root_信息共享': 'fa fa-share-alt',
-}
+
 
 
 # url参数中细分部门的参数名
