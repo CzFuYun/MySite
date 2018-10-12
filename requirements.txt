@@ -3,3 +3,5 @@ pymysql
 django
 xadmin
 xlsxwriter
+requests
+lxml

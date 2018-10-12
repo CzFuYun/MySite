@@ -345,8 +345,8 @@ class ProjectExecution(models.Model):
 
     @classmethod
     def takePhoto(cls, project_obj=None, photo_date=None):
-        # from app_customer_repository import models
-        # models.ProjectExecution.takePhoto()
+        # from app_customer_repository.models import ProjectExecution
+        # ProjectExecution.takePhoto()
         imp_date = models_operation.DateOperation()
         if project_obj:
             if not photo_date:

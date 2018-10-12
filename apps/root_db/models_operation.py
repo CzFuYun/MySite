@@ -3,8 +3,7 @@ from root_db import  models
 from django.utils.timezone import timedelta, datetime
 
 
-NEED_UPDATE_STAFF_INFORMATION = True
-NEED_UPDATE_ALL_COMPANIES_INFORMATION = False
+# NEED_UPDATE_STAFF_INFORMATION = True
 
 
 ########################################################################################################################
@@ -27,8 +26,8 @@ def createOrUpdateStaff(staff_id, name, sub_department_caption):
                 print('Failed to Add Staff 【%s-%s】' % (staff_id, name))
                 print('*' * 50)
     else:       # 若存在该员工
-        if not NEED_UPDATE_STAFF_INFORMATION:
-            return
+        # if not NEED_UPDATE_STAFF_INFORMATION:
+        #     return
         name_in_db = staff_qs[0]
         sub_department_in_db = staff_qs[1]
         if sub_department_in_db != sub_department_caption or name_in_db != name:
@@ -71,6 +70,7 @@ def getSimpleSerializationRule(model_class_used_to_serialize, primary_key_field=
             serialization_rule_dict[i[0]] = i[1]
     return serialization_rule_dict
 
+
 def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0, extra_fileds_kvp=None):
     '''
 
@@ -112,8 +112,9 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
         ret_list.append(row_data_dict)
     return ret_list
 
+
 def updateOrCreateCompany(file_name):
-    global NEED_UPDATE_ALL_COMPANIES_INFORMATION
+    need_update_info = input('是否更新客户信息？\n0.否\n1.是')
     all_sr_dict = {}
     all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
     all_sr_dict['customer_type_id'] = getSimpleSerializationRule(models.CustomerType)
@@ -124,7 +125,7 @@ def updateOrCreateCompany(file_name):
     data_for_bulk_create = []
     for data_dict in data_source_list:
         customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
-        if customer_obj.exists() and not NEED_UPDATE_ALL_COMPANIES_INFORMATION:
+        if customer_obj.exists() and need_update_info != '1':
             continue
         for field in data_dict:
             field_sr = all_sr_dict.get(field)
@@ -135,7 +136,7 @@ def updateOrCreateCompany(file_name):
             data_for_bulk_create.append(models.AccountedCompany(**data_dict))
             # models.AccountedCompany.objects.create(**data_dict)
             print('Ready To Add Customer:' + data_dict['name'])
-        elif NEED_UPDATE_ALL_COMPANIES_INFORMATION:
+        elif need_update_info == '1':
             customer_obj.update(**data_dict)
             print('Update Customer:' + data_dict['name'])
         else:
@@ -151,6 +152,7 @@ def updateOrCreateCompany(file_name):
         else:
             print('Add New Customers Successfully')
             break
+
 
 def createDividedCompanyAccount(file_name):
     data_date = input('>>>data_date?')
@@ -175,6 +177,7 @@ def createDividedCompanyAccount(file_name):
                     data_dict[field] = field_sr[value_before_serialize]
         data_for_bulk_create.append(models.DividedCompanyAccount(**data_dict))
     models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create)
+
 
 def createContributorAndUpdateSeries(file_name):
     from deposit_and_credit import models as m

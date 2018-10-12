@@ -53,17 +53,18 @@ def selectProjectAction(request):
         return downloadProjectList(start_date, end_date)
     elif action == '4':
         imp_date = models_operation.DateOperation()
-        if imp_date.date_dif(imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')) < 0:
+        if imp_date.date_dif(imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')) < 0 and not request.user.is_superuser:
             return render(request, 'feedback.html', {'title': '数据尚未就绪', 'swal_type': 'error'})
         return trackProjectExe(request)
 
 
 def viewProjectSummary(request):
-    imp_date = models_operation.DateOperation()
+    # imp_date = models_operation.DateOperation()
     start_date = request.POST.get('start_date')
     end_date = request.POST.get('end_date')
-    last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
-    exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
+    exe_date= models_operation.getNeighbourDate(models.ProjectExecution, 1, end_date, 'photo_date')
+    # last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
+    # exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
     exe_data = models.ProjectExecution.objects.filter(
         photo_date=exe_date
     ).values(
@@ -110,7 +111,7 @@ def viewProjectSummary(request):
         #     print()
         business_caption = p['business__superior__caption']
         p_id = p['id']
-        project = {**p, **project_exe[p_id]}
+        project = {**p, **project_exe[p_id]}# if project_exe.get(p_id) else p
         projects_structure_data[dept_caption][business_caption]['projects'].append(project)
     table_col = {     # 项目储备汇总表的列
         business_list[0]: (     # 授信
@@ -173,7 +174,6 @@ def viewProjectSummary(request):
             'rows': project_summary_table_rows,
             'detail': projects_structure_data
         }, cls=utilities.JsonEncoderExtend))
-
 
 
 def viewProjectList(request):
