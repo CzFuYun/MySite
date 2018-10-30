@@ -5,3 +5,5 @@ xadmin
 xlsxwriter
 requests
 lxml
+selenium
+pyexecjs

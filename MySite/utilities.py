@@ -266,6 +266,15 @@ def combineQueryValues(values, foundations):
     return ret
 
 
+def cleanCompanyName(string):
+    return string.strip().replace('(', '（').replace(')', '）')
+
+
+class FakeRequest():
+    def __init__(self, method, **kwargs):
+        self.method = method.upper()
+
+
 class XadminExtraAction:
     def parse_extra_action(self, extra_action):
         self.list_display = [*self.list_display, 'Action']

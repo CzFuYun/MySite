@@ -21,7 +21,7 @@ class ProjectModelForm(ModelForm):
             'total_net',
             'existing_net',
             'is_defuse',
-            'is_pure_credit',
+            # 'is_pure_credit',
             'plan_pretrial_date',
             'plan_chushen',
             'plan_zhuanshen',

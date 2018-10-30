@@ -3,6 +3,8 @@ from root_db import  models
 from django.utils.timezone import timedelta, datetime
 
 
+from MySite import utilities
+
 # NEED_UPDATE_STAFF_INFORMATION = True
 
 
@@ -132,9 +134,9 @@ def updateOrCreateCompany(file_name):
             if field_sr:        # 若该字段有序列化规则
                 value_before_serialize = data_dict[field]
                 data_dict[field] = field_sr[value_before_serialize]
+        data_dict['name'] = utilities.cleanCompanyName(data_dict['name'])
         if not customer_obj.exists():
             data_for_bulk_create.append(models.AccountedCompany(**data_dict))
-            # models.AccountedCompany.objects.create(**data_dict)
             print('Ready To Add Customer:' + data_dict['name'])
         elif need_update_info == '1':
             customer_obj.update(**data_dict)

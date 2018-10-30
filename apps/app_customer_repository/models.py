@@ -12,6 +12,7 @@ industry_factor_rule = {
 
 class CustomerRepository(models.Model):
     stockholder_choices = (
+        (0, 'unknown'),
         (10, '国有'),
         (20, '民营'),
         (30, '外资'),
@@ -78,7 +79,7 @@ class ProjectRepository(models.Model):
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
     account_num = models.DecimalField(default=0, max_digits=3, decimal_places=2, verbose_name='折算户数')
     is_defuse = models.BooleanField(verbose_name='涉及化解')
-    is_pure_credit = models.BooleanField(verbose_name='纯信用')
+    # is_pure_credit = models.BooleanField(verbose_name='纯信用')
     close_date = models.DateField(blank=True, null=True, verbose_name='关闭日期')
     tmp_close_date = models.DateField(blank=True, null=True, verbose_name='临时关闭日期')
     close_reason = models.IntegerField(choices=close_reason_choices, blank=True, null=True, verbose_name='关闭理由')
@@ -86,6 +87,7 @@ class ProjectRepository(models.Model):
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日期')
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='approver', verbose_name='专审')
+    is_specially_focus = models.BooleanField(default=False, verbose_name='是否重点跟进项目')
 
     class Meta:
         verbose_name = '项目库'
@@ -203,6 +205,8 @@ class PretrialDocument(models.Model):
     accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
     result = models.IntegerField(choices=result_choices, default=10, verbose_name='审议结果')
     department = models.ForeignKey('root_db.Department', null=True, on_delete=models.CASCADE, verbose_name='经营部门')
+    staff = models.ForeignKey('root_db.Staff', to_field='staff_id', blank=True, null=True, on_delete=models.CASCADE, verbose_name='客户经理')
+    business = models.ForeignKey('SubBusiness', on_delete=models.CASCADE, verbose_name='业务品种')
     reason = models.IntegerField(choices=reason_choices, default=0, verbose_name='上会原因')
     remark = models.TextField(blank=True, null=True, verbose_name='备注')
     order = models.IntegerField(default=0, verbose_name='上会顺位')
@@ -210,14 +214,17 @@ class PretrialDocument(models.Model):
     exist_net = models.IntegerField(default=0, verbose_name='已有敞口（万元）')
     agree_net = models.IntegerField(default=0, verbose_name='同意敞口（万元）')
     guarantee = models.TextField(blank=True, null=True, verbose_name='担保方式')
+    industry = models.ForeignKey('root_db.Industry', on_delete=models.PROTECT, verbose_name='行业')
+    stockholder = models.IntegerField(choices=CustomerRepository.stockholder_choices, verbose_name='控股方')
     is_defuse = models.NullBooleanField(blank=True, null=True, verbose_name='涉及化解')
     is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
+    type_of_3311 = models.ForeignKey('root_db.TypeOf3311', on_delete=models.PROTECT, verbose_name='3311类型')
     document_file = models.FileField(upload_to='pre_doc/%Y/%m', blank=True, null=True, verbose_name='预审表')
 
     class Meta:
         verbose_name = '预审项目'
         verbose_name_plural = verbose_name
-        ordering = ['order', '-accept_date', 'department__display_order']
+        ordering = ['-accept_date', 'department__display_order']
 
     def __str__(self):
         return self.customer_name + str(self.accept_date)
