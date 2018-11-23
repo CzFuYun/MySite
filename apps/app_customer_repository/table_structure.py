@@ -36,6 +36,7 @@ trackProjectExe_fields = [
     'project__approver__staff_id',
     'remark__create_date',
     'project__pretrial_doc__meeting__meeting_date',
+    'project__total_net',
 ]
 
 trackProjectExe_table_col = [
@@ -80,6 +81,11 @@ trackProjectExe_table_col = [
         'td_attr': {
             # 'sub_business': 'business_id'
         }
+    },
+    {
+        'index': 'project__total_net',
+        'col_name': '金额（万元）',
+        'width': '5%',
     },
     {
         'index': 'project__pretrial_doc__meeting__meeting_date',

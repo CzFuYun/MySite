@@ -28,8 +28,24 @@ class CustomerAdmin:
 
 
 class ProjectAdmin:
-    list_display = ['customer', 'staff', 'tmp_close_date', 'close_reason']
-    # search_fields = ['staff__name']
+    list_display = ['customer', 'staff', 'business', 'total_net', 'get_total_used', 'get_progress', 'is_specially_focus', 'show_remark', 'tmp_close_date', 'close_reason']
+    search_fields = ['customer__name']
+    list_filter = ['is_focus', 'is_specially_focus', 'business__superior']
+    list_per_page = 50
+
+    def show_remark(self, instance):
+        return self.last_exe.remark.content
+    show_remark.short_description = '备注'
+
+    def get_total_used(self, instance):
+        project_id = instance.id
+        self.last_exe = ProjectExecution.objects.filter(project_id=project_id).order_by('-id').first()
+        return self.last_exe.total_used
+    get_total_used.short_description = '已投放'
+
+    def get_progress(self, instance):
+        return self.last_exe.current_progress.caption
+    get_progress.short_description = '目前进度'
 
 
 class PreDocToNewProject(BaseActionView):

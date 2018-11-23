@@ -1,7 +1,9 @@
 from django.db import models
-from root_db import models as m
-from django.db.models import Sum
-from . import models_operation
+# from root_db import models as m
+# from django.db.models import Sum
+# from . import models_operation
+
+from private_modules.dcms_shovel import connection, dig
 
 # class DepartmentDeposit(models.Model):
 #     data_date = models.DateField(null=True, blank=True)
@@ -112,7 +114,18 @@ class ExpirePrompt(models.Model):
                 d[field] = str(field_obj)
         return d
 
-    # def update(self):
-    #     today = models_operation.DateOperation().today
-    #
-    #     pass
+    @classmethod
+    def updateProgress(cls):
+        dcms = connection.DcmsConnection('http://110.17.1.21:9082')
+        dcms.login('czfzc', 'hxb123')
+        customer_list = ExpirePrompt.objects.filter(finish_date__isnull=True).values(
+            'id', 'customer__name', 'cp_num',
+        )
+        for customer in customer_list:
+            search_value = customer['cp_num'] or customer['customer__name']
+            dig.update_cp_progress(dcms, search_value)
+
+    @staticmethod
+    def getCpNum(dcms, name, cf):
+        customer = dcms.search_customer(name, cf)
+        customer.go_to_cf_label('授信申请')

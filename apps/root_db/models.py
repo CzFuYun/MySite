@@ -207,7 +207,7 @@ class TypeOf3311(models.Model):
     remark = models.CharField(max_length=64, null=True, blank=True)
 
     def __str__(self):
-        return self.caption
+        return self.caption + '（' + self.level + '）'
 
     class Meta:
         verbose_name_plural = '3311类型'

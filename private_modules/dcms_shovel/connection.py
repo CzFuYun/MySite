@@ -11,7 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 
-# from .page_parser import DcmsWebPage
+from .page_parser import DcmsWebPage
 from private_modules.dcms_shovel.customer import Customer
 
 
@@ -188,7 +188,8 @@ class DcmsConnection(WebConnection):
     def search_customer(self, name, cf_num=None):
         return Customer(self, name, cf_num)
 
-    def get_into_work_flow(self, con_num):
+    def search_work_flow(self, con_num):
+        con_num = con_num.strip()
         if con_num.startswith('LU') or con_num.startswith('SMELU'):
             menu_item = ('放款管理', '额度使用', '查询')
         elif con_num.startswith('CP') or  con_num.startswith('SME'):
@@ -198,7 +199,9 @@ class DcmsConnection(WebConnection):
         self.click_main_menu(*menu_item)
         self.submit_form(submit_btn_locator=(By.NAME, 'Go'), searchCriteria='ref_no', searchValue=con_num)
         assert not self.browser.page_source.count('对不起, 未找到记录'), con_num + '未找到'
-        dcms1.browser.find_element_by_partial_link_text('1').click()
+        search_result_page = DcmsWebPage(self.browser.page_source, self.browser.current_url, self)
+        return search_result_page.search_result[0]
+
 
 if __name__ == '__main__':
     print('start')

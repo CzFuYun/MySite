@@ -1,11 +1,14 @@
 import os, json, datetime, decimal, re, xlsxwriter
 from io import BytesIO
+from collections import UserList
+
 from django.utils.encoding import escape_uri_path
 from django.shortcuts import HttpResponse, reverse
 from django.http import StreamingHttpResponse, FileResponse
 from django import forms
 from django.shortcuts import HttpResponse, render_to_response
 from django.utils.safestring import mark_safe
+
 
 
 return_as = {
@@ -241,7 +244,6 @@ def downloadWorkbook(file_name, columns, data_list, **field_choice_sr):
 
 def combineQueryValues(values, foundations):
     '''
-
     :param values: 由ORM values方法查询出的一组或多组结果，转化成列表传入
     :param foundations:  合并依据，values中的查询字段名，转化成列表传入，列表长度与values的长度要一致
     :return:
@@ -293,3 +295,24 @@ class XadminExtraAction:
             return mark_safe(a_tags)
         else:
             return ''
+
+
+class SingleDimensionalTable(UserList):
+    def __init__(self, field_name_list, *row_data):
+        super.__init__(self, None)
+        self.fields = field_name_list
+        self.row_data = row_data
+        self._dict_list = None
+        pass
+
+    @property
+    def dict_list(self):
+        if not self._dict_list is None:
+            return self._dict_list
+        else:
+            ret = []
+            for row in self.row_data:
+                ret.append({self.fields[i]: row[i].strip() for i in range(len(self.fields))})
+                pass
+            return
+

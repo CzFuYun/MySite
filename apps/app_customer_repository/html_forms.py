@@ -27,7 +27,8 @@ class ProjectModelForm(ModelForm):
             'plan_zhuanshen',
             'plan_xinshen',
             'plan_reply',
-            'plan_luodi'
+            'plan_luodi',
+            'is_specially_focus',
         ]
         # widgets = {
         #     'customer': forms.TextInput(),
@@ -42,13 +43,14 @@ class ProjectModelForm(ModelForm):
         self.fields['staff'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static'})
         self.fields['is_green'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['is_defuse'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
+        # self.fields['is_pure_credit'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['plan_pretrial_date'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_chushen'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_zhuanshen'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_xinshen'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_reply'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
+        self.fields['is_specially_focus'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         utilities.setRequiredFields(self)
 
 

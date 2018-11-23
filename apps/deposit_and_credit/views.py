@@ -14,6 +14,9 @@ from app_permission.views import checkPermission
 # import collections
 
 
+def test(request):
+    dac_models.ExpirePrompt.updateProgress()
+    pass
 
 @checkPermission
 def viewOverViewBranch(request):

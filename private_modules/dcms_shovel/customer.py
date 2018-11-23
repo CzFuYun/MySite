@@ -3,7 +3,38 @@ from collections import namedtuple
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
-from .page_parser import DcmsWebPage
+from dcms_shovel import page_parser
+
+
+class SearchResult:
+    label_reflector = {
+        '申请信息': 'tab_dcms_cp_0002',
+        '业务': 'tab_dcms_cp_0004',
+        '文件生成': 'tab_dcms_cp_0009',
+        '工作流': 'tab_dcms_cp_0010',
+    }
+    def __init__(self, dcms_connection, **kwargs):
+        self.dcms_connection = dcms_connection
+        for key, value in kwargs.items():
+            self.__dict__[key] = value
+
+    def click_into(self):
+        self.dcms_connection.browser.find_element_by_partial_link_text(self.__dict__['序号']).click()
+
+    def open_in_new_window(self):
+        pass
+
+    def click_label(self, label_text):
+        self.dcms_connection.switch_to_main_frame()
+        label_id = self.label_reflector[label_text]
+        self.dcms_connection.switch_to_body_frame()
+        self.dcms_connection.browser.find_element_by_id(label_id).click()
+        pass
+
+
+class CpFlow(SearchResult):
+    pass
+
 
 class Customer:
     work_flow_type_reflector = {

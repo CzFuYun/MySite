@@ -3,7 +3,7 @@ from django.db.models import Q, F, Sum, Max
 from MySite import utilities
 from app_customer_repository import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
-
+from root_db.models import AccountedCompany
 
 industry_factor_rule = {
     'C': 1.5,
@@ -39,6 +39,14 @@ class CustomerRepository(models.Model):
     def getCustomer(self):
         pass
 
+    @classmethod
+    def no_kernel_id(cls):
+        no_kernel_id_customers = cls.objects.filter(customer__isnull=True).values('name')
+        if no_kernel_id_customers.exists():
+            return [customer['name'] for customer in no_kernel_id_customers]
+        else:
+            return
+
 
 class ProjectRepository(models.Model):
     close_reason_choices = (
@@ -52,6 +60,7 @@ class ProjectRepository(models.Model):
         (70, '部分落地后终止'),
         (80, '全部落地'),
         (90, '授信到期'),
+        (100, '其他'),
     )
     whose_matter_choices = (
         (0, '无责任方'),
@@ -92,6 +101,7 @@ class ProjectRepository(models.Model):
     class Meta:
         verbose_name = '项目库'
         verbose_name_plural = verbose_name
+        ordering = ['customer__department__display_order', 'customer', 'staff']
 
     def __str__(self):
         return self.project_name
@@ -200,6 +210,14 @@ class PretrialDocument(models.Model):
         (3, '担保变更'),
         (4, '其他'),
     )
+    gov_debt_type_choices = (
+        (0, '未知'),
+        (-1, '非政府债务'),
+        (1, '未申报'),
+        (2, '政府一般债务'),
+        (3, '政府隐性债务'),
+        (4, '自身经营债务'),
+    )
     meeting = models.ForeignKey('PretrialMeeting', on_delete=models.CASCADE, verbose_name='预审会')
     customer_name = models.CharField(max_length=128, null=True, verbose_name='客户名称')
     accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
@@ -216,6 +234,7 @@ class PretrialDocument(models.Model):
     guarantee = models.TextField(blank=True, null=True, verbose_name='担保方式')
     industry = models.ForeignKey('root_db.Industry', on_delete=models.PROTECT, verbose_name='行业')
     stockholder = models.IntegerField(choices=CustomerRepository.stockholder_choices, verbose_name='控股方')
+    gov_debt_type = models.IntegerField(choices=gov_debt_type_choices, default=0, verbose_name='政府债务申报类型')
     is_defuse = models.NullBooleanField(blank=True, null=True, verbose_name='涉及化解')
     is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
     type_of_3311 = models.ForeignKey('root_db.TypeOf3311', on_delete=models.PROTECT, verbose_name='3311类型')
@@ -373,6 +392,9 @@ class ProjectExecution(models.Model):
                 photo_date = imp_date.strToDate(photo_date_str)
             else:
                 return
+            # ↓先补充新生成的核心客户号
+            newly_account = AccountedCompany.objects.filter(name__in=CustomerRepository.no_kernel_id()).values('name', 'customer_id')
+
             # ↓先将临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(
                 tmp_close_date__isnull=False,

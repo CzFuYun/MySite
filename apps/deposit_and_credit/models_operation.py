@@ -195,11 +195,9 @@ def getCustomerDailyDataForHighChartsLine(customer_id_list, model_class, annotat
     :param end_date:
     :return: {Group1: [(####-##-##, xxxx.xx), (####-##-##, xxxx.xx), ...], Group2: []}
     '''
-    if not end_date:
-        end_date = DateOperation().last_data_date_str(model_class)
-    first_data_date = DateOperation().first_data_date_str(model_class)
-    if not start_date:
-        start_date = first_data_date
+    imp_date = DateOperation()
+    end_date = end_date or imp_date.last_data_date_str(model_class)
+    start_date = start_date or getNeighbourDate(model_class, date_str=str(imp_date.delta_date(-365,end_date)))
     deposit_qs = model_class.objects.filter(customer_id__in=customer_id_list, data_date__gte=start_date, data_date__lte=end_date)
     if group_by:
         deposit_qs = deposit_qs.values_list('data_date', group_by)

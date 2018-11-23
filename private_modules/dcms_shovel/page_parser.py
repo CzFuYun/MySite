@@ -4,6 +4,7 @@ from collections import OrderedDict
 from bs4 import BeautifulSoup as BS
 from bs4.element import Tag
 
+from .customer import SearchResult
 
 class Parser:
     def __init__(self, bs_obj):
@@ -44,10 +45,11 @@ class Detail(Parser):
 
 class WebPage:
     parser = ('lxml', 'html.parser')
-    def __init__(self, HTML_text, path_url):
+    def __init__(self, HTML_text, path_url, connection=None):
         self.path_url = path_url
         self.HTML_text = HTML_text
         self.HTML_soup = BS(HTML_text, self.parser[0])
+        self.connection = connection
         self.current_pagenum = 1
         pass
 
@@ -103,7 +105,7 @@ class DcmsWebPage(WebPage):
     rgx_rlk = re.compile(r'[A-Z0-9]{32}')
     @property
     def search_result(self):
-        result_table = self.HTML_soup.find_all(style='word-break:break-all;', class_='clsForm')[0].find_all('tr')[1:]
+        result_table = self.HTML_soup.find_all(class_='clsForm')[0].find_all('tr')[1:]
         try:
             result_data = result_table[1:]
             result_head = result_table[0].find_all('td')
@@ -112,9 +114,9 @@ class DcmsWebPage(WebPage):
                 tmp = OrderedDict()
                 row_data = row.find_all('td')
                 tmp['rlk'] = self.rgx_rlk.findall(str(row_data[0]))
-                for i in range(1, len(result_head)):
-                    tmp.setdefault(result_head[i].text, row_data[i].text)
-                result.append(tmp)
+                for i in range(len(result_head)):
+                    tmp.setdefault(result_head[i].text, row_data[i].text.strip())
+                result.append(SearchResult(self.connection, **tmp))
             return result
         except:
             return None
