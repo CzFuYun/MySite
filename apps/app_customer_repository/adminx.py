@@ -28,10 +28,13 @@ class CustomerAdmin:
 
 
 class ProjectAdmin:
-    list_display = ['customer', 'staff', 'business', 'total_net', 'get_total_used', 'get_progress', 'is_specially_focus', 'show_remark', 'tmp_close_date', 'close_reason']
+    list_display = ['customer', 'staff', 'business', 'total_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'get_progress'
+        # , 'get_total_used', 'is_specially_focus', 'show_remark', 'tmp_close_date', 'close_reason'
+                    ]
+    list_editable = ['plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi']
     search_fields = ['customer__name']
-    list_filter = ['is_focus', 'is_specially_focus', 'business__superior']
-    list_per_page = 50
+    list_filter = ['is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date']
+    list_per_page = 15
 
     def show_remark(self, instance):
         return self.last_exe.remark.content
@@ -44,7 +47,7 @@ class ProjectAdmin:
     get_total_used.short_description = '已投放'
 
     def get_progress(self, instance):
-        return self.last_exe.current_progress.caption
+        return instance.projectexecution_set.last().current_progress
     get_progress.short_description = '目前进度'
 
 

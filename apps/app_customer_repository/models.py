@@ -392,15 +392,18 @@ class ProjectExecution(models.Model):
                 photo_date = imp_date.strToDate(photo_date_str)
             else:
                 return
-            # ↓先补充新生成的核心客户号
+            # ↓补充新生成的核心客户号
             newly_account = AccountedCompany.objects.filter(name__in=CustomerRepository.no_kernel_id()).values('name', 'customer_id')
-
-            # ↓先将临关超过半年的项目正式关闭
+            if newly_account.exists():
+                for new_customer in newly_account:
+                    CustomerRepository.objects.filter(name=new_customer['name']).update(customer_id=new_customer['customer_id'])
+                    print('新开户：【' + new_customer['name'] + '】【' + new_customer['customer_id'] + '】\n')
+            # ↓将临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(
                 tmp_close_date__isnull=False,
                 tmp_close_date__lte=imp_date.delta_date(-180, photo_date),
             ).update(close_date=imp_date.today)
-            # 提示关闭授信批复超过一年的项目
+            # ↓提示关闭授信批复超过一年的项目
             expire_credit_qs = ProjectRepository.objects.filter(
                 reply_date__isnull=False,
                 reply_date__lte=imp_date.delta_date(-365, photo_date),
