@@ -175,7 +175,8 @@ class ProjectRepository(models.Model):
             (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
             & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date)
             & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__lte=end_date))
-            & (Q(close_date__isnull=True) | Q(close_date__lte=end_date)))
+            & (Q(close_date__isnull=True) | Q(close_date__lte=end_date))
+        )
         return project_qs, exe_date
 
 

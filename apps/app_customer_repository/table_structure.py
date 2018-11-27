@@ -164,7 +164,13 @@ downloadProjectList_col_part1 = {
     'projectexecution__remark__content': '备注',
     'is_focus': '重点项目',
     'is_specially_focus': '重点跟进',
-    'tmp_close_date': '临时关闭日期'
+    'tmp_close_date': '临时关闭日期',
+    'plan_chushen': '计划到初审',
+    'plan_zhuanshen': '计划到专审',
+    'plan_xinshen': '计划到信审会',
+    'plan_reply': '计划获批',
+    'plan_luodi': '计划落地',
+    'id': '项目id'
 }
 
 downloadProjectList_col_part2 = {

@@ -387,6 +387,67 @@ def downloadProjectList(start_date, end_date):
     return utilities.downloadWorkbook('项目清单\n' + start_date + '→' + end_date + '.xlsx', collections.OrderedDict(**col_part1, **col_part2), combine_details)
 
 
+def downloadNewNetHistory(request):
+    # http://127.0.0.1:8000/cr/newnethistory.download?start_date=&end_date=
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    imp_date = models_operation.DateOperation()
+    last_photo_date = imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')
+    exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
+    project_exe = models.ProjectExecution.objects.filter(
+        photo_date__gte=start_date,
+        photo_date__lte=exe_date
+    ).select_related('project').filter(
+        (
+                (Q(project__business__superior_id__lt=20) & ((Q(project__reply_date__isnull=True) | Q(project__reply_date__gte=start_date) | Q(project__create_date__gte=start_date)))) |
+                Q(project__business__superior_id__gte=20)
+        )
+        & Q(project__create_date__lte=end_date)# & Q(photo_date=exe_date)
+        & (Q(project__tmp_close_date__isnull=True) | Q(project__tmp_close_date__gt=start_date))
+        & (Q(project__close_date__isnull=True) | Q(project__close_date__gt=start_date))
+    ).values(
+        'project_id',
+        'current_progress__status_num'
+    )
+    project_progress = collections.defaultdict(list)
+    for pe in project_exe:
+        project_progress[pe['project_id']].append(pe['current_progress__status_num'])
+    project_id = []
+    for p, g in project_progress.items():
+        if g[0] < 200:
+            project_id.append(p)
+    new_net_history = models.ProjectExecution.objects.filter(
+        project__in=project_id,
+        project__is_focus=True,
+        current_progress__status_num__gte=100,
+        new_net_used__gt=0,
+        photo_date__gte=start_date,
+        photo_date__lte=end_date,
+    ).values(
+        'project_id',
+        'project__customer__name',
+        'project__business__superior__caption',
+        'new_net_used',
+        'photo_date',
+    ).order_by(
+        'project__staff__sub_department__superior__display_order',
+        'project__staff',
+        'project__business__display_order',
+        'photo_date'
+    )
+    return utilities.downloadWorkbook(
+        '重点项目用信历史记录\n' + start_date + '→' + end_date + '.xlsx',
+        {
+            'project_id': '项目id',
+            'project__customer__name': '客户名称',
+            'project__business__superior__caption': '业务大类',
+            'new_net_used': '新增敞口已投',
+            'photo_date': '快照日期',
+        },
+        new_net_history
+    )
+
+
 def trackProjectExe(request):
     if request.method == 'POST':
         content_title = '项目进度'

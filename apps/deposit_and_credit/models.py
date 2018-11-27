@@ -123,7 +123,7 @@ class ExpirePrompt(models.Model):
         )
         for customer in customer_list:
             search_value = customer['cp_num'] or customer['customer__name']
-            dig.update_cp_progress(dcms, search_value)
+            dig.get_cp_progress_id(dcms, search_value)
 
     @staticmethod
     def getCpNum(dcms, name, cf):
