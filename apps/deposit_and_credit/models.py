@@ -1,6 +1,7 @@
 from django.db import models
+from django.db.models import Q
+
 # from root_db import models as m
-# from django.db.models import Sum
 # from . import models_operation
 
 from private_modules.dcms_shovel import connection, dig
@@ -115,15 +116,42 @@ class ExpirePrompt(models.Model):
         return d
 
     @classmethod
+    def fill_cp_num(cls):
+        dcms = connection.DcmsConnection('http://110.17.1.21:9082')
+        dcms.login('czfzc', 'hxb123')
+        customer_list = cls.objects.filter(
+            Q(finish_date__isnull=True) &
+            Q(cp_num__isnull=True)  &
+            (Q(current_progress__status_num__lt=100) | Q(current_progress__isnull=True))
+        ).values(
+            'id',
+            'customer__name',
+        )
+        for customer in customer_list:
+            cp_num = dig.get_cp_num(dcms, customer['customer__name'])
+            if cp_num:
+                cls.objects.filter(pk=customer['id']).update(cp_num=cp_num)
+
+    @classmethod
     def updateProgress(cls):
         dcms = connection.DcmsConnection('http://110.17.1.21:9082')
         dcms.login('czfzc', 'hxb123')
-        customer_list = ExpirePrompt.objects.filter(finish_date__isnull=True).values(
-            'id', 'customer__name', 'cp_num',
+        customer_list = cls.objects.filter(
+            Q(finish_date__isnull=True) &
+            Q(cp_num__isnull=False) &
+            (Q(current_progress__status_num__lt=100) | Q(current_progress__isnull=True))
+        ).values(
+            'id',
+            'customer__name',
+            'expire_date',
+            'cp_num',
+            'current_progress_id',
+            'progress_update_date'
         )
         for customer in customer_list:
             search_value = customer['cp_num'] or customer['customer__name']
-            dig.get_cp_progress_id(dcms, search_value)
+            progress_id = dig.get_cp_progress_id(dcms, search_value)
+            pass
 
     @staticmethod
     def getCpNum(dcms, name, cf):

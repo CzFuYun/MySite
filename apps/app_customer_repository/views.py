@@ -426,6 +426,7 @@ def downloadNewNetHistory(request):
     ).values(
         'project_id',
         'project__customer__name',
+        'project__staff__sub_department__superior__caption',
         'project__business__superior__caption',
         'new_net_used',
         'photo_date',
@@ -440,6 +441,7 @@ def downloadNewNetHistory(request):
         {
             'project_id': '项目id',
             'project__customer__name': '客户名称',
+            'project__staff__sub_department__superior__caption': '经营部门',
             'project__business__superior__caption': '业务大类',
             'new_net_used': '新增敞口已投',
             'photo_date': '快照日期',

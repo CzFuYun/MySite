@@ -68,7 +68,7 @@ class Customer:
         searchValue = self.__cf_num or self.name
         self.dcms_connection.submit_form(submit_btn_locator=(By.NAME, 'Go'), searchCriteria=searchCriteria, searchValue=searchValue, searchBranchCode='HQ')
         path = self.dcms_connection.active_frame_path
-        self.page_cache['credit_file_search'] = DcmsWebPage(self.dcms_connection.browser.page_source, path)
+        self.page_cache['credit_file_search'] = page_parser.DcmsWebPage(self.dcms_connection.browser.page_source, path)
         try:
             base_detail_dict = self.page_cache['credit_file_search'].lists[0].parse_to_dict_list()[0]
             self.name = base_detail_dict['客户']

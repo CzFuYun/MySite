@@ -15,7 +15,9 @@ from app_permission.views import checkPermission
 
 
 def test(request):
-    dac_models.ExpirePrompt.updateProgress()
+    # http://127.0.0.1:8000/dc/test
+    # dac_models.ExpirePrompt.updateProgress()
+    dac_models.ExpirePrompt.fill_cp_num()
     pass
 
 @checkPermission
