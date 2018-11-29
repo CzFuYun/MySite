@@ -2,8 +2,8 @@ from django.db import models
 from django.db.models import Q
 
 # from root_db import models as m
-# from . import models_operation
-
+from . import models_operation
+# from apps.app_customer_repository import models as crm
 from private_modules.dcms_shovel import connection, dig
 
 # class DepartmentDeposit(models.Model):
@@ -127,13 +127,28 @@ class ExpirePrompt(models.Model):
             'id',
             'customer__name',
         )
+        from app_customer_repository.models import ProjectRepository
         for customer in customer_list:
             cp_num = dig.get_cp_num(dcms, customer['customer__name'])
             if cp_num:
                 cls.objects.filter(pk=customer['id']).update(cp_num=cp_num)
+                project = ProjectRepository.objects.filter(
+                    customer__name=customer['customer__name'],
+                    cp_con_num__isnull=True,
+                    business_id=11
+                )
+                if project.exists():
+                    project = project.order_by('-create_date')[0]
+                    need_fill_project_cp_num = int(input('是否同步更新项目库中【' + project + '】的授信参考编号？\n0.否\n1.是\n>>>'))
+                    if need_fill_project_cp_num:
+                        project.update(cp_con_num=cp_num)
 
     @classmethod
     def updateProgress(cls):
+        # imp_date = models_operation.DateOperation()
+        updated = []
+        non_updated = []
+        approved = []
         dcms = connection.DcmsConnection('http://110.17.1.21:9082')
         dcms.login('czfzc', 'hxb123')
         customer_list = cls.objects.filter(
@@ -149,9 +164,18 @@ class ExpirePrompt(models.Model):
             'progress_update_date'
         )
         for customer in customer_list:
-            search_value = customer['cp_num'] or customer['customer__name']
-            progress_id = dig.get_cp_progress_id(dcms, search_value)
+            progress_id = dig.get_cp_progress_id(dcms, customer['cp_num'])
+            if progress_id == 0:
+                non_updated.append(customer['customer__name'])
+            elif progress_id != customer['current_progress_id']:
+                updated.append(customer['customer__name'])
+                cls.objects.filter(id=customer['id']).update(current_progress_id=progress_id)
+                if progress_id > 100:
+                    approved.append(customer['customer__name'])
             pass
+        print('更新：', updated)
+        print('\t\t其中新获批：', approved)
+        print('无更新:', non_updated)
 
     @staticmethod
     def getCpNum(dcms, name, cf):

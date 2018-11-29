@@ -1,6 +1,9 @@
 import re
 
 from dcms_shovel import connection, customer, page_parser
+from apps.deposit_and_credit.models_operation import DateOperation
+
+rgx_rlk = re.compile(r'[A-Z0-9]{32}')
 
 
 def get_cp_progress_id(dcms, cp_num, cf=None):
@@ -33,25 +36,54 @@ def get_cp_progress_id(dcms, cp_num, cf=None):
 
 
 def get_cp_num(dcms, customer_name):
+    imp_date = DateOperation()
     cp_num = None
-    dcms.search_customer(customer_name)
     cust = dcms.search_customer(customer_name)
+    cust.search_cf()
     cust.go_to_cf_label('授信申请')
     dcms.switch_to_main_frame()
     dcms.switch_to_body_frame()
     page = page_parser.DcmsWebPage(dcms.browser.page_source, dcms.active_frame_path)
     cp_list = page.lists[0].parse_to_tag_dict_list()
     for cp in cp_list:
+        status = cp['状态'].text.strip()
+        if status in ('已取消', ):
+            continue
         seemly_cp_num = cp['授信申请参考编号'].text.strip()
-        if cp['状态'].text.strip() not in ('已取消', '已关闭') and (seemly_cp_num.startswith('CP/') or seemly_cp_num.startswith('SME/')):
-            rlk = re.findall(r'[A-Z0-9]{32}', str(cp['序号']))[0]
-            dcms.browser.execute_script(
-                'window.open("http://110.17.1.21:9082/dcms/corporate/application/application_info.view?do=Summary&resultLinkKey={0}")'.format(rlk))
-            cp_num_check = int(input('【' + seemly_cp_num + '】号授信流程是否符合要求？\n0.否\n1.是\n>>>'))
-            if cp_num_check:
-                cp_num = seemly_cp_num
-            dcms.browser.close()
+        if not(seemly_cp_num.startswith('CP/') or seemly_cp_num.startswith('SME/')):
+            continue
+        approve_date = cp['授信批准日期'].text.strip()
+        if approve_date and imp_date.date_dif(imp_date.today, approve_date) > 30:
+            continue
+        cp_create_date = cp['创建时间'].text.strip()
+        if cp_create_date and imp_date.date_dif(imp_date.today, cp_create_date) > 180:
+            continue
+        purpose = cp['目的'].text.strip()
+        if purpose in ('重检', ):
+            continue
+        rlk = rgx_rlk.findall(str(cp['序号']))[0]
+        dcms.browser.execute_script(
+            'window.open("http://110.17.1.21:9082/dcms/corporate/application/application_info.view?do=Summary&resultLinkKey={0}")'.format(rlk))
+        dcms.browser.switch_to_window(dcms.browser.window_handles[1])
+        dcms.browser.switch_to.frame(dcms.browser.find_elements_by_css_selector('frameset>frame')[1])
+        dcms.browser.find_element_by_id('tab_dcms_cp_0009').click()
+        dcms.browser.switch_to.frame(dcms.browser.find_element_by_css_selector('iframe'))
+        if '特别授信' in dcms.browser.page_source:
             dcms.browser.switch_to_window(dcms.browser.window_handles[0])
+            continue
+        dcms.browser.browser.switch_to.default_content()
+        dcms.browser.switch_to.frame(dcms.browser.find_elements_by_css_selector('frameset>frame')[1])
+        dcms.browser.find_element_by_id('tab_dcms_cp_0010').click()
+        dcms.browser.switch_to.frame(dcms.browser.find_element_by_css_selector('iframe'))
+        if '特别授信' in dcms.browser.page_source:
+            dcms.browser.switch_to_window(dcms.browser.window_handles[0])
+            continue
+        cp_num_check = int(input(customer_name + '：\n【' + seemly_cp_num + '】号授信流程是否符合要求？\n0.否\n1.是\n>>>'))
+        if cp_num_check:
+            cp_num = seemly_cp_num
+        dcms.browser.switch_to_window(dcms.browser.window_handles[0])
+        # dcms.browser.execute_script('window.close()')
+        # dcms.browser.close()
     return cp_num
 
 
