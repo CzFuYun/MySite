@@ -9,6 +9,7 @@ rgx_rlk = re.compile(r'[A-Z0-9]{32}')
 def get_cp_progress_id(dcms, cp_num, cf=None):
     # 更新非特别授信系统进度
     progress_id = 0
+    event_date = None
     result = dcms.search_work_flow(cp_num)
     result.click_into()
     result.click_label('工作流')

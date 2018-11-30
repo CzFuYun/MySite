@@ -97,6 +97,7 @@ class ProjectRepository(models.Model):
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='approver', verbose_name='专审')
     is_specially_focus = models.BooleanField(default=False, verbose_name='是否重点跟进项目')
+    current_progress = models.ForeignKey('Progress', default=0, on_delete=models.CASCADE, verbose_name='当前进度')
 
     class Meta:
         verbose_name = '项目库'
@@ -184,7 +185,7 @@ class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
     notify_date = models.DateField(blank=True, null=True, verbose_name='通报日期')
     result = models.CharField(max_length=256, blank=True, null=True)
-    caption = models.CharField(max_length=32, default='待预审')
+    caption = models.CharField(max_length=32, default='待预审', verbose_name='预审会编号')
 
     class Meta:
         verbose_name = '预审会'
@@ -362,6 +363,8 @@ class ProjectExecution(models.Model):
         except:
             progress = Progress.objects.get(caption=new_value)
         self.current_progress = progress
+        self.project.current_progress = progress
+        self.project.save()
 
     @property
     def total_used_in_last_contribution(self):
@@ -473,6 +476,8 @@ class ProjectExecution(models.Model):
                     else:
                         attention.append(pe.project.customer.customer)
                 pe_photo_list.append(cls(**tmp))
+                # pe.project.current_progress = pe.current_progress
+                # pe.project.save()
             if pe_photo_list:
                 cls.objects.bulk_create(pe_photo_list)
                 # last_photoed = photo_date_str
@@ -492,12 +497,14 @@ class ProjectExecution(models.Model):
 
 class Progress(models.Model):
     caption = models.CharField(max_length=32)
-    status_num = models.IntegerField(default=0)
+    status_num = models.IntegerField(default=0, verbose_name='状态码')
     display_order = models.IntegerField(default=0)
     star = models.ForeignKey('Stars', blank=True, null=True, on_delete=models.CASCADE)
     suit_for_business = models.ManyToManyField('SubBusiness')
 
     class Meta:
+        verbose_name = '进度'
+        verbose_name_plural = verbose_name
         ordering = ('display_order', )
 
     def __str__(self):
@@ -512,7 +519,7 @@ class Progress(models.Model):
 
 
 class Business(models.Model):
-    caption = models.CharField(max_length=32)
+    caption = models.CharField(max_length=32, verbose_name='业务名称')
     display_order = models.IntegerField(default=0)
 
     def __str__(self):

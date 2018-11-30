@@ -104,7 +104,10 @@ def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date
         except:
             retry = True
     if search_type <= 0 or retry:
-        before_date = model_class.objects.filter(**{field + '__lte': date_str}).values_list(field).order_by('-' + field).first()[0]
+        try:
+            before_date = model_class.objects.filter(**{field + '__lte': date_str}).values_list(field).order_by('-' + field).first()[0]
+        except:
+            before_date = None
     if before_date and after_date:
         delta_before = (date_obj - before_date).days
         delta_after = (after_date - date_obj).days

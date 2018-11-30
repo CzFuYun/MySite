@@ -28,12 +28,12 @@ class CustomerAdmin:
 
 
 class ProjectAdmin:
-    list_display = ['customer', 'staff', 'business', 'total_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'get_progress'
+    list_display = ['customer', 'staff', 'business', 'total_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'current_progress'
         # , 'get_total_used', 'is_specially_focus', 'show_remark', 'tmp_close_date', 'close_reason'
                     ]
     list_editable = ['plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi']
     search_fields = ['customer__name']
-    list_filter = ['is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date']
+    list_filter = ['is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num']
     list_per_page = 15
 
     def show_remark(self, instance):

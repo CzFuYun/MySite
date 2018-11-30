@@ -91,7 +91,7 @@ expire_table_download = collections.OrderedDict(**{
     'current_progress__caption': '当前进度',
     'remark': '备注',
     'punishment': '扣罚金额',
-    'current_progress__status_num': '进度代号'
+    'current_progress__status_num': '状态码'
 })
 expire_table_sr_for_download = {
     'apply_type': utilities.field_choices_to_dict(models.ExpirePrompt.apply_type_choices, False)
