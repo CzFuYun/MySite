@@ -343,14 +343,21 @@ class ProjectExecution(models.Model):
         if self.new_net_used > 0:       # 若新增投放
             project_new_net = self.project.total_net - self.project.existing_net
             if self.new_net_used == project_new_net:
-                self.current_progress_id = 120
+                # self.current_progress_id = 120
+                # self.project.current_progress_id = 120
+                # self.project.save()
+                self._update_current_progress(120)
+                self._update_remark('+=【全部落地，项目结束】')
                 # self.project.close(80, 0, False)
             else:
                 self.current_progress_id = 115
 
     def _update_remark(self, new_value):
         if new_value:       # 新备注内容不为空
-            new_remark = ProjectRemark(content=new_value)
+            if new_value.startswith('+='):
+                new_remark = (self.remark.content + new_value[2:])
+            else:
+                new_remark = ProjectRemark(content=new_value)
             new_remark.save()
             self.remark = new_remark
         else:

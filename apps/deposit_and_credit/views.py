@@ -18,6 +18,7 @@ def test(request):
     # http://127.0.0.1:8000/dc/test
     # dac_models.ExpirePrompt.fill_cp_num()
     dac_models.ExpirePrompt.updateProgress()
+    return HttpResponse('finish')
     pass
 
 @checkPermission

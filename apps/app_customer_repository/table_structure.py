@@ -111,9 +111,17 @@ trackProjectExe_table_col = [
         }
     },
     {
+        'index': 'project__plan_pretrial_date',
+        'col_name': '计划初审',
+        'width': '4%',
+        'td_attr': {
+            'plan_20': None
+        },
+    },
+    {
         'index': 'remark__content',
         'col_name': '备注',
-        'width': '30%',
+        'width': '20%',
         'td_attr': {'title': 'remark__create_date'}
     },
     {

@@ -123,9 +123,9 @@ class PretrialDocumentAdmin:
     relfield_style = 'fk-ajax'
     actions = [PreDocToNewProject, ]
 
-    def queryset(self):
-        qs = super().queryset()
-        return qs.filter(result__gt=10).order_by('-meeting__caption', 'order')
+    # def queryset(self):
+    #     qs = super().queryset()
+    #     return qs.filter(result__gt=10).order_by('-meeting__caption', 'order')
 
     def show_file(self, instance):
         return showFile(instance)
