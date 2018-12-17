@@ -29,7 +29,7 @@ trackProjectExe_fields = [
     'project__plan_zhuanshen',
     'project__plan_xinshen',
     'project__plan_reply',
-    'project__plan_luodi',
+    'project__reply_date',
     'project__pre_approver__name',
     'project__pre_approver__staff_id',
     'project__approver__name',
@@ -52,7 +52,7 @@ trackProjectExe_table_col = [
     {
         'index': 'project__customer__name',
         'col_name': '客户名称',
-        'width': '13%',
+        'width': '10%',
         'td_attr': {
             'customer_id': 'project__customer__customer_id'
         }
@@ -60,7 +60,7 @@ trackProjectExe_table_col = [
     {
         'index': 'project__staff__sub_department__superior__caption',
         'col_name': '经营单位',
-        'width': '4%',
+        'width': '3%',
         'td_attr': {
             'dept_code': 'project__staff__sub_department__superior__code',
         }
@@ -68,7 +68,7 @@ trackProjectExe_table_col = [
     {
         'index': 'project__staff__name',
         'col_name': '客户经理',
-        'width': '4%',
+        'width': '3%',
         'td_attr': {
             'staff': 'project__staff_id',
             'yr_card': 'project__staff__yellow_red_card',
@@ -77,15 +77,15 @@ trackProjectExe_table_col = [
     {
         'index': 'project__business__caption',
         'col_name': '业务种类',
-        'width': '5%',
+        'width': '3%',
         'td_attr': {
             # 'sub_business': 'business_id'
         }
     },
     {
         'index': 'project__total_net',
-        'col_name': '金额（万元）',
-        'width': '5%',
+        'col_name': '金额',
+        'width': '3%',
     },
     {
         'index': 'project__pretrial_doc__meeting__meeting_date',
@@ -102,36 +102,68 @@ trackProjectExe_table_col = [
             'total_net': 'project__total_net',
             'existing_net': 'project__existing_net',
             'new_net_used': 'new_net_used',
-            'plan_20': 'project__plan_pretrial_date',
-            'plan_40': 'project__plan_chushen',
-            'plan_70': 'project__plan_zhuanshen',
-            'plan_80': 'project__plan_xinshen',
-            'plan_100': 'project__plan_reply',
-            'plan_120': 'project__plan_luodi',
+            # 'plan_20': 'project__plan_pretrial_date',
+            # 'plan_40': 'project__plan_chushen',
+            # 'plan_70': 'project__plan_zhuanshen',
+            # 'plan_80': 'project__plan_xinshen',
+            # 'plan_100': 'project__plan_reply',
+            # 'plan_120': 'project__plan_luodi',
         }
     },
     {
-        'index': 'project__plan_pretrial_date',
+        'index': 'project__plan_chushen',
         'col_name': '计划初审',
         'width': '4%',
         'td_attr': {
-            'plan_20': None
+            'plan_40': None
+        },
+    },
+    {
+        'index': 'project__plan_zhuanshen',
+        'col_name': '计划专审',
+        'width': '4%',
+        'td_attr': {
+            'plan_70': None
+        },
+    },
+    {
+        'index': 'project__plan_xinshen',
+        'col_name': '计划信审',
+        'width': '4%',
+        'td_attr': {
+            'plan_80': None
+        },
+    },
+    {
+        'index': 'project__plan_reply',
+        'col_name': '计划获批',
+        'width': '4%',
+        'td_attr': {
+            'plan_100': None
+        },
+    },
+    {
+        'index': 'project__reply_date',
+        'col_name': '批复日',
+        'width': '4%',
+        'td_attr': {
+            # 'plan_120': None
         },
     },
     {
         'index': 'remark__content',
         'col_name': '备注',
-        'width': '20%',
+        'width': '12%',
         'td_attr': {'title': 'remark__create_date'}
     },
-    {
-        'index': 'current_progress__star__caption',
-        'col_name': 'STAR',
-        'width': '4%',
-        'td_attr': {
-            'is_focus': 'project__is_focus'
-        }
-    },
+    # {
+    #     'index': 'current_progress__star__caption',
+    #     'col_name': 'STAR',
+    #     'width': '4%',
+    #     'td_attr': {
+    #         'is_focus': 'project__is_focus'
+    #     }
+    # },
     # {
     #     'index': 'project__pre_approver__name',
     #     'col_name': '初审',

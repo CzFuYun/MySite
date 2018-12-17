@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'deposit_and_credit',
     'app_permission',
     'app_customer_repository',
+    'scraper',
     'xadmin',
     'crispy_forms',
     'reversion',

@@ -13,7 +13,8 @@ class StaffAdmin:
 
 class AccountedCompanyAdmin:
     relfield_style = 'fk-ajax'
-
+    list_filter = ('customer_type__caption', 'type_of_3311__caption')
+    search_fields = ('name', 'series__caption')
 
 xadmin.site.register(Staff, StaffAdmin)
 xadmin.site.register(AccountedCompany, AccountedCompanyAdmin)

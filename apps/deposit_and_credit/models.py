@@ -139,13 +139,13 @@ class ExpirePrompt(models.Model):
                 )
                 if project.exists():
                     project = project.order_by('-create_date')[0]
-                    need_fill_project_cp_num = int(input('是否同步更新项目库中【' + project + '】的授信参考编号？\n0.否\n1.是\n>>>'))
+                    need_fill_project_cp_num = int(input('是否同步更新项目库中【' + project.project_name + '】的授信参考编号？\n0.否\n1.是\n>>>'))
                     if need_fill_project_cp_num:
                         project.update(cp_con_num=cp_num)
 
     @classmethod
     def updateProgress(cls):
-        # imp_date = models_operation.DateOperation()
+        imp_date = models_operation.DateOperation()
         updated = []
         non_updated = []
         approved = []
@@ -164,12 +164,17 @@ class ExpirePrompt(models.Model):
             'progress_update_date'
         )
         for customer in customer_list:
-            progress_id = dig.get_cp_progress_id(dcms, customer['cp_num'])
+            progress_id, event_date = dig.get_cp_progress_id(dcms, customer['cp_num'])
             if progress_id == 0:
                 non_updated.append(customer['customer__name'])
+            elif progress_id == -1:
+                print('【'+ customer['customer__name'] + customer['cp_num'] + '】流程已取消')
+                cls.objects.filter(id=customer['id']).update(cp_num=None, current_progress_id=None)
             elif progress_id != customer['current_progress_id']:
                 updated.append(customer['customer__name'])
-                cls.objects.filter(id=customer['id']).update(current_progress_id=progress_id)
+                exp = cls.objects.filter(id=customer['id'])
+
+                exp.update(current_progress_id=progress_id)
                 if progress_id > 100:
                     approved.append(customer['customer__name'])
             pass

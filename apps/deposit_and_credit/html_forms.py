@@ -5,7 +5,7 @@ from app_customer_repository import models as cr_m
 from root_db import models as rd_m
 
 JGBS7_STAFFS = rd_m.Staff.objects.filter(sub_department='JGBS-7')
-PROGRESS = cr_m.Progress.objects.filter(id__in=(0, 20, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 98, 99, 105))
+PROGRESS = cr_m.Progress.objects.filter(id__in=(0, 20, 40, 45, 50, 55, 60, 65, 70, 75, 80, 90, 98, 99, 100, 105))
 
 class ExpirePromptModelForm(forms.ModelForm):
     pk = forms.CharField(widget=forms.TextInput(attrs={'readonly': 'readonly', 'hidden': 'hidden'}))

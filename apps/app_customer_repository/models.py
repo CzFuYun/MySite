@@ -4,6 +4,7 @@ from MySite import utilities
 from app_customer_repository import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
 from root_db.models import AccountedCompany
+from scraper.utils import DcmsHttp
 
 industry_factor_rule = {
     'C': 1.5,
@@ -46,6 +47,18 @@ class CustomerRepository(models.Model):
             return [customer['name'] for customer in no_kernel_id_customers]
         else:
             return
+
+    @classmethod
+    def fill_cf_num(cls):
+        no_cf_customers = cls.objects.filter(credit_file__isnull=True).values('id', 'name')
+        if no_cf_customers.exists():
+            dcms = DcmsHttp('czfzc', 'hxb123')
+            for customer in no_cf_customers:
+                cf_num = dcms.search_cf(customer['name'])[0]
+                if not cf_num is None:
+                    print(customer['name'] + '信贷文件编号：' + cf_num + '是否确认？\n0.否\n1.是')
+                    if int(input('>>>')):
+                        cls.objects.filter(pk=customer['id']).update(cf_num=cf_num)
 
 
 class ProjectRepository(models.Model):
@@ -148,7 +161,7 @@ class ProjectRepository(models.Model):
             self.__dict__.update(**kwargs)
         self.save(force_update=True)
 
-    def close(self, close_reason, whose_matter, temply=True):
+    def close(self, close_reason, whose_matter, remark=None, temply=True):
         if int(close_reason) != 80:     # 若非完全落地关闭
             update_dict = {
                 'tmp_close_date': models_operation.DateOperation().today,
@@ -161,10 +174,16 @@ class ProjectRepository(models.Model):
                 self.update(**update_dict)
             except:
                 return False
-        else:       # 完全落地关闭
+        else:       # 完全落地关闭，不是设置关闭日期，而是修改进度为全部落地
             pe = ProjectExecution.objects.filter(project=self).order_by('-photo_date').first()
-            pe.current_progress_id = 120
-            pe.save()
+            pe.update(
+                {
+                    'remark': remark,
+                    'current_progress': Progress.objects.get(id=120),
+                }
+            )
+
+            # pe.save()
         return True
 
     @classmethod
@@ -423,7 +442,7 @@ class ProjectExecution(models.Model):
             for ep in expire_credit_qs:
                 need_close = input('>>>项目【' + ep.project_name + '】，授信批复日【' + str(ep.reply_date) + '】，疑似到期，是否关闭？\n0.否\n1.是')
                 if need_close:
-                    ep.close(90, 0, True)
+                    ep.close(90, 0)
             # ↓流程中项目的客户号、总敞口
             project_customer = cls.objects.filter(
                 project__close_date__isnull=True,

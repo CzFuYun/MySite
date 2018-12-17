@@ -18,6 +18,7 @@ def get_cp_progress_id(dcms, cp_num, cf=None):
     progresses = page.lists[0].parse_to_dict_list()
     last_progress = progresses[-1]['接受状态'].split('\n')[0].strip()
     progress_reflector = {
+        '已取消': -1,
         '授信申请建档': 40,
         '待地区审查': _judge_preliminary_progress,
         '待风险审查': 75,
@@ -31,9 +32,14 @@ def get_cp_progress_id(dcms, cp_num, cf=None):
     }
     for key, value in progress_reflector.items():
         if last_progress in key:
-            progress_id = value if type(value) == int else value(progresses)
+            if type(value) == int:
+                progress_id = value
+                event_date = dcms.format_date(progresses[-1]['接受日期'].strip())
+            else:
+                progress_id, event_date = value(progresses)
+                event_date = event_date if event_date is None else dcms.format_date(event_date)
             break
-    return progress_id
+    return (progress_id, event_date)
 
 
 def get_cp_num(dcms, customer_name):
@@ -72,14 +78,14 @@ def get_cp_num(dcms, customer_name):
         if '特别授信' in dcms.browser.page_source:
             dcms.browser.switch_to_window(dcms.browser.window_handles[0])
             continue
-        dcms.browser.browser.switch_to.default_content()
+        dcms.browser.switch_to.default_content()
         dcms.browser.switch_to.frame(dcms.browser.find_elements_by_css_selector('frameset>frame')[1])
         dcms.browser.find_element_by_id('tab_dcms_cp_0010').click()
         dcms.browser.switch_to.frame(dcms.browser.find_element_by_css_selector('iframe'))
         if '特别授信' in dcms.browser.page_source:
             dcms.browser.switch_to_window(dcms.browser.window_handles[0])
             continue
-        cp_num_check = int(input(customer_name + '：\n【' + seemly_cp_num + '】号授信流程是否符合要求？\n0.否\n1.是\n>>>'))
+        cp_num_check = int(input(customer_name + '：\n【' + str(seemly_cp_num) + '】号授信流程是否符合要求？\n0.否\n1.是\n>>>'))
         if cp_num_check:
             cp_num = seemly_cp_num
         dcms.browser.switch_to_window(dcms.browser.window_handles[0])
@@ -99,23 +105,26 @@ def _judge_preliminary_progress(work_flow_dict_list):
         if i['接受状态'].strip() in '待地区审查':
             count += 1
     if count == 1:
-        return 45
+        progress_id = 45
     elif count == 2:
-        return 55
-    elif count > 2:
-        return 65
+        progress_id = 55
+    else:
+        progress_id = 65
+    return (progress_id, None)
 
 
 def _judge_closed_cp_approve_status(work_flow_dict_list):
     last_2_progress = work_flow_dict_list[-2]['接受状态'].strip()
+    last_2_date_str = work_flow_dict_list[-2]['接受日期'].strip()
     if last_2_progress in ('授信已批准', '批准条件', '已符合条件'):
-        return 105
+        progress_id = 105
     elif last_2_progress in '续议':
-        return 104
+        progress_id = 104
     elif last_2_progress in '否决':
-        return 103
+        progress_id = 103
     else:
-        return 0
+        progress_id = 0
+    return (progress_id, last_2_date_str)
 
 
 def _judge_regressed_cp_progress(work_flow_dict_list):
@@ -126,17 +135,18 @@ def _judge_regressed_cp_progress(work_flow_dict_list):
     '''
     last_2_progress = work_flow_dict_list[-2]['接受状态'].strip()
     if last_2_progress in '待风险审查':
-        return 80
+        progress_id = 80
     elif last_2_progress in '待地区审查':
         regress_count = 0
         for i in work_flow_dict_list:
             if i['接受状态'] in '待地区审查':
                 regress_count += 1
         if regress_count == 1:
-            return 50
+            progress_id = 50
         elif regress_count == 2:
-            return 60
-        elif regress_count > 2:
-            return 70
+            progress_id = 60
+        else:
+            progress_id = 70
     else:
-        return 0
+        progress_id = 0
+    return (progress_id, None)

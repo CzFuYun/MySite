@@ -25,6 +25,8 @@ def showFile(instance):
 
 class CustomerAdmin:
     relfield_style = 'fk-ajax'
+    search_fields = ('name', 'simple_name', 'customer__name')
+    list_filter = ('department__caption', 'type_of_3311__caption', 'industry__caption', 'stockholder')
 
 
 class ProjectAdmin:
@@ -33,7 +35,7 @@ class ProjectAdmin:
                     ]
     list_editable = ['plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi']
     search_fields = ['customer__name']
-    list_filter = ['is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num']
+    list_filter = ['is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num']
     list_per_page = 15
 
     def show_remark(self, instance):
@@ -49,6 +51,11 @@ class ProjectAdmin:
     def get_progress(self, instance):
         return instance.projectexecution_set.last().current_progress
     get_progress.short_description = '目前进度'
+
+
+class ProjectExecutionAdmin:
+    list_display = ('project', 'current_progress', 'remark', 'photo_date')
+    search_fields = ('project__customer__name', )
 
 
 class PreDocToNewProject(BaseActionView):
@@ -132,7 +139,6 @@ class PretrialDocumentAdmin:
     show_file.short_description = '预审表'
 
 
-
 class PretrialDocumentWaitForMeetingAdmin(XadminExtraAction):
     list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file']
     list_per_page = 20
@@ -164,11 +170,12 @@ class PretrialDocumentInLine:
 class PretrialMeetingAdmin:
     list_display = ['caption', 'meeting_date']
     list_per_page = 20
-    inlines = [PretrialDocumentInLine]
+    # inlines = [PretrialDocumentInLine]
 
 
 xadmin.site.register(CustomerRepository, CustomerAdmin)
 xadmin.site.register(ProjectRepository, ProjectAdmin)
+xadmin.site.register(ProjectExecution, ProjectExecutionAdmin)
 xadmin.site.register(PretrialDocument, PretrialDocumentAdmin)
 xadmin.site.register(PretrialDocumentWaitForMeeting, PretrialDocumentWaitForMeetingAdmin)
 xadmin.site.register(PretrialMeeting, PretrialMeetingAdmin)

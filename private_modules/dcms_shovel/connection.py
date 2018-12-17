@@ -1,3 +1,4 @@
+from datetime import date
 from collections import defaultdict
 from time import sleep
 
@@ -201,6 +202,23 @@ class DcmsConnection(WebConnection):
         assert not self.browser.page_source.count('对不起, 未找到记录'), con_num + '未找到'
         search_result_page = DcmsWebPage(self.browser.page_source, self.browser.current_url, self)
         return search_result_page.search_result[0]
+
+    def format_date(self, dcms_datetime):
+        '''
+        将dcms中的日期时间转化为标准格式
+        :param dcms_datetime: 11/28/2018 10:16:00 AM
+        :return: yyyy-mm-dd
+        '''
+        js = '''
+        var time_stamp = Date.parse("{dcms_datetime}");
+        var date = new Date(time_stamp);
+        var year = date.getFullYear();
+        var month = date.getMonth() + 1;
+        var day = date.getDate();
+        return [year, month, day];
+        '''.format(dcms_datetime=dcms_datetime)
+        year, month, day = self.browser.execute_script(js)
+        return date(year, month, day)#.isoformat()
 
 
 if __name__ == '__main__':

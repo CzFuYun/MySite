@@ -570,8 +570,8 @@ def delProject(request):
         return render(request, 'blank_form.html', locals())
     elif request.method == 'POST':
         remark_content = request.POST.get('remark')
-        models.ProjectExecution.objects.filter(project_id=project_id).order_by('-id').first()._update_remark(remark_content)
-        if project.close(request.POST.get('close_reason'), request.POST.get('whose_matter')):       # 成功关闭项目
+        # models.ProjectExecution.objects.filter(project_id=project_id).order_by('-id').first()._update_remark(remark_content)
+        if project.close(request.POST.get('close_reason'), request.POST.get('whose_matter'), remark_content):       # 成功关闭项目
             return render(request, 'feedback.html')
         else:
             form = html_forms.ProjectModelForm_del(request.POST)

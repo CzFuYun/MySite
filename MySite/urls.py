@@ -44,4 +44,5 @@ urlpatterns = [
     url(r'feedback', views.feedback, name='feedback'),
     url(r'x/', include('xAdmin.urls')),
     url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    url(r'scrape/', include('scraper.urls'))
 ]
