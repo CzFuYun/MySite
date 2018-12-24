@@ -465,7 +465,8 @@ def trackProjectExe(request):
             'project__business__display_order',
         )
         table_col = table_structure.trackProjectExe_table_col
-        return render_to_response('proj_exe/project_exe_list.html', locals())
+        return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(exe_qs)), cls=utilities.JsonEncoderExtend))
+        # return render_to_response('proj_exe/project_exe_list.html', locals())
 
 
 def editProjectExe(request):

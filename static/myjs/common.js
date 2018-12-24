@@ -401,8 +401,8 @@ function makeListHtml(tableCol, tableColOrder, dataList){
         htmlTable += '<tr>';
         for(let c=0; c<tableColOrder.length; c++){
             htmlTable += '<td';
-            let tdValue = data[tableColOrder[c]];
             let tdAttrDict = tableCol[tableColOrder[c]]['td_attr'];
+            let tdValue = data[tableColOrder[c]];
             if(tdAttrDict){
                 for(let k in tdAttrDict){
                     if(k === 'choice_to_display'){

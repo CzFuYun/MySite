@@ -20,6 +20,7 @@
 {% block extra_js %}
     <script src="/static/myjs/common.js"></script>
     <script>
+        TODAY = '{% now "Y-m-d" %}';
         $(function(){
             refreshData();
         });
@@ -33,21 +34,27 @@
         function buildExeList(){
             $.get({
                 url: '{% url "trackProjectExe" %}',
-                dataType: 'text',
+                dataType: 'json',
                 async: false,
                 success: function(response){
-                    $('#main_content').html(response);
+                    let tableCol = response[0],
+                        tableColOrder = response[1],
+                        dataList = response[2];
+                    let table = makeListHtml(tableCol, tableColOrder, dataList);
+                    $('#main_content').html(table);
                 }
             })
         }
 
         function renderExeList(){
+            let redTextClass = 'text-danger text-semibold',
+                yellowTextClass = 'text-warning text-semibold';
             $('td[yr_card]').each(function(index, elem){
                 let yr_card = Number(elem.getAttribute('yr_card'));
                 if(yr_card === 1){
-                    $(elem).addClass('text-warning text-semibold');
+                    $(elem).addClass(yellowTextClass);
                 }else if(yr_card > 1){
-                    $(elem).addClass('text-danger text-semibold');
+                    $(elem).addClass(redTextClass);
                 }
             });
             $('td[exe_id]').each(function(index, elem){
@@ -61,7 +68,7 @@
                 elem.innerText = '';
                 elem.append($radio[0]);
             });
-
+            // ↓渲染出进度条
             $('td[status_num]').each(function(index, elem){
                 let pro_text = elem.innerHTML;
                 elem.innerHTML = '';
@@ -101,8 +108,35 @@
                 container.appendChild(progressBar);
                 elem.appendChild(container);
             });
+
             $('td[is_focus=False]').each(function(index, elem){
-                elem.innerHTML = 'None';
+                elem.innerHTML = '';
+            });
+            // ↓计划日期染色
+            $('tr').each(function(index, elem){
+                console.log(index);
+                if(index > 0){
+                    let $tr = $(elem);
+                    let currentProgress = Number($('td[status_num]')[index - 1].getAttribute('status_num'));
+                    $('td[plan]', $tr).each(function(){
+                        let planDate = this.innerText;
+                        if(planDate !== 'null'){
+                            let planProgress = Number(this.getAttribute('plan'));
+                            if(currentProgress < planProgress){
+                                let daysRemainder = dateDif(planDate, TODAY);
+                                let textColor;
+                                if(daysRemainder <= 0){
+                                    textColor = redTextClass;
+                                }else if(daysRemainder <= 5){
+                                    textColor = yellowTextClass;
+                                }
+                                $(this).addClass(textColor);
+                            }
+                        }else{
+                            this.innerText = '';
+                        }
+                    });
+                }
             });
         }
 

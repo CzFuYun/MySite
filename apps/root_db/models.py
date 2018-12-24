@@ -65,6 +65,11 @@ class Staff(models.Model):
         self.save()
 
     @classmethod
+    def bulkResetRedCard(cls):
+        imp_date = models_operation.DateOperation()
+        cls.objects.filter(red_card_expire_date__gte='')
+
+    @classmethod
     def getBusinessDeptStaff(cls, dept_code='', name_contains='', return_mode=utilities.return_as['choice']):
         dept_q = Q(sub_department__superior__code=dept_code) if dept_code else ~Q(sub_department__superior__code__in=['NONE', 'JGBS'])
         name_q = Q(name__contains=name_contains) if name_contains else Q(name__isnull=False)
