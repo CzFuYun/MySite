@@ -116,7 +116,8 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
 
 
 def updateOrCreateCompany(file_name):
-    need_update_info = input('是否更新客户信息？\n0.否\n1.是')
+    print('是否更新客户信息？\n0.否\n1.是')
+    need_update_info = int(input('>>>'))
     all_sr_dict = {}
     all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
     all_sr_dict['customer_type_id'] = getSimpleSerializationRule(models.CustomerType)
@@ -127,7 +128,7 @@ def updateOrCreateCompany(file_name):
     data_for_bulk_create = []
     for data_dict in data_source_list:
         customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
-        if customer_obj.exists() and need_update_info != '1':
+        if customer_obj.exists() and need_update_info != 1:
             continue
         for field in data_dict:
             field_sr = all_sr_dict.get(field)
@@ -138,7 +139,7 @@ def updateOrCreateCompany(file_name):
         if not customer_obj.exists():
             data_for_bulk_create.append(models.AccountedCompany(**data_dict))
             print('Ready To Add Customer:' + data_dict['name'])
-        elif need_update_info == '1':
+        elif need_update_info:
             customer_obj.update(**data_dict)
             print('Update Customer:' + data_dict['name'])
         else:
@@ -157,7 +158,8 @@ def updateOrCreateCompany(file_name):
 
 
 def createDividedCompanyAccount(file_name):
-    data_date = input('>>>data_date?')
+    print('data_date?')
+    data_date = input('>>>')
     all_sr_dict = {}
     all_sr_dict['sub_department_id'] = getSimpleSerializationRule(models.SubDepartment, 'sd_code', 'caption', 'superior')
     all_sr_dict['deposit_type_id'] = getSimpleSerializationRule(models.DepositType)
@@ -183,7 +185,8 @@ def createDividedCompanyAccount(file_name):
 
 def createContributorAndUpdateSeries(file_name):
     from deposit_and_credit import models as m
-    data_date_str = input('>>>data_date?')
+    print('data_date?')
+    data_date_str = input('>>>')
     data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
     expire_data_for_bulk_create = []
     expire_data_qs = m.ExpirePrompt.objects.filter(

@@ -135,11 +135,14 @@ class ExpirePrompt(models.Model):
                 project = ProjectRepository.objects.filter(
                     customer__name=customer['customer__name'],
                     cp_con_num__isnull=True,
-                    business_id=11
+                    business_id__in=(11, 12),
+                    tmp_close_date__isnull=False,
+                    close_date__isnull=False
                 )
                 if project.exists():
                     project = project.order_by('-create_date')[0]
-                    need_fill_project_cp_num = int(input('是否同步更新项目库中【' + project.project_name + '】的授信参考编号？\n0.否\n1.是\n>>>'))
+                    print('是否同步更新项目库中【' + project.project_name + '】的授信参考编号？\n0.否\n1.是')
+                    need_fill_project_cp_num = int(input('>>>'))
                     if need_fill_project_cp_num:
                         project.update(cp_con_num=cp_num)
 
