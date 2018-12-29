@@ -52,7 +52,7 @@ class CustomerRepository(models.Model):
     def fill_cf_num(cls):
         no_cf_customers = cls.objects.filter(credit_file__isnull=True).values('id', 'name')
         if no_cf_customers.exists():
-            dcms = DcmsHttp('czfzc', 'hxb123')
+            dcms = DcmsHttp()
             for customer in no_cf_customers:
                 cf_num = dcms.search_cf(customer['name'])[0]
                 if not cf_num is None:
@@ -357,8 +357,14 @@ class ProjectExecution(models.Model):
     def _update_total_used(self, new_value):
         previous_exe = self.previous_exe
         self.total_used = int(new_value)
-        this_time_used = self.total_used - previous_exe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
-        self.new_net_used = this_time_used + previous_exe.new_net_used
+        try:
+            this_time_used = self.total_used - previous_exe.total_used     # 本次投放敞口=截至本次的总投放敞口-截至上次修改的总投放敞口
+        except:
+            this_time_used = self.total_used        # 若不存在上次记录
+        try:
+            self.new_net_used = this_time_used + previous_exe.new_net_used
+        except:
+            self.new_net_used = this_time_used
         if self.new_net_used > 0:       # 若新增投放
             project_new_net = self.project.total_net - self.project.existing_net
             if self.new_net_used == project_new_net:

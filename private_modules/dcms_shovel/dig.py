@@ -86,8 +86,8 @@ def get_cp_num(dcms, customer_name):
             dcms.browser.switch_to_window(dcms.browser.window_handles[0])
             continue
         print(customer_name + '：\n【' + str(seemly_cp_num) + '】号授信流程是否符合要求？\n0.否\n1.是')
-        cp_num_check = int(input('>>>'))
-        if cp_num_check:
+        cp_num_check = input('>>>')
+        if int(cp_num_check):
             cp_num = seemly_cp_num
         dcms.browser.switch_to_window(dcms.browser.window_handles[0])
         # dcms.browser.execute_script('window.close()')

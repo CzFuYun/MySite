@@ -1,4 +1,4 @@
-import re, sys
+import re, sys, threading
 from collections import namedtuple
 
 import requests, bs4
@@ -42,27 +42,51 @@ class PostUrls:
         return self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy())
 
 
+
+
+class GetUrls:
+    def __init__(self, applicationCode):
+        self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
+
+    @property
+    def keep_connection(self):
+        return 'http://110.17.1.21:9082/dcms_index.view'
+
+
 class DcmsHttp:
 
-    def __init__(self, userId, password, applicationCode='DCMSCP'):
-        self.origin = 'http://110.17.1.21:9082/'
-        self.post_urls = PostUrls(applicationCode)
-        assert self._login(password, userId, applicationCode)
-
-    def _login(self, password, userId, applicationCode):
+    def __init__(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
         self.userId = userId
         self.password = password
         self.applicationCode = applicationCode
-        self.connection = requests.session()
-        r = self.post(self.post_urls.login, userId=userId, password=password, applicationCode=applicationCode)
-        return True if 'HXB_DCMS_WINDOW_' in r.text else False
 
-    def post(self, post_url, method='post', **other_params):
-        request = getattr(self.connection, method)
+    def login(self):
+        self.origin = 'http://110.17.1.21:9082/'
+        self.post_urls = PostUrls(self.applicationCode)
+        self.get_urls = GetUrls(self.applicationCode)
+        self.connection = requests.session()
+        r = self.post(self.post_urls.login, userId=self.userId, password=self.password, applicationCode=self.applicationCode)
+        assert 'HXB_DCMS_WINDOW_' in r.text, '登录失败，用户名或密码不正确'
+        return self
+
+    def keepConnection(self):
+        r = self.get(self.get_urls.keep_connection)
+        if 'frame' not in r.text:
+            self.login()
+        threading.Timer(60, self.keepConnection).start()
+
+    def post(self, post_url, **other_params):
         # this_module = sys.modules[__name__]
         # url = getattr(getattr(self, method + '_urls'), url_name)
         while True:
-            response = request(self.origin + post_url.path, data={**post_url.params, **other_params})
+            response = self.connection.post(self.origin + post_url.path, data={**post_url.params, **other_params})
+            if response.status_code == 200:
+                break
+        return response
+
+    def get(self, url):
+        while True:
+            response = self.connection.get(url)
             if response.status_code == 200:
                 break
         return response
@@ -91,6 +115,6 @@ class DcmsHttp:
         return
 
 
-if __name__ == '__main__':
-    dcms = DcmsHttp('czfzc', 'hxb123')
-    dcms.search_cf('江苏武进经济发展集团有限公司')
+# def initMyDcms():
+#     global DCMS
+#     DCMS = DcmsHttp()

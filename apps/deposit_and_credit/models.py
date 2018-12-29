@@ -142,8 +142,8 @@ class ExpirePrompt(models.Model):
                 if project.exists():
                     project = project.order_by('-create_date')[0]
                     print('是否同步更新项目库中【' + project.project_name + '】的授信参考编号？\n0.否\n1.是')
-                    need_fill_project_cp_num = int(input('>>>'))
-                    if need_fill_project_cp_num:
+                    need_fill_project_cp_num = input('>>>')
+                    if int(need_fill_project_cp_num):
                         project.update(cp_con_num=cp_num)
 
     @classmethod
