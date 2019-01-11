@@ -117,7 +117,8 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
 
 def updateOrCreateCompany(file_name):
     print('是否更新客户信息？\n0.否\n1.是')
-    need_update_info = int(input('>>>'))
+    need_update_info = input('>>>')
+    need_update_info = int(need_update_info)
     all_sr_dict = {}
     all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
     all_sr_dict['customer_type_id'] = getSimpleSerializationRule(models.CustomerType)

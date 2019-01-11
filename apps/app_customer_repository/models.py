@@ -4,7 +4,7 @@ from MySite import utilities
 from app_customer_repository import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
 from root_db.models import AccountedCompany
-from scraper.utils import DcmsHttp
+from scraper.utils import DcmsHttpRequest
 
 industry_factor_rule = {
     'C': 1.5,
@@ -52,7 +52,7 @@ class CustomerRepository(models.Model):
     def fill_cf_num(cls):
         no_cf_customers = cls.objects.filter(credit_file__isnull=True).values('id', 'name')
         if no_cf_customers.exists():
-            dcms = DcmsHttp()
+            dcms = DcmsHttpRequest()
             for customer in no_cf_customers:
                 cf_num = dcms.search_cf(customer['name'])[0]
                 if not cf_num is None:

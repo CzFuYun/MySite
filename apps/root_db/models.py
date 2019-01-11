@@ -150,8 +150,15 @@ class SubDepartment(models.Model):
 
 
 class AccountedCompany(models.Model):
+    belong_to_choices = (
+        (0, '部门'),
+        (1, '员工'),
+    )
     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
     name = models.CharField(max_length=128, verbose_name='账户名称')
+    staff = models.ForeignKey(to='Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='管户人')
+    sub_dept = models.ForeignKey(to='SubDepartment', blank=True, null=True, on_delete=models.CASCADE, verbose_name='经营部门')
+    belong_to = models.IntegerField(choices=belong_to_choices, default=0, verbose_name='归属')
     district = models.ForeignKey('District', default=1, on_delete=models.CASCADE, verbose_name='区域')
     customer_type = models.ForeignKey('CustomerType', default=1, on_delete=models.CASCADE, verbose_name='客户类别')
     scale = models.ForeignKey('Scale', default=1, on_delete=models.CASCADE, verbose_name='规模')
@@ -452,6 +459,17 @@ class CreditLedger(models.Model):
 
     class Meta:
         verbose_name_plural = '授信台账'
+
+
+class Customer(models.Model):
+    name = models.CharField(max_length=128, verbose_name='名称')
+    kernel_num = models.ForeignKey(to='AccountedCompany', blank=True, null=True, on_delete=models.CASCADE, verbose_name='核心客户号')
+    dcms_customer_num = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户号')
+    staff = models.ForeignKey(to='Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='管户人')
+    district = models.ForeignKey(to='District', blank=True, null=True, on_delete=models.CASCADE, verbose_name='区域')
+    industry = models.ForeignKey(to='Industry', blank=True, null=True, on_delete=models.CASCADE, verbose_name='行业')
+    cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
+
 
 
 #######################################################################################################################

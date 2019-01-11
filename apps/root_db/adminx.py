@@ -1,6 +1,6 @@
 import xadmin
 
-from .models import Staff, AccountedCompany
+from .models import Staff, AccountedCompany, SubDepartment
 
 
 class StaffAdmin:
@@ -16,5 +16,11 @@ class AccountedCompanyAdmin:
     list_filter = ('customer_type__caption', 'type_of_3311__caption')
     search_fields = ('name', 'series__caption')
 
+
+class SubDepartmentAdmin:
+    relfield_style = 'fk-ajax'
+
+
 xadmin.site.register(Staff, StaffAdmin)
 xadmin.site.register(AccountedCompany, AccountedCompanyAdmin)
+xadmin.site.register(SubDepartment, SubDepartmentAdmin)

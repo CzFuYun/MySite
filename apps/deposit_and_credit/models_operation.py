@@ -76,6 +76,15 @@ class DateOperation():
         elif returnMode == 'd':
             return self.strToDate(d)
 
+    def month_dif(self, start_date, month):
+        '''
+        计算起始日期加上或减去相应月份数后的日期，若该日期不存在，如：2018-02-29，则转为当月末日期
+        :param start_date: 起始日期
+        :param month: 月份数，可正负
+        :return:
+        '''
+        pass
+
     def neighbour_date_date_str(self, model_class, date_str, field='data_date'):
         return getNeighbourDate(model_class, 0, date_str, field)
 

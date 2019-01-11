@@ -409,7 +409,7 @@ def finishExpirePrompt(expire_obj):
             staff = expire_obj.staff_id
             staff.setYellowRedCard()
         else:
-            expire_obj.punishment = 0
+            # expire_obj.punishment = 0
             expire_obj.save()
         ret['success'] = True
         return ret

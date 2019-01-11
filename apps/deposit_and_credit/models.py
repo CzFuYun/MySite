@@ -174,14 +174,15 @@ class ExpirePrompt(models.Model):
                 print('【'+ customer['customer__name'] + customer['cp_num'] + '】流程已取消')
                 cls.objects.filter(id=customer['id']).update(cp_num=None, current_progress_id=None)
             elif progress_id != customer['current_progress_id']:
-                updated.append(customer['customer__name'])
+                updated.append(customer['customer__name'] + customer['current_progress_id'] + '→' + progress_id)
                 exp = cls.objects.filter(id=customer['id'])
-
                 exp.update(current_progress_id=progress_id)
+
                 if progress_id > 100:
                     approved.append(customer['customer__name'])
             pass
-        print('更新：', updated)
+        for i in updated:
+            print(i)
         print('\t\t其中新获批：', approved)
         print('无更新:', non_updated)
 

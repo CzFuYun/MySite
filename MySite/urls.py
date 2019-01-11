@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'url\.convert', views.convertToUrl),
     url(r'dc/', include('deposit_and_credit.urls'), name='deposit_and_credit'),
     url(r'cr/', include('app_customer_repository.urls')),
+    url(r'rd/', include('root_db.urls')),
     url(r'accounted_company\.export', views.exportAccountedCompany),
     url(r'divided_company_account\.create', views.createDividedCompanyAccount),
     url(r'contributor_and_series\.export', views.exportContributorAndSeries),

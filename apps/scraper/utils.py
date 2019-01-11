@@ -53,7 +53,7 @@ class GetUrls:
         return 'http://110.17.1.21:9082/dcms_index.view'
 
 
-class DcmsHttp:
+class DcmsHttpRequest:
 
     def __init__(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
         self.userId = userId
