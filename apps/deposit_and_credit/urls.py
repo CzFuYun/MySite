@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'expireprompt\.finish', views.finishExpirePrompt, name='finishExpirePrompt'),
     url(r'expireexplain\.view', views.viewExpireExplain, name='viewExpireExplain'),
     url(r'redcard\.reset', views.resetRedCard, name='resetRedCard'),
+    url(r'progress\.update', views.updateProgress, name='updateProgress'),
 ]

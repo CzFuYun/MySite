@@ -1,4 +1,4 @@
-import json
+import json, datetime as pydate
 from django.db.models import Sum
 from django.utils.timezone import timedelta, datetime
 from deposit_and_credit import models as dac_models
@@ -39,7 +39,37 @@ class DateOperation():
 
     @property
     def this_year_end_date(self):
-        return  self.strToDate(self.this_year_end_date_str)
+        return self.strToDate(self.this_year_end_date_str)
+
+    def month_first_date(self, year=None, month=None):
+        if not year:
+            year = self.today.year
+        if not month:
+            month = self.today.month
+        s = str(year) + '-' + str(month) + '-01'
+        return datetime.strptime(s, '%Y-%m-%d').date()
+
+    def month_last_date(self, year=None, month=None):
+        if not year:
+            year = self.today.year
+        if not month:
+            month = self.today.month
+        day = self.judgeMonthDays(year, month)
+        s = str(year) + '-' + str(month) + '-' + str(day)
+        return datetime.strptime(s, '%Y-%m-%d').date()
+
+    @staticmethod
+    def judgeMonthDays(year, month):
+        if month == 2:
+            if year % 4 == 0 and year % 100:
+                days = 29
+            else:
+                days = 28
+        elif month in (1, 3, 5, 7, 8, 10, 12):
+            days = 31
+        else:
+            days = 30
+        return days
 
     def strToDate(self, s):
         return datetime.strptime(s, '%Y-%m-%d').date()
@@ -76,14 +106,27 @@ class DateOperation():
         elif returnMode == 'd':
             return self.strToDate(d)
 
-    def month_dif(self, start_date, month):
+    def month_dif(self, month, start_date=None):
         '''
         计算起始日期加上或减去相应月份数后的日期，若该日期不存在，如：2018-02-29，则转为当月末日期
         :param start_date: 起始日期
         :param month: 月份数，可正负
         :return:
         '''
-        pass
+        start_date = start_date if not start_date is None else self.today
+        start_date = self.strToDate(start_date) if type(start_date) == str else start_date
+        start_year = start_date.year
+        start_month = start_date.month
+        if start_month + month <= 0 or start_month + month > 12:
+            result_year = int(month / 12) + start_year
+            result_month = start_month + month % 12
+        else:
+            result_year = start_year
+            result_month = start_month + month
+        result_day = start_date.day
+        if result_month == 2 and result_day > 28:
+            result_day = self.judgeMonthDays(result_year, 2)
+        return pydate.date(result_year, result_month, result_day)
 
     def neighbour_date_date_str(self, model_class, date_str, field='data_date'):
         return getNeighbourDate(model_class, 0, date_str, field)

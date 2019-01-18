@@ -190,3 +190,61 @@ class ExpirePrompt(models.Model):
     def getCpNum(dcms, name, cf):
         customer = dcms.search_customer(name, cf)
         customer.go_to_cf_label('授信申请')
+
+
+# class BusinessExpire(models.Model):
+#     business_choices = (
+#         ('dld', '短期流贷'),
+#         ('zld', '中期流贷'),
+#         ('xmd', '项目贷款'),
+#     )
+#     customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
+#     prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT)
+#     amount = models.IntegerField(default=0, verbose_name='金额')
+#     lu_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='放款参考编号')
+#     business = models.CharField(max_length=8, blank=True, null=True, verbose_name='业务种类')
+#
+#     def __str__(self):
+#         return self.prompt.customer.name + self.business + str(self.amount)
+#
+#     @classmethod
+#     def linkPrompt(cls):
+#         pass
+#
+#     class Meta:
+#         verbose_name = '业务到期记录'
+#         verbose_name_plural = verbose_name
+
+
+class LoanDemand(models.Model):
+    business_choices = (
+        ('dld', '短期流贷'),
+        ('zld', '中期流贷'),
+        ('xmd', '项目贷款'),
+    )
+    existing = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='存量规模')
+    new_increase = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='新增规模')
+    business = models.CharField(max_length=8, choices=business_choices, verbose_name='业务种类')
+    now_rate = models.IntegerField(default=0, verbose_name='当前利率上浮(%)')
+    now_deposit_ratio = models.IntegerField(default=0, verbose_name='当前存款沉淀率(%)')
+    plan_amount = models.IntegerField(default=0, verbose_name='拟放金额')
+    plan_rate = models.IntegerField(default=0, verbose_name='利率拟上浮(%)')
+    plan_deposit_ratio = models.IntegerField(default=0, verbose_name='预计存款沉淀率(%)')
+    plan_date = models.DateField(blank=True, null=True, verbose_name='预计投放日期')
+    expect = models.IntegerField(default=100, verbose_name='把握(%)')
+    already_achieved = models.IntegerField(default=0, verbose_name='已落地金额')
+    remark = models.CharField(max_length=512, blank=True, null=True, verbose_name='备注')
+    finish_date = models.DateField(blank=True, null=True, verbose_name='办结日')
+
+    def __str__(self):
+        if self.existing:
+            customer_name = self.existing.customer.name
+        elif self.new_increase:
+            customer_name = self.new_increase.customer.name
+        else:
+            customer_name = 'None'
+        return customer_name
+
+    class Meta:
+        verbose_name = '贷款需求'
+        verbose_name_plural = verbose_name

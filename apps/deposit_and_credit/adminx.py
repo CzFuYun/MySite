@@ -3,7 +3,7 @@ from django.db.models import Sum
 import xadmin
 from xadmin import views
 
-from .models import Contributor, ExpirePrompt
+from .models import Contributor, ExpirePrompt, LoanDemand
 from root_db.models import DividedCompanyAccount
 
 class ContributorAdmin:
@@ -49,7 +49,13 @@ class ExpirePromptAdmin:
     ordering = ['staff_id__sub_department__superior__display_order', 'staff_id']
     list_filter = ['expire_date', 'finish_date', 'current_progress']
     list_display = ['customer', 'staff_id', 'expire_date', 'remark']
+    relfield_style = 'fk-ajax'
+
+
+class LoanDemandAdmin:
+    list_display = []
 
 
 xadmin.site.register(Contributor, ContributorAdmin)
 xadmin.site.register(ExpirePrompt, ExpirePromptAdmin)
+xadmin.site.register(LoanDemand, LoanDemandAdmin)

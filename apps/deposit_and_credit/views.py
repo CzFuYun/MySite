@@ -16,10 +16,16 @@ from app_permission.views import checkPermission
 
 def test(request):
     # http://127.0.0.1:8000/dc/test
+    from deposit_and_credit.models_operation import DateOperation
+    imp_date = DateOperation()
+    d = imp_date.month_dif(-11)
+    pass
+
+def updateProgress(request):
+    # http://127.0.0.1:8000/dc/progress.update
     dac_models.ExpirePrompt.fill_cp_num()
     dac_models.ExpirePrompt.updateProgress()
     return HttpResponse('finish')
-    pass
 
 @checkPermission
 def viewOverViewBranch(request):
