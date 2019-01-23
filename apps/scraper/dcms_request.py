@@ -3,6 +3,7 @@ from collections import namedtuple
 
 import requests, bs4
 
+from .base_request import BaseHttpRequest
 from  private_modules.dcms_shovel.page_parser import DcmsWebPage
 
 
@@ -53,18 +54,19 @@ class GetUrls:
         return 'http://110.17.1.21:9082/dcms_index.view'
 
 
-class DcmsHttpRequest:
+class DcmsHttpRequest(BaseHttpRequest):
+    origin_url = 'http://110.17.1.21:9082/'
 
-    def __init__(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
+    def __init__(self):
+        super().__init__()
+
+        self.post_urls = PostUrls(self.applicationCode)
+        self.get_urls = GetUrls(self.applicationCode)
+
+    def login(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
         self.userId = userId
         self.password = password
         self.applicationCode = applicationCode
-
-    def login(self):
-        self.origin = 'http://110.17.1.21:9082/'
-        self.post_urls = PostUrls(self.applicationCode)
-        self.get_urls = GetUrls(self.applicationCode)
-        self.connection = requests.session()
         r = self.post(self.post_urls.login, userId=self.userId, password=self.password, applicationCode=self.applicationCode)
         assert 'HXB_DCMS_WINDOW_' in r.text, '登录失败，用户名或密码不正确'
         return self
@@ -75,21 +77,21 @@ class DcmsHttpRequest:
             self.login()
         threading.Timer(60, self.keepConnection).start()
 
-    def post(self, post_url, **other_params):
-        # this_module = sys.modules[__name__]
-        # url = getattr(getattr(self, method + '_urls'), url_name)
-        while True:
-            response = self.connection.post(self.origin + post_url.path, data={**post_url.params, **other_params})
-            if response.status_code == 200:
-                break
-        return response
-
-    def get(self, url):
-        while True:
-            response = self.connection.get(url)
-            if response.status_code == 200:
-                break
-        return response
+    # def post(self, post_url, **other_params):
+    #     # this_module = sys.modules[__name__]
+    #     # url = getattr(getattr(self, method + '_urls'), url_name)
+    #     while True:
+    #         response = self.connection.post(self.origin + post_url.path, data={**post_url.params, **other_params})
+    #         if response.status_code == 200:
+    #             break
+    #     return response
+    #
+    # def get(self, url):
+    #     while True:
+    #         response = self.connection.get(url)
+    #         if response.status_code == 200:
+    #             break
+    #     return response
 
     def search_cf(self, name_or_cf):
         searchCriteria = SearchBy.cf_num if name_or_cf.startswith('CF') else SearchBy.customer_name

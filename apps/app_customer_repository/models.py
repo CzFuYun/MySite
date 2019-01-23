@@ -4,7 +4,7 @@ from MySite import utilities
 from app_customer_repository import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
 from root_db.models import AccountedCompany
-from scraper.utils import DcmsHttpRequest
+from scraper.dcms_request import DcmsHttpRequest
 
 industry_factor_rule = {
     'C': 1.5,
