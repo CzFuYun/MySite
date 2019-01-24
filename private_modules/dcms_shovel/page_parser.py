@@ -45,7 +45,7 @@ class Detail(Parser):
 
 class WebPage:
     parser = ('lxml', 'html.parser')
-    def __init__(self, HTML_text, path_url, connection=None):
+    def __init__(self, HTML_text, path_url=None, connection=None):
         self.path_url = path_url
         self.HTML_text = HTML_text
         self.HTML_soup = BS(HTML_text, self.parser[0])

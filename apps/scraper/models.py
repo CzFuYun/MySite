@@ -31,7 +31,7 @@ class LuLedger(models.Model):
         ('USD', '美元'),
     )
     add_date = models.DateField(auto_now_add=True)
-    current_amount = models.FloatField(default=0, verbose_name='当前余额')
+    current_amount = models.FloatField(default=0, verbose_name='当前地区余额（含特别授信）')
     update_date = models.DateField(auto_now=True, verbose_name='更新日')
     cp = models.ForeignKey(to='CpLedger', db_column='cp_num', blank=True, null=True, on_delete=models.CASCADE, verbose_name='授信')
     loan_demand = models.ForeignKey(to='deposit_and_credit.LoanDemand', on_delete=models.PROTECT, verbose_name='规模安排')
@@ -71,10 +71,14 @@ class LuLedger(models.Model):
         return
 
     @classmethod
-    def updateAmount(cls):
+    def updateAmount(cls, date_str=None):
         '''
-        爬取企贷表，更新用信余额
+        爬取企贷表，更新地区用信余额
         :return:
         '''
         crp = CrpHttpRequest()
-        crp.connection.get()
+        crp.login()
+        if date_str is not None:
+            crp.setDataDate(date_str)
+        for page in crp.getDtcx('放款参考编号', '业务余额(原币)', '总账汇率', **{'业务余额(原币)': '>0', '是否小企业客户': "='CP'"}):
+            pass

@@ -9,16 +9,24 @@ class BaseHttpRequest:
     def __init__(self, *args, **kwargs):
         self.connection = requests.session()
 
-    def get(self, url):
+    def get(self, url_path):
+        if url_path.strip().lower().startswith('http'):
+            url = url_path
+        else:
+            url = self.origin_url + url_path
         while True:
             response = self.connection.get(url)
             if response.status_code == 200:
                 break
         return response
 
-    def post(self, url, **kwargs):
+    def post(self, url_path, **kwargs):
+        if url_path.strip().lower().startswith('http'):
+            url = url_path
+        else:
+            url = self.origin_url + url_path
         while True:
-            response = self.connection.post(self.origin_url + url, data=kwargs)
+            response = self.connection.post(url, data=kwargs)
             if response.status_code == 200:
                 break
         return response
