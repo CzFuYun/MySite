@@ -1,3 +1,4 @@
+# coding: utf-8
 from django.db import models
 from django.db.models import Q
 
@@ -5,7 +6,7 @@ from django.db.models import Q
 from . import models_operation
 from scraper.models import LuLedger
 # from apps.app_customer_repository import models as crm
-from private_modules.dcms_shovel import connection, dig
+from dcms_shovel import connection, dig
 
 
 # class DepartmentDeposit(models.Model):
@@ -224,15 +225,19 @@ class LoanDemand(models.Model):
         ('zq', '中期流贷'),
         ('xm', '项目贷款'),
     )
-    existing = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='存量规模')
-    existing_lu = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
-    new_increase = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='新增规模')
-    business = models.CharField(max_length=8, choices=business_choices, verbose_name='业务种类')
-    now_rate = models.FloatField(default=0, verbose_name='当前利率')
-    now_deposit_ratio = models.IntegerField(default=0, verbose_name='当前存款金额')
-    plan_amount = models.IntegerField(default=0, verbose_name='拟放金额')
-    plan_rate = models.FloatField(default=0, verbose_name='拟放利率')
-    plan_deposit_ratio = models.IntegerField(default=0, verbose_name='预计存款回报')
+    add_time = models.DateTimeField(auto_now_add=True)
+    customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
+    expire_prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='到期提示')
+    lu_ledger = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
+    expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
+    expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
+    new_increase = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='新增项目')
+    business = models.CharField(max_length=8, verbose_name='业务种类')
+    # now_rate = models.FloatField(default=0, verbose_name='当前利率')
+    # now_deposit_ydavg = models.IntegerField(default=0, verbose_name='当前存款日均')
+    plan_amount = models.IntegerField(blank=True, null=True, verbose_name='拟放金额')
+    plan_rate = models.FloatField(blank=True, null=True, verbose_name='拟放利率')
+    plan_deposit_ratio = models.IntegerField(blank=True, null=True, verbose_name='预计存款回报')
     plan_date = models.DateField(blank=True, null=True, verbose_name='预计投放日期')
     expect = models.IntegerField(default=100, verbose_name='把握(%)')
     already_achieved = models.IntegerField(default=0, verbose_name='已放金额')
@@ -245,8 +250,8 @@ class LoanDemand(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        if self.existing:
-            customer_name = self.existing.customer.name
+        if self.expire_prompt:
+            customer_name = self.expire_prompt.customer.name
         elif self.new_increase:
             customer_name = self.new_increase.customer.name
         else:
@@ -254,13 +259,88 @@ class LoanDemand(models.Model):
         return customer_name + str(self.plan_amount) + '万元'
 
     @classmethod
-    def createFromProjectRepository(cls):
+    def createFromProjectRepositoryForNextMonth(cls):
         pass
 
     @classmethod
-    def createFromLuLedger(cls):
-        LuLedger.objects.filter()
+    def createFromLuLedgerForNextMonth(cls):
+        '''
+        从放款台账中抽取到期贷款，生成贷款需求记录，并关联至EP表
+        月末执行，执行前先爬取月末企贷表的贷款余额数据
+        :return:
+        '''
+        imp_date = models_operation.DateOperation()
+        next_month_last_date = imp_date.month_dif(1, imp_date.month_last_date())
+        next_month_first_date = imp_date.month_dif(1, imp_date.month_first_date())
+        expire_lu = LuLedger.objects.filter(
+            Q(
+                plan_expire__lte=next_month_last_date,
+                plan_expire__gte=next_month_first_date,
+                current_amount__gt=0,
+                lu_num__startswith='LU',
+                net_amount__gt=0,
+            ) & (Q(dcms_business__caption__contains='贷') | Q(dcms_business__caption__contains='保理') | Q(dcms_business__caption__contains='押汇'))
+
+        ).values(
+            'lu_num',
+            'customer_id',
+            'current_amount',
+            'rate',
+            'dcms_business__caption',
+            'plan_expire',
+            'dcms_business__caption',
+        )
+        # customer = []
+        # for lu in expire_lu:
+        #     customer.append(lu['customer_id'])
+        # ep_qs = ExpirePrompt.objects.filter(
+        #         Q(customer_id__in=customer) &
+        #         (
+        #             Q(expire_date__lte=next_month_last_date) |
+        #             Q(expire_date__gte=imp_date.month_dif(-3, imp_date.month_first_date()))
+        #         )
+        #     )
+        for lu in expire_lu:
+            customer_id = lu['customer_id']
+            ep = ExpirePrompt.objects.filter(
+                Q(customer_id=customer_id) &
+                (
+                    Q(expire_date__lte=next_month_last_date) |
+                    Q(expire_date__gte=imp_date.month_dif(-3, imp_date.month_first_date()))
+                )
+            )
+            obj_ep = None
+            if ep.exists():
+                ep_index = 0
+                if ep.count() > 1:
+                    print(ep[ep_index].customer.name, '存在多笔EP记录：')
+                    for i in range(ep.count()):
+                        print(i, '.到期日：' , ep[i].expire_date , '，pk:' , ep[i].id)
+                    ep_index = int(input('>>>'))
+                obj_ep = ep[ep_index]
+            cls(
+                customer_id=customer_id,
+                existing=obj_ep,
+                existing_lu_id=lu['lu_num'],
+                now_rate=lu['rate'],
+                expire_amount=lu['current_amount'],
+                expire_date=lu['plan_expire'],
+                business=lu['dcms_business__caption']
+            ).save()
+            pass
 
     @classmethod
     def createFromLeiShou(cls):
+        pass
+
+    @classmethod
+    def createBaseRecord(cls):
+        pass
+
+    @classmethod
+    def updateDemandAmountByLuLedger(cls):
+        '''
+        根据昨日放款更新贷款需求金额
+        :return:
+        '''
         pass

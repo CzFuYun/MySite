@@ -5,9 +5,10 @@ from .crp import CrpHttpRequest
 from .models import LuLedger
 
 def test(request):
+    # http://127.0.0.1:8000/scrape/test
     # req = CrpHttpRequest()
     # req.login()
-    # p = req.getDtcx('客户编号')
+    # p = req.getQiDai('客户编号')
     # for i in p:
     #     print(i)
     LuLedger.updateAmount()

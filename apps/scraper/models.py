@@ -80,5 +80,6 @@ class LuLedger(models.Model):
         crp.login()
         if date_str is not None:
             crp.setDataDate(date_str)
-        for page in crp.getDtcx('放款参考编号', '业务余额(原币)', '总账汇率', **{'业务余额(原币)': '>0', '是否小企业客户': "='CP'"}):
+        qidai = crp.getQiDai(*['放款参考编号', '业务余额(原币)', '总账汇率'], **{'业务余额(原币)': '>0', '是否小企业客户': "='CP'"})
+        for page in qidai:
             pass

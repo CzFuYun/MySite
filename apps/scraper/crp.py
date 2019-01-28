@@ -11,7 +11,7 @@ from dcms_shovel.page_parser import DcmsWebPage
 class CrpHttpRequest(BaseHttpRequest):
     origin_url = 'http://102.104.254.14/crp/'
     Column = namedtuple('Column', ['db_field', 'type'])
-    dtcx_fields = {
+    qidai_fields = {
         '报表数据日期': Column('DT_COMMIT', '4'),
         '分行名称（一级）': Column('BR_NM2', '2'),
         '分行名称（二级）': Column('BR_NM', '2'),
@@ -221,6 +221,41 @@ class CrpHttpRequest(BaseHttpRequest):
         '是否有效用户': Column('SFYXYH', '2'),
         '总账汇率': Column('ZZHL', '2'),
     }
+    leishou_fields = {
+        '报表数据日期': Column('DT_COMMIT', '4'),
+        '分行名称': Column('BR_NM', '2'),
+        '经办行': Column('JBBR_NM', '2'),
+        '客户编号': Column('CIF_NO', '9'),
+        '客户名称': Column('CIF_NM', '9'),
+        '行业门类（客户）': Column('MT_IND_TYP_NAME', '2'),
+        '行业大类（客户）': Column('MT_IND_CAT_NAME', '2'),
+        '行业中类（客户）': Column('MT_IND_NAME', '2'),
+        '行业小类（客户）': Column('MT_IND_DETAIL_NAME', '2'),
+        '企业规模': Column('MT_CORP_TYP_NAME', '2'),
+        '信用等级评定': Column('RATING', '2'),
+        '业务种类': Column('MT_FAC_NAME', '2'),
+        '是否特别授信业务': Column('IS_LOW_RISK', '2'),
+        '是否表外业务': Column('IS_BWAI', '2'),
+        '帐号': Column('ACCT_NO', '9'),
+        '合同号': Column('CONTRACT_NO', '9'),
+        '收回日期': Column('CREDIT_DT_UPDATED', '4'),
+        '收回金额(元)': Column('CREDIT', '1'),
+        '汇率': Column('EXCHG_RATE', '9'),
+        '利率': Column('INT_RATE', '9'),
+        '计息频率': Column('MT_REST_TYP_NAME', '2'),
+        '业务币种': Column('MT_CUR_NAME', '2'),
+        '账户状态': Column('MT_ACCT_STS_NAME', '2'),
+        '五级分类': Column('MT_RISK_RATING_TYP_NAME', '2'),
+        '行业门类（投向）': Column('INVEST_MT_IND_TYP_NAME', '2'),
+        '行业大类（投向）': Column('INVEST_MT_IND_CAT_NAME', '2'),
+        '行业中类（投向）': Column('INVEST_MT_IND_NAME', '2'),
+        '行业小类（投向）': Column('INVEST_MT_IND_DETAIL_NAME', '2'),
+        '发放日期': Column('DT_FIRST_DISB', '4'),
+    }
+
+    @staticmethod
+    def encode(string):
+        return BaseHttpRequest.encode(string).replace('%', '%25')
 
     def __init__(self):
         super().__init__()
@@ -240,59 +275,52 @@ class CrpHttpRequest(BaseHttpRequest):
             date_str = str(self.imp_date.delta_date(-1))
         self.data_date = date_str
 
-    def getDtcx(self, *col_name_cn, **filter_condition):
+    def getUrlParam(self, fields_dict, strFrom, px, *col_name_cn, task='qry', step='submit', tran='dtcx_list', **filter_condition):
+        # ↑以前从未注意到的问题：参数的摆放位置。可选参数要位于*args与**kwargs之间
         '''
-        爬取企贷表
+        :param fields_dict:
         :param col_name_cn: 企贷表表头的中文列名
         :param filter_condition: 筛选条件，由中文列名及条件字符串组成，例如：'业务余额(原币)': '>0 & <100', '分行名称（一级）': "='CZ'"
         :return:
         '''
         strFilter = ''
         if filter_condition:
-
             for key, value in filter_condition.items():
                 strFilter += ' AND '
-                col_name = self.dtcx_fields[key].db_field
+                col_name = self.qidai_fields[key].db_field
                 condition = value.replace('&', ' OR ' + col_name + ' ').replace('|', ' AND ' + col_name + ' ')
                 strFilter += ('(' + col_name + condition)
-                # if '|' in value:
-                #     conditions = value.split('|')
-                #     for condition in conditions:
-                #         strFilter += ''
-                # if '&' in value:
-                #     pass
-                # else:
-                #     pass
                 strFilter += ')'
         strSelect = ''
         strType = ''
         strMc = ''
         for i in col_name_cn:
-            strSelect += (self.dtcx_fields[i].db_field + ',')
-            strType += (self.dtcx_fields[i].type + ',')
-            strMc += self.encode(i).replace('%', '%25')
+            strSelect += (fields_dict[i].db_field + ',')
+            strType += (fields_dict[i].type + ',')
+            strMc += self.encode(i)
         url_param = {
-            'task': 'qry',
-            'step': 'submit',
-            'tran': 'dtcx_list',
+            'task': task,
+            'step': step,
+            'tran': tran,
             'strSelect': strSelect[:-1],
-            'strFrom': 'TBL_CPMX_COLL_' + self.data_date.replace('-', ''),
+            'strFrom': strFrom + self.data_date.replace('-', ''),
             'strWhere': " AND (DT_COMMIT = to_date('" + self.data_date + "','yyyy-mm-dd'))" + strFilter +
                         " AND MT_BR_CD IN (" +
-                            "SELECT "
-                                "JBBR_CD "
-                            "FROM "
-                                "TBL_MT_BR_CC "
-                            "WHERE "
-                                "JBBR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "') " +
-                                "OR YDBR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name +"') " +
-                                "OR BR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "') " +
-                                "OR CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "')) ",
+                        "SELECT "
+                        "JBBR_CD "
+                        "FROM "
+                        "TBL_MT_BR_CC "
+                        "WHERE "
+                        "JBBR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "') " +
+                        "OR YDBR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "') " +
+                        "OR BR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "') " +
+                        "OR CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "')) ",
             'strType': strType[:-1],
             'strMc': strMc,
-            'px': 'br_nm as c1,no as c2;c1,c2;br_nm,no',
+            'px': px,
             'pageNum': '1'
         }
+        # return url_param
         response = self.post('CustZdy.do', **url_param)
         p = DcmsWebPage(response.text)
         max_page = int(p.HTML_soup.find('input', {'id': 'resMaxPages'}).attrs['value'])
@@ -303,4 +331,15 @@ class CrpHttpRequest(BaseHttpRequest):
             yield DcmsWebPage(response.text)
         raise StopIteration
 
+    def getQiDai(self, *col_name_cn, **filter_condition):
+        '''
+        爬取企贷表
+        '''
+        strFrom = 'TBL_CPMX_COLL_'
+        px = 'br_nm as c1,no as c2;c1,c2;br_nm,no'
+        return self.getUrlParam(self.qidai_fields, strFrom, px, *col_name_cn, **filter_condition)
 
+    def getLeiShou(self, *col_name_cn, **filter_condition):
+        strFrom = 'TBL_CPMX_LS_'
+        px = 'BR_NM AS C1,ACCT_NO AS C2;C1,C2;BR_NM,ACCT_NO'
+        return self.getUrlParam(self.qidai_fields, strFrom, px, *col_name_cn, **filter_condition)
