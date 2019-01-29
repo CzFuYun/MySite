@@ -11,4 +11,4 @@ def test(request):
     # p = req.getQiDai('客户编号')
     # for i in p:
     #     print(i)
-    LuLedger.updateAmount()
+    LuLedger.updateAmountByQiDai()

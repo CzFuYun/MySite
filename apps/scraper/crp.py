@@ -275,7 +275,7 @@ class CrpHttpRequest(BaseHttpRequest):
             date_str = str(self.imp_date.delta_date(-1))
         self.data_date = date_str
 
-    def getUrlParam(self, fields_dict, strFrom, px, *col_name_cn, task='qry', step='submit', tran='dtcx_list', **filter_condition):
+    def query(self, fields_dict, strFrom, px, *col_name_cn, task='qry', step='submit', tran='dtcx_list', **filter_condition):
         # ↑以前从未注意到的问题：参数的摆放位置。可选参数要位于*args与**kwargs之间
         '''
         :param fields_dict:
@@ -320,7 +320,6 @@ class CrpHttpRequest(BaseHttpRequest):
             'px': px,
             'pageNum': '1'
         }
-        # return url_param
         response = self.post('CustZdy.do', **url_param)
         p = DcmsWebPage(response.text)
         max_page = int(p.HTML_soup.find('input', {'id': 'resMaxPages'}).attrs['value'])
@@ -337,9 +336,9 @@ class CrpHttpRequest(BaseHttpRequest):
         '''
         strFrom = 'TBL_CPMX_COLL_'
         px = 'br_nm as c1,no as c2;c1,c2;br_nm,no'
-        return self.getUrlParam(self.qidai_fields, strFrom, px, *col_name_cn, **filter_condition)
+        return self.query(self.qidai_fields, strFrom, px, *col_name_cn, **filter_condition)
 
     def getLeiShou(self, *col_name_cn, **filter_condition):
         strFrom = 'TBL_CPMX_LS_'
         px = 'BR_NM AS C1,ACCT_NO AS C2;C1,C2;BR_NM,ACCT_NO'
-        return self.getUrlParam(self.qidai_fields, strFrom, px, *col_name_cn, **filter_condition)
+        return self.query(self.leishou_fields, strFrom, px, *col_name_cn, **filter_condition)

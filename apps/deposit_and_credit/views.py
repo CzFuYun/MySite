@@ -16,9 +16,7 @@ from app_permission.views import checkPermission
 
 def test(request):
     # http://127.0.0.1:8000/dc/test
-    from deposit_and_credit.models_operation import DateOperation
-    imp_date = DateOperation()
-    d = imp_date.month_dif(-11)
+    dac_models.LuLedger.create('LU/CZ11/2018/03/00004849')
     pass
 
 def updateProgress(request):

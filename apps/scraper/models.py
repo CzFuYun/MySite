@@ -2,6 +2,7 @@ from django.db import models
 
 
 from .crp import CrpHttpRequest
+from .dcms_request import DcmsHttpRequest
 
 class DcmsBusiness(models.Model):
     code = models.CharField(max_length=8, primary_key=True, verbose_name='业务编号')
@@ -71,7 +72,7 @@ class LuLedger(models.Model):
         return
 
     @classmethod
-    def updateAmount(cls, date_str=None):
+    def updateAmountByQiDai(cls, date_str=None):
         '''
         爬取企贷表，更新地区用信余额
         :return:
@@ -83,3 +84,10 @@ class LuLedger(models.Model):
         qidai = crp.getQiDai(*['放款参考编号', '业务余额(原币)', '总账汇率'], **{'业务余额(原币)': '>0', '是否小企业客户': "='CP'"})
         for page in qidai:
             pass
+
+    @classmethod
+    def create(cls, lu_num):
+        dcms = DcmsHttpRequest()
+        dcms.login()
+        dcms.search_lu(lu_num)
+        pass

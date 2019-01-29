@@ -17,8 +17,38 @@ class SearchBy:
     cf_num = 'CREDIT_FILE_NO'
 
 
-class PostUrls:
-    UrlPath = namedtuple('UrlPath', ['path', 'params'])
+# class PostUrls:
+#     UrlPath = namedtuple('UrlPath', ['path', 'params'])
+#     base_params = {
+#         'do': 'Search',
+#         'searchBranchCode': 'HQ',
+#         'scope': 'A',
+#         'searchCriteria': None,
+#         'searchValue': None
+#     }
+#
+#     def __init__(self, applicationCode):
+#         self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
+#
+#     @property
+#     def login(self):
+#         return self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'})
+#
+#     @property
+#     def search_cp(self):
+#         return self.UrlPath(self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view', self.base_params.copy())
+#
+#     @property
+#     def search_cf(self):
+#         return self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy())
+#
+#     @property
+#     def search_lu(self):
+#         return self.UrlPath(self.dcms_type + 'dcma/limit_utilization/application/application.view', self.base_params.copy())
+
+
+class DcmsHttpRequest(BaseHttpRequest):
+    origin_url = 'http://110.17.1.21:9082/'
     base_params = {
         'do': 'Search',
         'searchBranchCode': 'HQ',
@@ -27,75 +57,35 @@ class PostUrls:
         'searchValue': None
     }
 
-    def __init__(self, applicationCode):
-        self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
-
-    @property
-    def login(self):
-        return self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'})
-
-    @property
-    def search_cp(self):
-        return self.UrlPath(self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view', self.base_params.copy())
-
-    @property
-    def search_cf(self):
-        return self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy())
-
-
-
-
-class GetUrls:
-    def __init__(self, applicationCode):
-        self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
-
-    @property
-    def keep_connection(self):
-        return 'http://110.17.1.21:9082/dcms_index.view'
-
-
-class DcmsHttpRequest(BaseHttpRequest):
-    origin_url = 'http://110.17.1.21:9082/'
-
-    def __init__(self):
-        super().__init__()
-
-        self.post_urls = PostUrls(self.applicationCode)
-        self.get_urls = GetUrls(self.applicationCode)
-
     def login(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
+        self.applicationCode = applicationCode
+        # self.post_urls = PostUrls(applicationCode)
+        # self.get_urls = GetUrls(applicationCode)
+        self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
         self.userId = userId
         self.password = password
-        self.applicationCode = applicationCode
-        r = self.post(self.post_urls.login, userId=self.userId, password=self.password, applicationCode=self.applicationCode)
+        r = self.post(self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'}), userId=self.userId, password=self.password, applicationCode=self.applicationCode)
         assert 'HXB_DCMS_WINDOW_' in r.text, '登录失败，用户名或密码不正确'
+        self.post_urls = {
+            # 'login': self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'}),
+            'search_cp': self.UrlPath(self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view', self.base_params.copy()),
+            'search_cf': self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy()),
+            'search_lu': self.UrlPath(self.dcms_type + 'dcma/limit_utilization/application/application.view', self.base_params.copy()),
+        }
+        self.get_urls = {
+            'keep_connection': 'http://110.17.1.21:9082/dcms_index.view'
+        }
         return self
 
     def keepConnection(self):
-        r = self.get(self.get_urls.keep_connection)
+        r = self.get(self.get_urls['keep_connection'])
         if 'frame' not in r.text:
             self.login()
         threading.Timer(60, self.keepConnection).start()
 
-    # def post(self, post_url, **other_params):
-    #     # this_module = sys.modules[__name__]
-    #     # url = getattr(getattr(self, method + '_urls'), url_name)
-    #     while True:
-    #         response = self.connection.post(self.origin + post_url.path, data={**post_url.params, **other_params})
-    #         if response.status_code == 200:
-    #             break
-    #     return response
-    #
-    # def get(self, url):
-    #     while True:
-    #         response = self.connection.get(url)
-    #         if response.status_code == 200:
-    #             break
-    #     return response
-
     def search_cf(self, name_or_cf):
         searchCriteria = SearchBy.cf_num if name_or_cf.startswith('CF') else SearchBy.customer_name
-        response = self.post(self.post_urls.search_cf, searchCriteria=searchCriteria, searchValue=name_or_cf)
+        response = self.post(self.post_urls['search_cf'], searchCriteria=searchCriteria, searchValue=name_or_cf)
         try:
             search_result = DcmsWebPage(response.text, None).lists[0].parse_to_tag_dict_list()
             index = 0
@@ -112,11 +102,11 @@ class DcmsHttpRequest(BaseHttpRequest):
             return (None, None)
 
     def get_into_cp(self, cp_num):
-        r = self.post(self.post_urls.search_cp, searchValue=cp_num, searchCriteria=SearchBy.con_num)
+        r = self.post(self.post_urls['search_cp'], searchValue=cp_num, searchCriteria=SearchBy.con_num)
         rlk = RegExp.rlk.findall(r.text)[0]
         return
 
-
-# def initMyDcms():
-#     global DCMS
-#     DCMS = DcmsHttp()
+    def search_lu(self, lu_num):
+        r = self.post(self.post_urls['search_lu'], searchValue=lu_num, searchCriteria=SearchBy.con_num, stopLimit='N')
+        rlk = RegExp.rlk.findall(r.text)[0]
+        pass
