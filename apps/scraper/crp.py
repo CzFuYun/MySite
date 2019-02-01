@@ -8,6 +8,10 @@ from apps.deposit_and_credit.models_operation import DateOperation
 from dcms_shovel.page_parser import DcmsWebPage
 
 
+RGX = {
+    'date': re.compile(r'\d{4}-\d{2}-\d{2}')
+}
+
 class CrpHttpRequest(BaseHttpRequest):
     origin_url = 'http://102.104.254.14/crp/'
     Column = namedtuple('Column', ['db_field', 'type'])
@@ -287,10 +291,17 @@ class CrpHttpRequest(BaseHttpRequest):
         if filter_condition:
             for key, value in filter_condition.items():
                 strFilter += ' AND '
-                col_name = self.qidai_fields[key].db_field
+                col_name = fields_dict[key].db_field
+                condition_date = RGX['date'].findall(value)
+                if condition_date:
+                    for i in range(len(condition_date)):
+                        RGX['date'].sub()
+                        RGX['date'].sub("'" + condition_date + "'", value)
+                        value = value.replace("'" + condition_date + "'", "to_date('" + condition_date + "','yyyy-mm-dd')")
                 condition = value.replace('&', ' OR ' + col_name + ' ').replace('|', ' AND ' + col_name + ' ')
                 strFilter += ('(' + col_name + condition)
                 strFilter += ')'
+        strFilter = self.encode(strFilter)
         strSelect = ''
         strType = ''
         strMc = ''

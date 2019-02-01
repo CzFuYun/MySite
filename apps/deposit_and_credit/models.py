@@ -4,7 +4,8 @@ from django.db.models import Q
 
 # from root_db import models as m
 from . import models_operation
-from scraper.models import LuLedger
+from scraper.models import LuLedger,DcmsBusiness
+from scraper.crp import CrpHttpRequest
 # from apps.app_customer_repository import models as crm
 from dcms_shovel import connection, dig
 
@@ -177,7 +178,7 @@ class ExpirePrompt(models.Model):
                 print('【'+ customer['customer__name'] + customer['cp_num'] + '】流程已取消')
                 cls.objects.filter(id=customer['id']).update(cp_num=None, current_progress_id=None)
             elif progress_id != customer['current_progress_id']:
-                updated.append(customer['customer__name'] + customer['current_progress_id'] + '→' + progress_id)
+                updated.append(customer['customer__name'] + str(customer['current_progress_id']) + '→' + str(progress_id))
                 exp = cls.objects.filter(id=customer['id'])
                 exp.update(current_progress_id=progress_id)
 
@@ -220,19 +221,16 @@ class ExpirePrompt(models.Model):
 
 
 class LoanDemand(models.Model):
-    business_choices = (
-        ('dq', '短期流贷'),
-        ('zq', '中期流贷'),
-        ('xm', '项目贷款'),
-    )
-    add_time = models.DateTimeField(auto_now_add=True)
+    add_time = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
+    staff = models.ForeignKey(to='root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
     expire_prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='到期提示')
-    lu_ledger = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
+    # lu_ledger = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
+    contract = models.CharField(max_length=16, blank=True, null=True, verbose_name='放款合同号')
     expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
     expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
     new_increase = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='新增项目')
-    business = models.CharField(max_length=8, verbose_name='业务种类')
+    business = models.ForeignKey(to='scraper.DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     # now_rate = models.FloatField(default=0, verbose_name='当前利率')
     # now_deposit_ydavg = models.IntegerField(default=0, verbose_name='当前存款日均')
     plan_amount = models.IntegerField(blank=True, null=True, verbose_name='拟放金额')
@@ -287,9 +285,10 @@ class LoanDemand(models.Model):
             'customer_id',
             'current_amount',
             'rate',
-            'dcms_business__caption',
+            'dcms_business__code',
             'plan_expire',
-            'dcms_business__caption',
+            'staff_id',
+            'contract_code'
         )
         for lu in expire_lu:
             customer_id = lu['customer_id']
@@ -316,13 +315,20 @@ class LoanDemand(models.Model):
                 now_rate=lu['rate'],
                 expire_amount=lu['current_amount'],
                 expire_date=lu['plan_expire'],
-                business=lu['dcms_business__caption']
+                business_id=lu['dcms_business__code'],
+                staff_id=lu['staff_id'],
+                contract=lu['contract_code']
             ).save()
-            pass
 
     @classmethod
-    def createFromLeiShou(cls):
-        pass
+    def createFromLeiShou(cls, data_date=None):
+        imp_date = models_operation.DateOperation()
+        last_update = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'last_update') and str(imp_date.delta_date(-1))
+        crp = CrpHttpRequest()
+        crp.login()
+        crp.setDataDate(data_date)
+        for page in crp.getLeiShou(*('客户名称', '业务种类', '合同号', '收回日期', '收回金额(元)'), **{'收回日期': ">'" + last_update + "'"}):
+            pass
 
     @classmethod
     def createBaseRecordForNewMonth(cls):

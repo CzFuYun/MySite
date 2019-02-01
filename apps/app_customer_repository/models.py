@@ -472,9 +472,7 @@ class ProjectExecution(models.Model):
                 'customer_id',
                 'net_total',
             )
-            customer_used_net = {}
-            for un in used_net_data:
-                customer_used_net[un['customer_id']] = un['net_total']
+            customer_used_net = {un['customer_id']: un['net_total'] for un in used_net_data}
             last_photo_date = imp_date.last_data_date_str(cls, 'photo_date')
             pe_on_the_way = cls.objects.filter(
                 project__close_date__isnull=True,
@@ -500,7 +498,18 @@ class ProjectExecution(models.Model):
                 tmp['photo_date'] = photo_date
                 # ↓为一般授信填充已投放净额
                 if pe.project.business.id < 15:
-                    tmp['total_used'] = customer_used_net.get(customer_id, 0)
+                    last_used_net = 0
+                    previous_exe = pe.previous_exe
+                    if previous_exe:
+                        last_used_net = previous_exe.total_used
+                    if last_used_net != customer_used_net.get(customer_id, 0):
+                        print(pe.project, "，请选择：")
+                        print('\t0.上次快照中已投敞口：', last_used_net)
+                        print('\t1.最近贡献度数据已投敞口：', customer_used_net.get(customer_id, 0))
+                        choice = input('>>>')
+                        tmp['total_used'] = customer_used_net.get(customer_id, 0) if int(choice) else last_used_net
+                    else:
+                        tmp['total_used'] = customer_used_net.get(customer_id, 0)
                     # ↓若已投净额小于项目的净额
                     if tmp['total_used'] <= customer_project_amount[customer_id]['project__total_net']:
                         tmp['new_net_used'] = tmp['total_used'] - customer_project_amount[customer_id]['project__existing_net']

@@ -16,12 +16,13 @@ from app_permission.views import checkPermission
 
 def test(request):
     # http://127.0.0.1:8000/dc/test
-    dac_models.LuLedger.create('LU/CZ11/2018/03/00004849')
+    # dac_models.LuLedger.create('LU/CZ11/2018/03/00004849')
+    dac_models.LoanDemand.createFromLeiShou()
     pass
 
 def updateProgress(request):
     # http://127.0.0.1:8000/dc/progress.update
-    dac_models.ExpirePrompt.fill_cp_num()
+    # dac_models.ExpirePrompt.fill_cp_num()
     dac_models.ExpirePrompt.updateProgress()
     return HttpResponse('finish')
 
