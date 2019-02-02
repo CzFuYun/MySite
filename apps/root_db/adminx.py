@@ -1,6 +1,6 @@
 import xadmin
 
-from .models import Staff, AccountedCompany, SubDepartment
+from .models import Staff, AccountedCompany, SubDepartment, DividedCompanyAccount
 
 
 class StaffAdmin:
@@ -21,6 +21,13 @@ class SubDepartmentAdmin:
     relfield_style = 'fk-ajax'
 
 
+class DividedCompanyAccountAdmin:
+    list_display = ['customer', 'data_date']
+    list_filter = ['data_date']
+    search_fields = ['customer__name']
+
+
 xadmin.site.register(Staff, StaffAdmin)
 xadmin.site.register(AccountedCompany, AccountedCompanyAdmin)
 xadmin.site.register(SubDepartment, SubDepartmentAdmin)
+xadmin.site.register(DividedCompanyAccount, DividedCompanyAccountAdmin)

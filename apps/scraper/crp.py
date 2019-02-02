@@ -9,7 +9,7 @@ from dcms_shovel.page_parser import DcmsWebPage
 
 
 RGX = {
-    'date': re.compile(r'\d{4}-\d{2}-\d{2}')
+    'date': re.compile(r"\d{4}-\d{2}-\d{2}")
 }
 
 class CrpHttpRequest(BaseHttpRequest):
@@ -295,9 +295,9 @@ class CrpHttpRequest(BaseHttpRequest):
                 condition_date = RGX['date'].findall(value)
                 if condition_date:
                     for i in range(len(condition_date)):
-                        RGX['date'].sub()
-                        RGX['date'].sub("'" + condition_date + "'", value)
-                        value = value.replace("'" + condition_date + "'", "to_date('" + condition_date + "','yyyy-mm-dd')")
+                        value = RGX['date'].sub("to_date('" + condition_date[i] + "','yyyy-mm-dd')", value, 1)
+                        # value = value.replace("'" + condition_date + "'", "to_date('" + condition_date + "','yyyy-mm-dd')")
+
                 condition = value.replace('&', ' OR ' + col_name + ' ').replace('|', ' AND ' + col_name + ' ')
                 strFilter += ('(' + col_name + condition)
                 strFilter += ')'

@@ -1,4 +1,6 @@
 # coding: utf-8
+from collections import defaultdict, namedtuple
+
 from django.db import models
 from django.db.models import Q
 
@@ -229,6 +231,7 @@ class LoanDemand(models.Model):
     contract = models.CharField(max_length=16, blank=True, null=True, verbose_name='放款合同号')
     expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
     expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
+    this_month_leishou = models.IntegerField(default=0, verbose_name='当月累收金额')
     new_increase = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='新增项目')
     business = models.ForeignKey(to='scraper.DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     # now_rate = models.FloatField(default=0, verbose_name='当前利率')
@@ -327,8 +330,20 @@ class LoanDemand(models.Model):
         crp = CrpHttpRequest()
         crp.login()
         crp.setDataDate(data_date)
-        for page in crp.getLeiShou(*('客户名称', '业务种类', '合同号', '收回日期', '收回金额(元)'), **{'收回日期': ">'" + last_update + "'"}):
-            pass
+        query_fields = {'customer_name': '客户名称', 'dcms_business': '业务种类', 'contract_code': '合同号', 'date': '收回日期', 'amount': '收回金额(元)'}
+        query_condition = {'收回日期': ">" + last_update}
+        leishou_annotation = defaultdict()
+        for page in crp.getLeiShou(*query_fields.values(), **query_condition):
+            query_result = page.HTML_soup.find_all('td')[1:]
+            col_num = len(query_fields.values())
+            row_num = int(len(query_result) / col_num)
+            for i in range(0, row_num, col_num):
+                row_data = query_result[i: i + col_num]
+                j = 0
+                for k in query_fields.keys():
+                    exec(k + '="' + row_data[j].text.strip().replace(',', '') + '"')
+                    j += 1
+                pass
 
     @classmethod
     def createBaseRecordForNewMonth(cls):

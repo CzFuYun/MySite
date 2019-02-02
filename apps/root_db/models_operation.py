@@ -127,7 +127,9 @@ def updateOrCreateCompany(file_name):
     all_sr_dict['type_of_3311_id'] = getSimpleSerializationRule(models.TypeOf3311)
     data_source_list = getXlDataForOrmOperation(file_name, '@AccountedCompany', 1, 0)
     data_for_bulk_create = []
-    for data_dict in data_source_list:
+    list_length = len(data_source_list)
+    for i in range(list_length):
+        data_dict = data_source_list[i]
         customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
         if customer_obj.exists() and need_update_info != 1:
             continue
@@ -142,7 +144,7 @@ def updateOrCreateCompany(file_name):
             print('Ready To Add Customer:' + data_dict['name'])
         elif need_update_info:
             customer_obj.update(**data_dict)
-            print('Update Customer:' + data_dict['name'])
+            print('Update Customer ', i, '/', list_length, ':', data_dict['name'])
         else:
             print(data_dict['name'], 'Already exists')
     while True:

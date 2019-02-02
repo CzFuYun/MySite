@@ -54,7 +54,7 @@ class LuLedger(models.Model):
     float_ratio = models.FloatField(default=0, verbose_name='浮动比例%')
     net_amount = models.FloatField(default=0, verbose_name='敞口金额')
     guarantee = models.TextField(verbose_name='担保方式', blank=True, null=True)
-    contract_code = models.CharField(max_length=32, blank=True, null=True, verbose_name='信贷合同编号')
+    contract_code = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='信贷合同编号')
     reply_date = models.DateField(blank=True, null=True, verbose_name='授信批复日期')
     reply_code = models.CharField(max_length=16, blank=True, null=True, verbose_name='授信批复编号')
     reply_content = models.TextField(blank=True, null=True, verbose_name='授信批复内容')
