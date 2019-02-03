@@ -17,7 +17,7 @@ from app_permission.views import checkPermission
 def test(request):
     # http://127.0.0.1:8000/dc/test
     # dac_models.LuLedger.create('LU/CZ11/2018/03/00004849')
-    dac_models.LoanDemand.createFromLeiShou()
+    dac_models.LoanDemand.updateByLeiShou()
     pass
 
 def updateProgress(request):

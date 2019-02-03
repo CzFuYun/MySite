@@ -1,12 +1,13 @@
 # coding: utf-8
-from collections import defaultdict, namedtuple
+import re
+from collections import defaultdict, namedtuple, OrderedDict
 
 from django.db import models
 from django.db.models import Q
 
 # from root_db import models as m
 from . import models_operation
-from scraper.models import LuLedger,DcmsBusiness
+from scraper.models import LuLedger, DcmsBusiness
 from scraper.crp import CrpHttpRequest
 # from apps.app_customer_repository import models as crm
 from dcms_shovel import connection, dig
@@ -198,30 +199,6 @@ class ExpirePrompt(models.Model):
         customer.go_to_cf_label('授信申请')
 
 
-# class BusinessExpire(models.Model):
-#     business_choices = (
-#         ('dld', '短期流贷'),
-#         ('zld', '中期流贷'),
-#         ('xmd', '项目贷款'),
-#     )
-#     customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
-#     prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT)
-#     amount = models.IntegerField(default=0, verbose_name='金额')
-#     lu_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='放款参考编号')
-#     business = models.CharField(max_length=8, blank=True, null=True, verbose_name='业务种类')
-#
-#     def __str__(self):
-#         return self.prompt.customer.name + self.business + str(self.amount)
-#
-#     @classmethod
-#     def linkPrompt(cls):
-#         pass
-#
-#     class Meta:
-#         verbose_name = '业务到期记录'
-#         verbose_name_plural = verbose_name
-
-
 class LoanDemand(models.Model):
     add_time = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
@@ -324,26 +301,66 @@ class LoanDemand(models.Model):
             ).save()
 
     @classmethod
-    def createFromLeiShou(cls, data_date=None):
+    def updateByLeiShou(cls, data__gte=None):
+        '''
+        爬取累收表并更新贷款需求：
+        1、贷款需求中有对应信贷合同号的，直接对相应贷款需求记录的当月累收金额字段进行累加
+        2、贷款需求中，合同号为空，但是客户名和品种能匹配的，同上处理
+        3、其他情况，在贷款需求中新建，并做好备注
+        :param data__gte: 累收起始日，>=
+        :return:
+        '''
         imp_date = models_operation.DateOperation()
         last_update = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'last_update') and str(imp_date.delta_date(-1))
+        print('贷款需求表上次更新日期', last_update, '是否是否以此作为累收表的起始日期进行抓取(__gte)？')
+        print('0.否\n1.是')
+        confirm = input('>>>')
+        if confirm == '0':
+            data__gte = input('累收表起始日期(__gte)>>>')
+        else:
+            data__gte = last_update
         crp = CrpHttpRequest()
         crp.login()
-        crp.setDataDate(data_date)
-        query_fields = {'customer_name': '客户名称', 'dcms_business': '业务种类', 'contract_code': '合同号', 'date': '收回日期', 'amount': '收回金额(元)'}
-        query_condition = {'收回日期': ">" + last_update}
-        leishou_annotation = defaultdict()
+        crp.setDataDate(data__gte)
+        query_fields = OrderedDict(**{'contract_code': '合同号', 'customer_name': '客户名称', 'dcms_business': '业务种类', 'date': '收回日期', 'amount': '收回金额(元)'})
+        query_condition = {'收回日期': ">" + data__gte}
+        leishou_aggregation = defaultdict(float)
         for page in crp.getLeiShou(*query_fields.values(), **query_condition):
             query_result = page.HTML_soup.find_all('td')[1:]
-            col_num = len(query_fields.values())
+            col_num = len(query_fields)
             row_num = int(len(query_result) / col_num)
-            for i in range(0, row_num, col_num):
-                row_data = query_result[i: i + col_num]
-                j = 0
-                for k in query_fields.keys():
-                    exec(k + '="' + row_data[j].text.strip().replace(',', '') + '"')
-                    j += 1
+            for td_index in range(0, row_num, col_num):
+                row_data = query_result[td_index: td_index + col_num]
+                col_index = 0
+                info = OrderedDict()
+                for field in query_fields.keys():
+                    # exec(field + '="' + re.sub(r'[,\s\t\n\r]', '', row_data[col_index].text) + '"', scope)
+                    info[field] = re.sub(r'[,\s\t\n\r]', '', row_data[col_index].text)
+                    col_index += 1
+                leishou_aggregation[(info['contract_code'], info['customer_name'], info['dcms_business'], info['date'])] += float(info['amount']) / 10000
+        for info, amount in leishou_aggregation.items():
+            contract_code = info[0]
+            customer_name = info[1]
+            amount = int(amount)
+            try:
+                dcms_business = DcmsBusiness.objects.get(caption=info[2])
+            except:
+                print(customer_name, '未找到用信品种', info[2], '默认使用短期流贷。')
+                dcms_business = DcmsBusiness.objects.get(pk='1011')
+            existed_ld = cls.objects.filter(add_date__gte=imp_date.month_first_date(), contract=contract_code)
+            if existed_ld.exists():
+                index = 0
+                if existed_ld.count() > 1:
+                    print(customer_name, contract_code, '在本月贷款需求中存在多笔记录，请选择：')
+                    for i in range(existed_ld.count()):
+                        print(i, '到期日', existed_ld[i].expire_date, '，拟投放日', existed_ld[i].plan_date)
+                    index = int(input('>>>'))
+                existed_ld[index].this_month_leishou += amount
+                existed_ld[index].save()
+            else:
                 pass
+            pass
+
 
     @classmethod
     def createBaseRecordForNewMonth(cls):

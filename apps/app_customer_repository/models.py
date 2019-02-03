@@ -502,7 +502,7 @@ class ProjectExecution(models.Model):
                     previous_exe = pe.previous_exe
                     if previous_exe:
                         last_used_net = previous_exe.total_used
-                    if last_used_net != customer_used_net.get(customer_id, 0):
+                    if not pe.project.tmp_close_date and last_used_net != customer_used_net.get(customer_id, 0) and pe.current_progress_id < 120:
                         print(pe.project, "，请选择：")
                         print('\t0.上次快照中已投敞口：', last_used_net)
                         print('\t1.最近贡献度数据已投敞口：', customer_used_net.get(customer_id, 0))
