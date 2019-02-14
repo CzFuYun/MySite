@@ -11,13 +11,15 @@ from MySite import utilities
 from root_db import models as rd_models
 from deposit_and_credit import models as dac_models, models_operation, settings, html_forms, table_structure
 from app_permission.views import checkPermission
-# import collections
+from scraper.models import CpLedger
 
 
 def test(request):
     # http://127.0.0.1:8000/dc/test
     # dac_models.LuLedger.create('LU/CZ11/2018/03/00004849')
-    dac_models.LoanDemand.updateByLeiShou()
+    # dac_models.LoanDemand.updateByLeiShou('2019-02-01')
+    # dac_models.LoanDemand.linkToEpRecord('2019-02-10')
+    CpLedger.bulkCreateFromCrp('2019-01-31')
     pass
 
 def updateProgress(request):

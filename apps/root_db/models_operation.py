@@ -131,7 +131,7 @@ def updateOrCreateCompany(file_name):
     for i in range(list_length):
         data_dict = data_source_list[i]
         customer_obj = models.AccountedCompany.objects.filter(customer_id=data_dict['customer_id'])
-        if customer_obj.exists() and need_update_info != 1:
+        if customer_obj.exists() and not need_update_info:
             continue
         for field in data_dict:
             field_sr = all_sr_dict.get(field)

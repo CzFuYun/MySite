@@ -1,7 +1,9 @@
+import re
+
 from django.db import models
 from django.db.models import Q
 
-from deposit_and_credit import models_operation
+from deposit_and_credit.models_operation import DateOperation
 from MySite import utilities
 
 
@@ -34,7 +36,7 @@ class Staff(models.Model):
     def bulkUpdate(cls, workbook_name):
         from root_db.models_operation import getSimpleSerializationRule, getXlDataForOrmOperation
         # 先清除到期红牌
-        cls.objects.filter(yellow_red_card__gt=1, red_card_expire_date__lte=models_operation.DateOperation().today).update(
+        cls.objects.filter(yellow_red_card__gt=1, red_card_expire_date__lte=DateOperation().today).update(
             red_card_expire_date=None, yellow_red_card=0
         )
         all_sr_dict = {}
@@ -55,7 +57,7 @@ class Staff(models.Model):
         yellow_red_card = self.yellow_red_card
         self.yellow_red_card = yellow_red_card + 1
         if yellow_red_card:     # 之前已经是黄牌或红牌
-            self.red_card_expire_date = models_operation.DateOperation().delta_date(90)
+            self.red_card_expire_date = DateOperation().delta_date(90)
         self.save()
 
     def resetRedCard(self):
@@ -66,7 +68,7 @@ class Staff(models.Model):
 
     @classmethod
     def bulkResetRedCard(cls):
-        imp_date = models_operation.DateOperation()
+        imp_date = DateOperation()
         cls.objects.filter(red_card_expire_date__gte='')
 
     @classmethod
@@ -155,6 +157,10 @@ class AccountedCompany(models.Model):
         (1, '员工'),
     )
     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
+    dcms_customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='信贷系统客户编号')
+    cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件编号')
+    rlk_cf = models.CharField(max_length=32, blank=True, null=True)
+    rlk_customer = models.CharField(max_length=32, blank=True, null=True)
     name = models.CharField(max_length=128, verbose_name='账户名称')
     staff = models.ForeignKey(to='Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='管户人')
     sub_dept = models.ForeignKey(to='SubDepartment', blank=True, null=True, on_delete=models.CASCADE, verbose_name='经营部门')
@@ -197,8 +203,71 @@ class AccountedCompany(models.Model):
             for c in c_qs:
                 ret[c['customer_id']] = c['name']
             return ret
-########################################################################################################################
 
+    @classmethod
+    def fillDcmsInfo(cls, customer_name=None, dcms=None):
+        '''
+        从信贷系统中获取客户编号、信贷文件编号、rlk等信息并保存
+        :return:
+        '''
+        if customer_name:
+            no_code = cls.objects.filter(name=customer_name)
+        else:
+            from deposit_and_credit.models import Contributor
+            imp_date = DateOperation()
+            last_data = imp_date.neighbour_date_date_str(Contributor, imp_date.today_str)
+            has_credit = Contributor.objects.filter(
+                Q(data_date=last_data) &
+                (
+                    Q(net_total__gt=0)
+                )
+            )
+            credit_customer = [hc.customer_id for hc in has_credit]
+            no_code = cls.objects.filter(
+                Q(customer_id__in=credit_customer) &
+                (
+                    Q(dcms_customer_code__isnull=True) |
+                    Q(cf_num__isnull=True) |
+                    Q(rlk_cf__isnull=True) |
+                    Q(rlk_customer__isnull=True)
+                )
+            )
+        if no_code.exists():
+            from private_modules.dcms_shovel.page_parser import DcmsWebPage
+            rgx_rlk = re.compile(r'[A-Z0-9]{32}')
+            not_found = []
+            from scraper.dcms_request import DcmsHttpRequest
+            if not dcms:
+                dcms = DcmsHttpRequest()
+                dcms.login()
+            total_count = no_code.count()
+            for i in range(total_count):
+                customer_name = no_code[i].name
+                if len(customer_name) < 5:
+                    continue
+                update_info = {}
+                r = dcms.search_customer(customer_name)
+                if r is None:
+                    not_found.append(customer_name)
+                    continue
+                else:
+                    search_result = DcmsWebPage(r.text)
+                    customer_info = search_result.lists[0].parse_to_dict_list()
+                    index = 0
+                    if len(customer_info) > 1:
+                        print('搜索', customer_name, '获得超过一个结果：')
+                        for j in range(len(customer_info)):
+                            print(j, customer_info[j]['客户名称'], customer_info[j]['客户编号'])
+                        index = input('请选择>>>')
+                    update_info['dcms_customer_code'] = customer_info[int(index)]['客户编号']
+                    update_info['rlk_customer'] = rgx_rlk.findall(str(search_result.lists[0].parse_to_tag_dict_list()[int(index)]['序号']))[0]
+                    if no_code[i].cf_num is None or no_code[i].rlk_cf is None:
+                        cf_num, cf_rlk = dcms.search_cf(update_info['dcms_customer_code'])
+                        update_info['cf_num'] = cf_num
+                        update_info['rlk_cf'] = cf_rlk
+                    cls.objects.filter(pk=no_code[i].customer_id).update(**update_info)
+                    print('已更新', i, '/', total_count, customer_name, update_info)
+########################################################################################################################
 
 class Series(models.Model):
     code = models.CharField(primary_key=True, max_length=8, verbose_name='代号')
@@ -461,14 +530,14 @@ class CreditLedger(models.Model):
         verbose_name_plural = '授信台账'
 
 
-class Customer(models.Model):
-    name = models.CharField(max_length=128, verbose_name='名称')
-    kernel_num = models.ForeignKey(to='AccountedCompany', blank=True, null=True, on_delete=models.CASCADE, verbose_name='核心客户号')
-    dcms_customer_num = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户号')
-    staff = models.ForeignKey(to='Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='管户人')
-    district = models.ForeignKey(to='District', blank=True, null=True, on_delete=models.CASCADE, verbose_name='区域')
-    industry = models.ForeignKey(to='Industry', blank=True, null=True, on_delete=models.CASCADE, verbose_name='行业')
-    cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
+# class Customer(models.Model):
+#     name = models.CharField(max_length=128, verbose_name='名称')
+#     kernel_num = models.ForeignKey(to='AccountedCompany', blank=True, null=True, on_delete=models.CASCADE, verbose_name='核心客户号')
+#     dcms_customer_num = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户号')
+#     staff = models.ForeignKey(to='Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='管户人')
+#     district = models.ForeignKey(to='District', blank=True, null=True, on_delete=models.CASCADE, verbose_name='区域')
+#     industry = models.ForeignKey(to='Industry', blank=True, null=True, on_delete=models.CASCADE, verbose_name='行业')
+#     cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
 
 
 

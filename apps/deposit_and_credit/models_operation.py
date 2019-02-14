@@ -1,8 +1,7 @@
 import json, datetime as pydate
 from django.db.models import Sum
 from django.utils.timezone import timedelta, datetime
-from deposit_and_credit import models as dac_models
-from root_db import models as rd_models
+
 
 class DateOperation():
     def __init__(self):
@@ -167,34 +166,37 @@ def getNeighbourDate(model_class, search_type=0, date_str=None, field='data_date
             delta_before: before_date,
             delta_after: after_date
         }
-        return str(ret_dict[min(delta_before, delta_after)])
+        ret = ret_dict[min(delta_before, delta_after)]
     else:
-        return str(before_date or after_date)
+        ret = before_date or after_date
+    return str(ret) if ret else ret
 
 
 def getContributionTree(data_date):
+    from root_db.models import DividedCompanyAccount, Department
+    from deposit_and_credit.models import Contributor
     last_year_str = str(DateOperation().last_year_num)
-    last_year_yd_avg = rd_models.DividedCompanyAccount.objects.filter(
+    last_year_yd_avg = DividedCompanyAccount.objects.filter(
         data_date=last_year_str + '-12-31').values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'))
     last_year_yd_avg_dict = {}
     for i in last_year_yd_avg:
         last_year_yd_avg_dict[i[0]] = i[1]
-    last_deposit = rd_models.DividedCompanyAccount.objects.filter(data_date=data_date).values_list(
+    last_deposit = DividedCompanyAccount.objects.filter(data_date=data_date).values_list(
         'customer__customer_id').annotate(Sum('divided_yd_avg'), Sum('divided_amount'))
     last_deposit_dict= {}
     for i in last_deposit:
         last_deposit_dict[i[0]] = {'yd_avg': i[1], 'amount': i[2]}
 
     contrib_tree = {}
-    dep_qs = rd_models.Department.objects.all().order_by('display_order')
+    dep_qs = Department.objects.all().order_by('display_order')
     for dep in dep_qs:
         contrib_tree[dep.code] = {
             'department_caption': dep.caption,
             'department_code': dep.code,
             'series_customer_data': {}
         }
-    contrib_qs = dac_models.Contributor.objects.filter(data_date=data_date).prefetch_related('customer')
+    contrib_qs = Contributor.objects.filter(data_date=data_date).prefetch_related('customer')
     contributor_num = contrib_qs.count()
     for i in range(contributor_num):
         contrib = contrib_qs[i]

@@ -316,3 +316,9 @@ class SingleDimensionalTable(UserList):
                 pass
             return
 
+
+def reverseDictKeyValue(dic):
+    ret = {}
+    for k, v in dic.items():
+        ret[v] = k
+    return ret

@@ -1,5 +1,5 @@
 import re, sys, threading, urllib
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 
 import requests, bs4
 
@@ -256,6 +256,90 @@ class CrpHttpRequest(BaseHttpRequest):
         '行业小类（投向）': Column('INVEST_MT_IND_DETAIL_NAME', '2'),
         '发放日期': Column('DT_FIRST_DISB', '4'),
     }
+    shouxin_fields = {
+        '报表数据日期': Column('DT_COMMIT', '4'),
+        '审批机构': Column('ORGANIZATION', '2'),
+        '分行名称': Column('BR_NM', '2'),
+        '经办行': Column('JBBR_NM', '2'),
+        '客户编号': Column('CIF_NO', '9'),
+        '客户名称': Column('CIF_NM', '9'),
+        '授信参考编号': Column('REF_NO', '9'),
+        '行业门类（客户）': Column('MT_IND_TYP_NAME', '2'),
+        '行业大类（客户）': Column('MT_IND_CAT_NAME', '2'),
+        '行业中类（客户）': Column('MT_IND_NAME', '2'),
+        '行业小类（客户）': Column('MT_IND_DETAIL_NAME', '2'),
+        '客户信用评级': Column('RATING', '2'),
+        '授信审批日期': Column('DT_CONDUCTED', '4'),
+        '是否授权审批': Column('IS_ATR', '2'),
+        '是否特别授信': Column('IS_LOW_RISK', '2'),
+        '申报金额（原币）': Column('LMT_PROPOSED', '1'),
+        '业务币种': Column('MT_CUR_NAME', '2'),
+        '汇率': Column('RATE', '9'),
+        '业务品种': Column('MT_FAC_NAME', '2'),
+        '担保方式': Column('MT_COLL_CLS_TYP_NAME', '2'),
+        '担保类型': Column('MT_COLL_TYP_NAME', '2'),
+        '抵质押率': Column('SAFETY_FACTOR', '9'),
+        '批复时间': Column('APPR_DT', '4'),
+        '批复结论': Column('MT_CMT_RESULT_NAME', '2'),
+        '批复金额(原币）': Column('LMT_APPR', '1'),
+        '批复编号': Column('APPROVAL_LETTER_NO', '9'),
+        '批复期限': Column('TENURE_MT_TIME_NAME', '9'),
+        '授信开始时间': Column('DT_APPR', '4'),
+        '授信到期时间': Column('DT_MATURITY', '4'),
+        '业务余额（人民币）': Column('OUTSTD_AMT', '1'),
+        '利率': Column('INT_RATE', '9'),
+        '利息调整方式': Column('MT_SIGN_NAME', '2'),
+        '计息频率': Column('INT_CALC_MT_REST_TYP_NAME', '2'),
+        '业务费用类型': Column('MT_FEE_NAME', '2'),
+        '业务费率(%)': Column('FEE_RATE', '9'),
+        '项目名称（适用项目融资）': Column('PROJ_NM', '9'),
+        '主营业务': Column('CORE_BIZ', '9'),
+        '控股股东': Column('DSCP_MUGS', '9'),
+        '控股比率': Column('EQUITY', '9'),
+        '公司性质/公司类型': Column('MT_CORP_SALUTATION_NAME', '2'),
+        '企业出资人经济成分': Column('MT_CIF_CAT_NAME', '2'),
+        '是否我行关联方': Column('IS_BANK_REL', '2'),
+        '建档人': Column('ACCT_MGR', '9'),
+        '集团客户分类': Column('GRP_MT_CIF_GRP_CAT_CD', '2'),
+        '集团客户控制额度到期日': Column('A', '4'),
+        '主客户经理': Column('GRP_MAIN_RM_ID', '9'),
+        '是否集团客户': Column('IS_GRP', '2'),
+        '企业规模': Column('MT_CORP_TYP_NM', '2'),
+        '09版标准评级': Column('TMP_RATING_GRADE_CD', '2'),
+        '09版参考评级': Column('FINY_RATING_GRADE_CD', '2'),
+        '评级有效日期': Column('DT_VALID', '4'),
+        '是否有效授信': Column('IS_APP_AVAILABLE', '2'),
+        '授信编号': Column('FAC_NO', '9'),
+        '是否大额预警': Column('IS_EW_LARG', '2'),
+        '是否表外业务': Column('IS_OFF_BAL_SHEET', '2'),
+        '可用额度': Column('LMT_APPR_AVAIL', '1'),
+        '新客户': Column('IS_NEW_CIF', '2'),
+        '担保品所有者': Column('COLL_OWNER', '9'),
+        '审批人': Column('APPR_PSN', '9'),
+        '是否总行直接授信': Column('IS_ACTV_MKTING', '2'),
+        '受托支付起点金额': Column('ENTRUSTED_PAYMENT_AMT', '1'),
+        '是否银团贷款': Column('IS_BANK_GROUP_LOAN', '2'),
+        '总行专审首次接受任务': Column('FTA_CREATED_DATE_MIN', '9'),
+        '总行专审末次接受任务': Column('FTA_CREATED_DATE_MAX', '9'),
+        '总行专审首次发送任务': Column('FTA_COMPLETE_DATE_MIN', '9'),
+        '总行专审末次发送任务': Column('FTA_COMPLETE_DATE_MAX', '9'),
+        '任务状态': Column('TASK_STATUS', '9'),
+        '申报利率': Column('SBLL', '9'),
+        '申报利率浮动标识及比例': Column('SBLL_FDBS', '9'),
+        '接受任务日期': Column('JSRW_DT', '4'),
+        '提交贷审会日期': Column('TJDSH_DT', '4'),
+        '批复日期': Column('PF_DT', '4'),
+        '批复利率': Column('PF_LL', '9'),
+        '批复利率浮动标识及比例': Column('PFLL_FDBS', '9'),
+        '放款利率': Column('FK_LL', '9'),
+        '放款利率浮动标识及比例': Column('FKLL_FDBS', '9'),
+        '五级分类': Column('WJFL', '2'),
+        '账户状态': Column('ZHZT', '2'),
+        '是否优质客户': Column('SFYZKH', '2'),
+        '环境与社会风险敏感度': Column('HJSHFX', '2'),
+        '政府融资平台': Column('ZFRZPT', '2'),
+
+    }
 
     @staticmethod
     def encode(string):
@@ -292,14 +376,14 @@ class CrpHttpRequest(BaseHttpRequest):
             for key, value in filter_condition.items():
                 strFilter += ' AND '
                 col_name = fields_dict[key].db_field
-                condition_date = RGX['date'].findall(value)
-                if condition_date:
-                    for i in range(len(condition_date)):
-                        value = RGX['date'].sub("to_date('" + condition_date[i] + "','yyyy-mm-dd')", value, 1)
-                        # value = value.replace("'" + condition_date + "'", "to_date('" + condition_date + "','yyyy-mm-dd')")
+                # condition_date = RGX['date'].findall(value)
+                # if condition_date:
+                #     for i in range(len(condition_date)):
+                #         value = RGX['date'].sub("to_date('" + condition_date[i] + "','yyyy-mm-dd')", value, 1)
+                #         # value = value.replace("'" + condition_date + "'", "to_date('" + condition_date + "','yyyy-mm-dd')")
 
-                condition = value.replace('&', ' OR ' + col_name + ' ').replace('|', ' AND ' + col_name + ' ')
-                strFilter += ('(' + col_name + condition)
+                condition = value.replace('&', ' AND ' + col_name + ' ').replace('|', ' OR ' + col_name + ' ')
+                strFilter += ('(' + col_name + ' ' + condition)
                 strFilter += ')'
         strFilter = self.encode(strFilter)
         strSelect = ''
@@ -308,7 +392,7 @@ class CrpHttpRequest(BaseHttpRequest):
         for i in col_name_cn:
             strSelect += (fields_dict[i].db_field + ',')
             strType += (fields_dict[i].type + ',')
-            strMc += self.encode(i)
+            strMc += (self.encode(i) + ',')
         url_param = {
             'task': task,
             'step': step,
@@ -327,7 +411,7 @@ class CrpHttpRequest(BaseHttpRequest):
                         "OR BR_CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "') " +
                         "OR CD=(SELECT MT_BR_CD FROM TBL_SEC_USER WHERE ID='" + self.user_name + "')) ",
             'strType': strType[:-1],
-            'strMc': strMc,
+            'strMc': strMc[:-1],
             'px': px,
             'pageNum': '1'
         }
@@ -353,3 +437,57 @@ class CrpHttpRequest(BaseHttpRequest):
         strFrom = 'TBL_CPMX_LS_'
         px = 'BR_NM AS C1,ACCT_NO AS C2;C1,C2;BR_NM,ACCT_NO'
         return self.query(self.leishou_fields, strFrom, px, *col_name_cn, **filter_condition)
+
+    def getShouXin(self,  *col_name_cn, **filter_condition):
+        strFrom = 'TBL_CPMX_APP_'
+        px = 'br_nm as c1,cif_no as c2;c1,c2;br_nm,cif_no'
+        return self.query(self.shouxin_fields, strFrom, px, *col_name_cn, **filter_condition)
+
+    @staticmethod
+    def parseQueryResultToDictList(response_page):
+        table_head = response_page.HTML_soup.find_all('tr')[0].contents
+        query_fields = []
+        ret = []
+        for td in table_head:
+            query_fields.append(BaseHttpRequest.decode(td.text))
+        col_num = len(query_fields)
+        query_result = response_page.HTML_soup.find_all('td')[col_num:]
+        row_num = int(len(query_result) / col_num)
+        for td_index in range(0, row_num, col_num):
+            row_data = query_result[td_index: td_index + col_num]
+            col_index = 0
+            info = OrderedDict()
+            for field in query_fields:
+                info[field] = re.sub(r'[,\s\t\n\r]', '', row_data[col_index].text)
+                col_index += 1
+            ret.append(info)
+        return ret
+
+
+    class DateCondition:
+
+        @staticmethod
+        def between(date__gte, date__lte):
+            return "between to_date('" + str(date__gte) + "','yyyy-mm-dd') and to_date('" + str(date__lte) + "','yyyy-mm-dd')"
+
+        @staticmethod
+        def laterThan(date_str):
+            return "> to_date('" + date_str + "','yyyy-mm-dd')"
+
+        @staticmethod
+        def earlierThan(date_str):
+            return "< to_date('" + date_str + "','yyyy-mm-dd')"
+
+    class CharCondition:
+        @staticmethod
+        def equal(string):
+            return "='" + string + "'"
+
+    class NumCondition:
+        @staticmethod
+        def gt(num):
+            return '>' + str(num)
+
+        @staticmethod
+        def lt(num):
+            return '<' + str(num)

@@ -53,7 +53,11 @@ class ExpirePromptAdmin:
 
 
 class LoanDemandAdmin:
-    list_display = []
+    list_display = ['add_time', 'customer', 'get_expire_prompt_info', 'this_month_leishou', 'already_achieved']
+
+    def get_expire_prompt_info(self, instance):
+        return instance.expire_prompt_id
+    get_expire_prompt_info.short_description = '到期提示'
 
 
 xadmin.site.register(Contributor, ContributorAdmin)

@@ -455,7 +455,9 @@ def trackProjectExe(request):
         content_title = '项目进度'
         return render(request, 'proj_exe/project_exe_frame.html', locals())
     elif request.method == 'GET':
-        business_q = Q(project__business__superior__caption__contains='投行') if request.user.user_id.sub_department.caption == '投资银行部' else Q(id__isnull=False)
+        from app_permission.models import Group
+        user_groups = str(Group.objects.filter(user=request.user))
+        business_q = Q(project__business__superior__caption__contains='投行') if request.user.user_id.sub_department.caption == '投资银行部' and not '公司部' in user_groups else Q(id__isnull=False)
         exe_qs = models.ProjectExecution.lastExePhoto().filter(business_q,
             (Q(project__tmp_close_date__isnull=True) & Q(project__close_date__isnull=True))
             & Q(current_progress__status_num__lt=200)

@@ -7,6 +7,16 @@ from django.shortcuts import HttpResponse
 
 from .models import AccountedCompany
 
+
+def test(request):
+    # http://127.0.0.1:8000/rd/test
+    # from scraper.dcms_request import DcmsHttpRequest
+    # dcms = DcmsHttpRequest()
+    # dcms.login()
+    # AccountedCompany.fillDcmsInfo(dcms=dcms)
+    pass
+
+
 class CustomerDeptView(View):
     def get(self, request):
         ret = []

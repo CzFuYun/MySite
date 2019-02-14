@@ -50,3 +50,8 @@ class BaseHttpRequest:
         :return:
         '''
         return str(string.encode())[2:-1].replace(r'\x', '%').upper()
+
+    @staticmethod
+    def decode(string):
+        string = string.replace('%', r'\x')
+        return eval('b"' + string + '".decode()')
