@@ -6,6 +6,9 @@ from django.db.models import Q
 from deposit_and_credit.models_operation import DateOperation
 from MySite import utilities
 
+from scraper.dcms_request import DcmsHttpRequest
+from private_modules.dcms_shovel.page_parser import DcmsWebPage
+
 
 class Staff(models.Model):
     position_choices = (
@@ -31,6 +34,25 @@ class Staff(models.Model):
 
     def __str__(self):
         return self.sub_department.caption + self.name       # '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
+
+    @classmethod
+    def judgeStaffByName(cls, name):
+        '''
+        根据姓名返回员工obj
+        :param name:
+        :return:
+        '''
+        staff = cls.objects.filter(name__contains=name)
+        if staff.exists():
+            index = 0
+            if staff.count() > 1:
+                print('姓名包含', name, '的员工不止一名，请选择：')
+                for i in range(staff.count()):
+                    print(i, '.', str(staff[i]))
+                index = input('>>>')
+            return staff[int(index)]
+        else:
+            return None
 
     @classmethod
     def bulkUpdate(cls, workbook_name):
@@ -184,6 +206,31 @@ class AccountedCompany(models.Model):
 
     class Meta:
         verbose_name_plural = '已开户对公客户'
+
+    @classmethod
+    def createCustomerByDcmsCode(cls, dcms_customer_code, dcms=None):
+        if dcms is None:
+            dcms = DcmsHttpRequest()
+            dcms.login()
+        dcms_search_result = dcms.search_customer(dcms_customer_code)
+        if dcms_search_result is None:
+            return None
+        else:
+            dcms_search_result = DcmsWebPage(dcms_search_result.text)
+            dcms_customer_info = dcms_search_result.lists[0].parse_to_dict_list()
+            cf_num, cf_rlk = dcms.search_cf(dcms_customer_code)
+            kernel_no = '{:0>16}'.format(dcms_customer_info['核心客户号'][:-1])
+            customer_info = {
+                'customer_id': kernel_no,
+                'dcms_customer_code': dcms_customer_code,
+                'name': dcms_customer_info['客户名称'],
+                'rlk_customer': re.findall(r'[A-Z0-9]{32}', str(dcms_search_result.lists[0].parse_to_tag_dict_list()[0]['序号']))[0],
+                'rlk_cf': cf_rlk,
+                'cf_num': cf_num,
+            }
+            cls(**customer_info).save()
+            print('已添加新客户', customer_info['name'], customer_info['customer_id'])
+            return kernel_no
 
     @classmethod
     def matchAccountByName(cls, name, return_mode=utilities.return_as['choice']):
