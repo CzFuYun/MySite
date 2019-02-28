@@ -114,14 +114,18 @@ class DcmsHttpRequest(BaseHttpRequest):
         :param name_or_code: 客户名称或客户编号C247551
         :return:
         '''
+        customerType = 'CP'
         if name_or_code.startswith('C'):
             searchCriteria = 'no'
+        elif name_or_code.startswith('P'):
+            searchCriteria = 'no'
+            customerType = 'CS'
         else:
             searchCriteria = 'nm'
         r = self.post(
             self.post_urls['search_customer'],
             do='AllScopeSearch',
-            customerType='CP',
+            customerType=customerType,
             cardCategory='I',
             searchCriteria=searchCriteria,
             searchValue=name_or_code
@@ -132,7 +136,17 @@ class DcmsHttpRequest(BaseHttpRequest):
             print('未在DCMS中查询到客户', name_or_code)
             return None
         else:
-            return r
+            search_result = DcmsWebPage(r.text)
+            customer_info = search_result.lists[0].parse_to_dict_list()
+            index = 0
+            if len(customer_info) > 1:
+                print('搜索', name_or_code, '获得超过一个结果：')
+                for i in range(len(customer_info)):
+                    print(i, customer_info[i]['客户名称'], customer_info[i]['客户编号'])
+                index = input('请选择>>>')
+            shallow_info = customer_info[int(index)]
+            deep_info = search_result.lists[0].parse_to_tag_dict_list()[int(index)]
+            return (shallow_info, deep_info)
 
     def get_into_cp(self, cp_num):
         r = self.post(self.post_urls['search_cp'], searchValue=cp_num, searchCriteria=SearchBy.con_num)

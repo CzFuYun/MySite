@@ -12,4 +12,15 @@ def test(request):
     # for i in p:
     #     print(i)
     # LuLedger.fillInfo()
-    CpLedger.bulkCreateFromCrp('2018-02-14')
+    crp = CrpHttpRequest()
+    crp.login()
+    reply_date__gte = '2018-01-01'
+    sme_cp = crp.getCsCp(
+        *['客户名称', '客户编号', '授信编号', '批复时间', '批复编号', '授信到期时间', '客户经理'],
+        **{
+            '授信额度(元)': crp.NumCondition.gt(0),
+            '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
+        }
+    )
+    for p in sme_cp:
+        pass

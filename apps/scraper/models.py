@@ -24,17 +24,20 @@ class DcmsBusiness(models.Model):
 class CpLedger(models.Model):
     add_date = models.DateField(auto_now_add=True)
     cp_num = models.CharField(max_length=32, primary_key=True, verbose_name='参考编号')
-    customer = models.ForeignKey(to='root_db.AccountedCompany', on_delete=models.CASCADE, verbose_name='客户')
+    cp_rlk = models.CharField(max_length=32, blank=True, null=True)
+    customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.CASCADE, verbose_name='客户')
+    dcms_customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户编号')
+    # customer_name = models.CharField(max_length=64, blank=True, null=True, verbose_name='客户名称')
     staff = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日')
     reply_code = models.CharField(max_length=32, blank=True, null=True, verbose_name='批复号')
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
-    apply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='申报金额')
-    reply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='批复金额')
-    baozheng = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='保证担保')
-    diya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='抵押担保')
-    zhiya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='质押担保')
-    is_auto_added = models.BooleanField(default=False, verbose_name='是否自动生成')
+    # apply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='申报金额')
+    # reply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='批复金额')
+    # baozheng = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='保证担保')
+    # diya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='抵押担保')
+    # zhiya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='质押担保')
+    # is_auto_added = models.BooleanField(default=False, verbose_name='是否自动生成')
 
     class Meta:
         verbose_name = '授信台账'
@@ -60,65 +63,59 @@ class CpLedger(models.Model):
         imp_date = DateOperation()
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
-        shouxin = crp.getShouXin(
-            *['客户名称', '客户编号', '授信参考编号', '申报金额（原币）', '批复时间', '批复编号', '批复期限', '建档人', '担保方式', '汇率'],
+        shouxin = crp.getCp(
+            # *['客户名称', '客户编号', '授信参考编号', '申报金额（原币）', '批复金额(原币）', '批复时间', '批复编号', '批复期限', '建档人', '担保方式', '汇率'],
+            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '批复期限', '建档人'],
             **{
                 '申报金额（原币）': crp.NumCondition.gt(0),
                 '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
-                '是否特别授信': crp.CharCondition.equal('N')
+                # '是否特别授信': crp.CharCondition.equal('N')
             }
         )
-        try:
-            for page in shouxin:
-                page_data = crp.parseQueryResultToDictList(page)
-                for i in range(len(page_data)):
-                    row_data = page_data[i]
-                    cp_num = row_data['授信参考编号']
-                    if cls.objects.filter(cp_num=cp_num).exists():
-                        pass
-                    else:
-                        customer_name = row_data['客户名称']
-                        customer_code = row_data['客户编号']
-                        customer = AccountedCompany.objects.filter(Q(name=customer_name) | Q(dcms_customer_code=customer_code))
-                        if not customer.exists():
-                            print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户，是否新建？')
-                            print('\t0.否\n\t1.是')
-                            need_create = input('>>>')
-                            if int(need_create):
-                                kernel_num = AccountedCompany.createCustomerByDcmsCode(customer_code, dcms)
-                            else:
-                                print('请指定该客户的16位核心客户号：')
-                                kernel_num = input('>>>')
-                                exist_customer = AccountedCompany.objects.filter(customer_id=kernel_num)
-                                if not exist_customer.exists():
-                                    AccountedCompany(customer_id=kernel_num, name=customer_name).save()
-                                    print('已添加新客户')
-                                else:
-                                    print('将关联至', exist_customer[0].name)
+        for page in shouxin:
+            page_data = crp.parseQueryResultToDictList(page)
+            for i in range(len(page_data)):
+                row_data = page_data[i]
+                cp_num = row_data['授信参考编号']
+                if not cls.objects.filter(cp_num=cp_num).exists():
+                    customer_name = row_data['客户名称']
+                    customer_code = row_data['客户编号']
+                    customer = AccountedCompany.objects.filter(Q(name=customer_name) | Q(dcms_customer_code=customer_code))
+                    if not customer.exists():
+                        print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户，是否新建？')
+                        print('\t0.否\n\t1.是')
+                        need_create = input('>>>')
+                        if int(need_create):
+                            kernel_num = AccountedCompany.createCustomerByDcms(customer_code, dcms)
                         else:
-                            kernel_num = customer[0].customer_id
-                        baozheng = diya = zhiya = 0
-                        if row_data['担保方式'] == '保证':
-                            pass
-                        elif row_data['担保方式'] == '抵押':
-                            pass
-                        elif row_data['担保方式'] == '质押':
-                            pass
-                        cls(
-                            customer_id=kernel_num,
-                            cp_num=cp_num,
-                            staff=Staff.judgeStaffByName(row_data['建档人']),
-                            reply_date=row_data['批复时间'],
-                            reply_code=row_data['批复编号'],
-                            apply_amount=float(row_data['申报金额（原币）'].replace(',', ''))*float(row_data['汇率']),
-                            reply_amount=float(row_data['批复金额(原币）'].replace(',', ''))*float(row_data['汇率']),
+                            print('请指定该客户的16位核心客户号：')
+                            kernel_num = input('>>>')
+                            exist_customer = AccountedCompany.objects.filter(customer_id=kernel_num)
+                            if not exist_customer.exists():
+                                AccountedCompany(customer_id=kernel_num, name=customer_name).save()
+                                print('已添加新客户')
+                            else:
+                                print('将关联至', exist_customer[0].name)
+                    else:
+                        kernel_num = customer[0].customer_id
+                    print('准备添加授信', customer_name)
+                    cls(
+                        customer_id=kernel_num,
+                        cp_num=cp_num,
+                        staff=Staff.judgeStaffByName(row_data['建档人']),
+                        reply_date=row_data['批复时间'],
+                        reply_code=row_data['批复编号'],
+                        # apply_amount=float(row_data['申报金额（原币）'].replace(',', ''))*float(row_data['汇率']),
+                        # reply_amount=float(row_data['批复金额(原币）'].replace(',', ''))*float(row_data['汇率']),
+                    ).save()
 
-                        )
-                pass
-        except:
-            print('>=', reply_date__gte, '无新批复授信')
-
-
+    @classmethod
+    def fillReplyContentFromDcms(cls, dcms=None):
+        '''
+        爬取信贷系统授信批复
+        :return:
+        '''
+        pass
 
 
 class LuLedger(models.Model):
@@ -178,7 +175,7 @@ class LuLedger(models.Model):
         crp.login()
         if loan_date__gte is not None:
             crp.setDataDate(loan_date__gte)
-        qidai = crp.getQiDai(*['放款参考编号', '业务余额(原币)', '总账汇率'], **{'业务余额(原币)': '>0'})
+        qidai = crp.getQiDai(*['放款参考编号', '业务余额(原币)', '总账汇率'], **{'业务余额(原币)': crp.NumCondition.gt(0)})
         for page in qidai:
             pass
 
@@ -191,4 +188,19 @@ class LuLedger(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        pass
+
+
+class DailyLeiShou(models.Model):
+    add_date = models.DateField(auto_now_add=True)
+    contract_code = models.CharField(max_length=32, blank=True, null=True, verbose_name='信贷合同编号')
+    retract_amount = models.FloatField(default=0, verbose_name='收回金额（元）')
+    retract_date = models.FloatField(blank=True, null=True, verbose_name='收回日期')
+
+    class Meta:
+        verbose_name = '累收'
+        verbose_name_plural = verbose_name
+
+    @classmethod
+    def getDailyLeishou(cls, retract_date__gte=None):
         pass

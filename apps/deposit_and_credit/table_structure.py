@@ -102,7 +102,7 @@ contribution_download = collections.OrderedDict(**{
     'approve_line': '途径',
     'customer__name': '客户名称',
     'department__caption': '经营部门',
-    'customer__industry__code': '行业门类',
+    'customer__industry__caption': '行业门类',
     'loan_rate': '加权利率',
     'loan': '贷款余额',
     'net_BAB': '银票敞口余额',

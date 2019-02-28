@@ -5,6 +5,8 @@ from app_customer_repository import models_operation as mo
 from deposit_and_credit import models_operation, models as dac_m
 from root_db.models import AccountedCompany
 from scraper.dcms_request import DcmsHttpRequest
+from private_modules.dcms_shovel.page_parser import DcmsWebPage
+
 
 industry_factor_rule = {
     'C': 1.5,
@@ -19,6 +21,7 @@ class CustomerRepository(models.Model):
         (30, '外资'),
     )
     name = models.CharField(max_length=128, unique=True, verbose_name='企业名称')
+    # kernel_id = models.CharField(max_length=16, blank=True, null=True, verbose_name='核心客户号')
     simple_name = models.CharField(max_length=32, unique=True, verbose_name='企业简称')
     customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, on_delete=models.CASCADE, verbose_name='核心客户号')
     credit_file = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件')
@@ -59,6 +62,37 @@ class CustomerRepository(models.Model):
                     print(customer['name'] + '信贷文件编号：' + cf_num + '是否确认？\n0.否\n1.是')
                     if int(input('>>>')):
                         cls.objects.filter(pk=customer['id']).update(cf_num=cf_num)
+
+    @classmethod
+    def fillKernelId(cls):
+        no_kernel_id_customers_name = cls.no_kernel_id()
+        if no_kernel_id_customers_name:
+            dcms = DcmsHttpRequest()
+            dcms.login()
+            for customer_name in no_kernel_id_customers_name:
+                # 先从已开户客户中查找核心客户号
+                exist_customer = AccountedCompany.objects.filter(name=customer_name)
+                choice = 0
+                if exist_customer:
+                    print(exist_customer, '已开户，核心客户号', exist_customer.values('customer_id'))
+                    print('是否正确？\n0.否\n1.是')
+                    choice = input('>>>')
+                    if int(choice):
+                        cls.objects.filter(name=customer_name).update(customer=exist_customer[0])
+                if not exist_customer.exists() or not int(choice):
+                    search_result = dcms.search_customer(customer_name)
+                    if search_result:
+                        shallow_info, deep_info = search_result
+                        kernel_no = '{:0>16}'.format(shallow_info['核心客户号'][:-1])
+                        print(customer_name, '核心客户号', kernel_no, '是否正确？')
+                        print('0.否\n1.是')
+                        choice = input('>>>')
+                        if int(choice):
+                            customer = AccountedCompany.objects.filter(customer_id=kernel_no)
+                            if not customer.exists():
+                                AccountedCompany.createCustomerByDcms(customer_name, dcms)
+                                customer = AccountedCompany.objects.filter(customer_id=kernel_no)
+                            cls.objects.filter(name=customer_name).update(customer=customer[0])
 
 
 class ProjectRepository(models.Model):
@@ -407,8 +441,6 @@ class ProjectExecution(models.Model):
 
     @classmethod
     def takePhoto(cls, project_obj=None, photo_date=None):
-        # from app_customer_repository.models import ProjectExecution
-        # ProjectExecution.takePhoto()
         imp_date = models_operation.DateOperation()
         if project_obj:
             if not photo_date:
@@ -428,12 +460,14 @@ class ProjectExecution(models.Model):
                 photo_date = imp_date.strToDate(photo_date_str)
             else:
                 return
-            # ↓补充新生成的核心客户号
+            # ↓补充新开户客户的核心客户号
             newly_account = AccountedCompany.objects.filter(name__in=CustomerRepository.no_kernel_id()).values('name', 'customer_id')
             if newly_account.exists():
                 for new_customer in newly_account:
                     CustomerRepository.objects.filter(name=new_customer['name']).update(customer_id=new_customer['customer_id'])
                     print('新开户：【' + new_customer['name'] + '】【' + new_customer['customer_id'] + '】\n')
+            # ↓根据信贷系统补充未开户客户的核心客户号
+            CustomerRepository.fillKernelId()
             # ↓将临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(
                 tmp_close_date__isnull=False,

@@ -9,6 +9,7 @@ from MySite.utilities import reverseDictKeyValue
 from root_db.models import AccountedCompany
 from .models_operation import DateOperation
 from scraper.models import LuLedger, DcmsBusiness
+from app_customer_repository.models import ProjectRepository, ProjectExecution
 from scraper.crp import CrpHttpRequest
 # from apps.app_customer_repository import models as crm
 from dcms_shovel import connection, dig
@@ -203,16 +204,16 @@ class ExpirePrompt(models.Model):
 
 class LoanDemand(models.Model):
     add_time = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='添加时间')
-    # customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
-    customer = models.CharField(max_length=128, blank=True, null=True, verbose_name='客户')
+    customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
+    # customer = models.CharField(max_length=128, blank=True, null=True, verbose_name='客户')
     staff = models.ForeignKey(to='root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
     expire_prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='到期提示')
+    project = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='项目储备')
     # lu_ledger = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
     contract = models.CharField(max_length=16, blank=True, null=True, verbose_name='放款合同号')
     expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
     expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
     this_month_leishou = models.IntegerField(default=0, verbose_name='当月累收')
-    new_increase = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='新增项目')
     business = models.ForeignKey(to='scraper.DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     # now_rate = models.FloatField(default=0, verbose_name='当前利率')
     # now_deposit_ydavg = models.IntegerField(default=0, verbose_name='当前存款日均')
@@ -230,19 +231,50 @@ class LoanDemand(models.Model):
     class Meta:
         verbose_name = '贷款需求'
         verbose_name_plural = verbose_name
+        ordering = ('staff__sub_department__superior__display_order', '-add_time')
 
     def __str__(self):
         if self.expire_prompt:
             customer_name = self.expire_prompt.customer.name
-        elif self.new_increase:
-            customer_name = self.new_increase.customer.name
+        elif self.project:
+            customer_name = self.project.project_name
         else:
             customer_name = 'None'
         return customer_name + str(self.plan_amount) + '万元'
 
     @classmethod
     def createFromProjectRepositoryForNextMonth(cls):
-        pass
+        # imp_date = DateOperation()
+        # ↓目前已建档且未落地的授信项目
+        project = ProjectRepository.objects.filter(
+            current_progress__status_num__gte=30,
+            current_progress__status_num__lt=200,
+            business__superior_id=10,
+            tmp_close_date__isnull=True,
+            customer__customer_id__isnull=False
+        )
+        for p in project:
+            project_name = p.project_name
+            if cls.objects.filter(project=p).exists():
+                print(project_name, '已存在于贷款需求表中')
+            else:
+                print(project_name, '当前进度', p.current_progress, '是否可能投放？')
+                print('0.否\n1.是')
+                choice = input('>>>')
+                if int(choice):
+                    last_pe = ProjectExecution.lastExePhoto().get(project=p)
+                    plan_date = p.plan_luodi
+                    if not plan_date:
+                        print(project_name, '预计落地时间？')
+                        plan_date = input('>>>')
+                    cls(
+                        customer_id=p.customer.customer_id,
+                        staff=p.staff,
+                        project=p,
+                        plan_amount=p.total_net - last_pe.total_used,
+                        plan_date=plan_date
+                    ).save()
+
 
     @classmethod
     def createFromLuLedgerForNextMonth(cls):
@@ -411,12 +443,12 @@ class LoanDemand(models.Model):
             for i in no_customer:
                 print('\t', i)        # 可能信贷系统或此系统中未及时更新客户名
 
-    @classmethod
-    def linkToProjectRepository(cls, add_date=None):
-        imp_date = DateOperation()
-        next_month_last_date = imp_date.month_dif(1, imp_date.month_last_date())
-        # next_month_first_date = imp_date.month_dif(1, imp_date.month_first_date())
-        add_date = add_date or imp_date.today_str
+    # @classmethod
+    # def linkToProjectRepository(cls, add_date=None):
+    #     imp_date = DateOperation()
+    #     next_month_last_date = imp_date.month_dif(1, imp_date.month_last_date())
+    #     # next_month_first_date = imp_date.month_dif(1, imp_date.month_first_date())
+    #     add_date = add_date or imp_date.today_str
 
     @classmethod
     def createBaseRecordForNewMonth(cls):

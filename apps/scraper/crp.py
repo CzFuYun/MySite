@@ -256,7 +256,7 @@ class CrpHttpRequest(BaseHttpRequest):
         '行业小类（投向）': Column('INVEST_MT_IND_DETAIL_NAME', '2'),
         '发放日期': Column('DT_FIRST_DISB', '4'),
     }
-    shouxin_fields = {
+    cp_fields = {
         '报表数据日期': Column('DT_COMMIT', '4'),
         '审批机构': Column('ORGANIZATION', '2'),
         '分行名称': Column('BR_NM', '2'),
@@ -339,6 +339,44 @@ class CrpHttpRequest(BaseHttpRequest):
         '环境与社会风险敏感度': Column('HJSHFX', '2'),
         '政府融资平台': Column('ZFRZPT', '2'),
 
+    }
+    cs_cp_fields = {
+        '报表数据日期': Column('DT_COMMIT', '4'),
+        '分行名称': Column('BR_NM', '2'),
+        '经办行': Column('CREATOR_MT_BR_NAME', '2'),
+        '客户编号': Column('no', '9'),
+        '客户名称': Column('NM', '9'),
+        '授信编号': Column('APP_NO', '9'),
+        '业务种类': Column('MT_FAC_CAT_NAME', '2'),
+        '授信额度(元)': Column('LMT_APPR', '1'),
+        '业务品种': Column('MT_FAC_NAME', '2'),
+        '是否自助贷款': Column('IS_SELF_SRV_LOAN', '2'),
+        '授信开始时间': Column('DT_APPR', '4'),
+        '授信到期时间': Column('DT_MATURITY', '4'),
+        '利率': Column('INT_RATE', '3'),
+        '担保方式': Column('MT_COLL_CLS_TYP_NAME', '2'),
+        '担保金额(元)': Column('SAVE_COLL_VALUE', '1'),
+        '担保明细': Column('MT_COLL_NAME', '2'),
+        '抵质押品价值(元)': Column('COLL_VALUE', '1'),
+        '抵质押率': Column('SAFETY_FACTOR', '3'),
+        '授信用途': Column('MT_FAC_PUR_NAME', '2'),
+        '批复时间': Column('DT_PROCESS', '4'),
+        '批复编号': Column('PROCESS_REF_NO', '9'),
+        '批复结论': Column('MT_FAC_STS_CD', '2'),
+        '购房地址(适用住房贷款)': Column('ADDR_LINE_1', '9'),
+        '楼盘名称(适用住房贷款)': Column('BUILDING_NM', '9'),
+        '购房类型(适用住房贷款)': Column('MT_PRTY_USE_CD', '9'),
+        '所购房面积(适用住房贷款)': Column('BUILT_UP_AREA', '9'),
+        '面积单位': Column('BUILT_UP_MT_AREA_UNIT_NAME', '2'),
+        '购房/购车价格(元)': Column('PURCHASED_PRC', '1'),
+        '车辆类型(适用汽车消费贷款)': Column('MT_MODEL_name', '2'),
+        '可用额度(已还金额)(元)': Column('KY_AMT', '1'),
+        '已用额度(授信余额)(元)': Column('YY_AMT', '1'),
+        '授信任务状态': Column('MT_SECTION_name', '2'),
+        '授信任务状态变更时间': Column('COMPLETE_DATE', '4'),
+        '客户经理': Column('CREATED_BY', '9'),
+        '利率浮动标识': Column('mt_sign_name', '2'),
+        '利率浮动比例': Column('margin', '9'),
     }
 
     @staticmethod
@@ -438,10 +476,15 @@ class CrpHttpRequest(BaseHttpRequest):
         px = 'BR_NM AS C1,ACCT_NO AS C2;C1,C2;BR_NM,ACCT_NO'
         return self.query(self.leishou_fields, strFrom, px, *col_name_cn, **filter_condition)
 
-    def getShouXin(self,  *col_name_cn, **filter_condition):
+    def getCp(self, *col_name_cn, **filter_condition):
         strFrom = 'TBL_CPMX_APP_'
         px = 'br_nm as c1,cif_no as c2;c1,c2;br_nm,cif_no'
-        return self.query(self.shouxin_fields, strFrom, px, *col_name_cn, **filter_condition)
+        return self.query(self.cp_fields, strFrom, px, *col_name_cn, **filter_condition)
+
+    def getCsCp(self, *col_name_cn, **filter_condition):    # 个贷
+        strFrom = 'TBL_CSMX_APP_'
+        px = 'CREATOR_MT_BR_CD as c1,no as c2;c1,c2;CREATOR_MT_BR_CD,no'
+        return self.query(self.cs_cp_fields, strFrom, px, *col_name_cn, **filter_condition)
 
     @staticmethod
     def parseQueryResultToDictList(response_page):
@@ -453,7 +496,9 @@ class CrpHttpRequest(BaseHttpRequest):
         col_num = len(query_fields)
         query_result = response_page.HTML_soup.find_all('td')[col_num:]
         row_num = int(len(query_result) / col_num)
-        for td_index in range(0, row_num, col_num):
+        for r in range(row_num):
+            td_index = r * col_num
+        # for td_index in range(0, row_num, col_num):
             row_data = query_result[td_index: td_index + col_num]
             col_index = 0
             info = OrderedDict()

@@ -178,6 +178,7 @@ class AccountedCompany(models.Model):
         (0, '部门'),
         (1, '员工'),
     )
+    add_date = models.DateField(auto_now_add=True, blank=True, null=True)
     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
     dcms_customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='信贷系统客户编号')
     cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件编号')
@@ -208,23 +209,22 @@ class AccountedCompany(models.Model):
         verbose_name_plural = '已开户对公客户'
 
     @classmethod
-    def createCustomerByDcmsCode(cls, dcms_customer_code, dcms=None):
+    def createCustomerByDcms(cls, name_or_dcms_customer_code, dcms=None):
         if dcms is None:
             dcms = DcmsHttpRequest()
             dcms.login()
-        dcms_search_result = dcms.search_customer(dcms_customer_code)
+        dcms_search_result = dcms.search_customer(name_or_dcms_customer_code)
         if dcms_search_result is None:
             return None
         else:
-            dcms_search_result = DcmsWebPage(dcms_search_result.text)
-            dcms_customer_info = dcms_search_result.lists[0].parse_to_dict_list()
-            cf_num, cf_rlk = dcms.search_cf(dcms_customer_code)
-            kernel_no = '{:0>16}'.format(dcms_customer_info['核心客户号'][:-1])
+            shallow_info, deep_info = dcms_search_result
+            cf_num, cf_rlk = dcms.search_cf(name_or_dcms_customer_code)
+            kernel_no = '{:0>16}'.format(shallow_info['核心客户号'][:-1])
             customer_info = {
                 'customer_id': kernel_no,
-                'dcms_customer_code': dcms_customer_code,
-                'name': dcms_customer_info['客户名称'],
-                'rlk_customer': re.findall(r'[A-Z0-9]{32}', str(dcms_search_result.lists[0].parse_to_tag_dict_list()[0]['序号']))[0],
+                'dcms_customer_code': name_or_dcms_customer_code,
+                'name': shallow_info['客户名称'],
+                'rlk_customer': re.findall(r'[A-Z0-9]{32}', str(deep_info['序号']))[0],
                 'rlk_cf': cf_rlk,
                 'cf_num': cf_num,
             }
@@ -280,7 +280,6 @@ class AccountedCompany(models.Model):
                 )
             )
         if no_code.exists():
-            from private_modules.dcms_shovel.page_parser import DcmsWebPage
             rgx_rlk = re.compile(r'[A-Z0-9]{32}')
             not_found = []
             from scraper.dcms_request import DcmsHttpRequest
@@ -293,21 +292,14 @@ class AccountedCompany(models.Model):
                 if len(customer_name) < 5:
                     continue
                 update_info = {}
-                r = dcms.search_customer(customer_name)
-                if r is None:
+                search_result = dcms.search_customer(customer_name)
+                if search_result is None:
                     not_found.append(customer_name)
                     continue
                 else:
-                    search_result = DcmsWebPage(r.text)
-                    customer_info = search_result.lists[0].parse_to_dict_list()
-                    index = 0
-                    if len(customer_info) > 1:
-                        print('搜索', customer_name, '获得超过一个结果：')
-                        for j in range(len(customer_info)):
-                            print(j, customer_info[j]['客户名称'], customer_info[j]['客户编号'])
-                        index = input('请选择>>>')
-                    update_info['dcms_customer_code'] = customer_info[int(index)]['客户编号']
-                    update_info['rlk_customer'] = rgx_rlk.findall(str(search_result.lists[0].parse_to_tag_dict_list()[int(index)]['序号']))[0]
+                    shallow_info, deep_info = search_result
+                    update_info['dcms_customer_code'] = shallow_info['客户编号']
+                    update_info['rlk_customer'] = rgx_rlk.findall(str(deep_info['序号']))[0]
                     if no_code[i].cf_num is None or no_code[i].rlk_cf is None:
                         cf_num, cf_rlk = dcms.search_cf(update_info['dcms_customer_code'])
                         update_info['cf_num'] = cf_num
@@ -315,6 +307,7 @@ class AccountedCompany(models.Model):
                     cls.objects.filter(pk=no_code[i].customer_id).update(**update_info)
                     print('已更新', i, '/', total_count, customer_name, update_info)
 ########################################################################################################################
+
 
 class Series(models.Model):
     code = models.CharField(primary_key=True, max_length=8, verbose_name='代号')

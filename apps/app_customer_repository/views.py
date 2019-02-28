@@ -16,10 +16,9 @@ from root_db import models as rd_m
 ALLOW_EDIT = False
 
 def test(request):
-    # http://139.17.1.35:8000/cr/test
     # http://127.0.0.1:8000/cr/test
     print('start test')
-    models.ProjectExecution.takePhoto()
+    models.CustomerRepository.fillKernelId()
     print('finish test')
 
 

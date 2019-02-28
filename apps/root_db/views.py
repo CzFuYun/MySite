@@ -10,10 +10,10 @@ from .models import AccountedCompany
 
 def test(request):
     # http://127.0.0.1:8000/rd/test
-    # from scraper.dcms_request import DcmsHttpRequest
-    # dcms = DcmsHttpRequest()
-    # dcms.login()
-    # AccountedCompany.fillDcmsInfo(dcms=dcms)
+    from scraper.dcms_request import DcmsHttpRequest
+    dcms = DcmsHttpRequest()
+    dcms.login()
+    AccountedCompany.fillDcmsInfo(dcms=dcms)
     pass
 
 
