@@ -19,7 +19,7 @@ def test(request):
     # dac_models.LuLedger.create('LU/CZ11/2018/03/00004849')
     # dac_models.LoanDemand.updateByLeiShou('2019-02-01')
     # dac_models.LoanDemand.linkToEpRecord('2019-02-10')
-    # CpLedger.bulkCreateFromCrp('2019-01-31')
+    # CpLedger._bulkCreateCpFromCrp('2019-01-31')
     dac_models.LoanDemand.createFromProjectRepositoryForNextMonth()
     pass
 

@@ -23,6 +23,9 @@ class Staff(models.Model):
     phone_number = models.CharField(max_length=16, null=True, blank=True)
     cellphone_number = models.CharField(max_length=16, null=True, blank=True)
     oa = models.CharField(max_length=8, null=True, blank=True)
+    dcms_name = models.CharField(max_length=16, blank=True, null=True, verbose_name='地区信贷系统用户名')
+    dcms_name_sme = models.CharField(max_length=16, blank=True, null=True, verbose_name='小微信贷系统用户名')
+    dcms_name_gr = models.CharField(max_length=16, blank=True, null=True, verbose_name='个人信贷系统用户名')
     yellow_red_card = models.IntegerField(default=0, verbose_name='授信到期黄红牌')
     red_card_expire_date = models.DateField(blank=True, null=True, verbose_name='红牌到期日')
 
@@ -53,6 +56,15 @@ class Staff(models.Model):
             return staff[int(index)]
         else:
             return None
+
+    @classmethod
+    def pickStaffByDcmsName(cls, dcms_name):
+        staff = cls.objects.filter(
+            Q(dcms_name=dcms_name) | Q(dcms_name_sme=dcms_name) | Q(dcms_name_gr=dcms_name)
+        )
+        if staff.exists():
+            return staff[0]
+        return
 
     @classmethod
     def bulkUpdate(cls, workbook_name):
@@ -113,6 +125,21 @@ class Staff(models.Model):
                     continue
                 ret.append(s['sub_department__superior__caption'] + '  ' + s['name'] + '  ' + s['staff_id'])
             return ret
+
+    @classmethod
+    def fillDcmsName(cls, name, dcms_name, dcms_type=''):
+        '''
+
+        :param name:
+        :param dcms_name: 空或'_sme'或'_gr',小写
+        :param dcms_type:
+        :return:
+        '''
+        staff = cls.judgeStaffByName(name)
+        exec('staff.dcms_name' + dcms_type + '="' + dcms_name + '"')
+        staff.save()
+
+
 ########################################################################################################################
 class Department(models.Model):
     code = models.CharField(primary_key=True, max_length=8, unique=True, verbose_name='部门编号')

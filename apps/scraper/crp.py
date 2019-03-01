@@ -340,6 +340,92 @@ class CrpHttpRequest(BaseHttpRequest):
         '政府融资平台': Column('ZFRZPT', '2'),
 
     }
+    sme_cp_fields = {
+        '报表数据日期': Column('DT_COMMIT', '4'),
+        '审批机构': Column('ORGANIZATION', '2'),
+        '一级分部': Column('YJ_ORG', '2'),
+        '分行名称': Column('BR_NM', '2'),
+        '经办行': Column('JBBR_NM', '2'),
+        '客户编号': Column('CIF_NO', '9'),
+        '客户名称': Column('CIF_NM', '9'),
+        '授信参考编号': Column('REF_NO', '9'),
+        '行业门类（客户）': Column('MT_IND_TYP_NAME', '2'),
+        '行业大类（客户）': Column('MT_IND_CAT_NAME', '2'),
+        '行业中类（客户）': Column('MT_IND_NAME', '2'),
+        '行业小类（客户）': Column('MT_IND_DETAIL_NAME', '2'),
+        '客户信用评级': Column('RATING', '2'),
+        '授信审批日期': Column('DT_CONDUCTED', '4'),
+        '是否授权审批': Column('IS_ATR', '2'),
+        '是否特别授信': Column('IS_LOW_RISK', '2'),
+        '申报金额（原币）': Column('LMT_PROPOSED', '1'),
+        '业务币种': Column('MT_CUR_NAME', '2'),
+        '汇率': Column('EXCHG_RATE', '9'),
+        '业务品种': Column('MT_FAC_NAME', '2'),
+        '担保方式': Column('MT_COLL_CLS_TYP_NAME', '2'),
+        '担保类型': Column('MT_COLL_TYP_NAME', '2'),
+        '抵质押率': Column('SAFETY_FACTOR', '9'),
+        '批复时间': Column('DT_APPR', '4'),
+        '批复结论': Column('MT_CMT_RESULT_NAME', '2'),
+        '批复金额（原币）': Column('LMT_APPR', '1'),
+        '批复编号': Column('APPROVAL_LETTER_NO', '9'),
+        '批复期限': Column('TENURE_APPR', '9'),
+        '授信开始时间': Column('DT_APPR', '4'),
+        '授信到期时间': Column('DT_MATURITY', '4'),
+        '业务余额（人民币）': Column('OUTSTD_AMT', '1'),
+        '利率': Column('INT_RATE', '9'),
+        '利息调整方式': Column('MT_SIGN_NAME', '2'),
+        '计息频率': Column('INT_CALC_MT_REST_TYP_NAME', '2'),
+        '业务费用类型': Column('MT_FEE_NAME', '2'),
+        '业务费率(%)': Column('FEE_RATE', '9'),
+        '项目名称（适用项目融资）': Column('PROJ_NM', '9'),
+        '主营业务': Column('CORE_BIZ', '9'),
+        '控股股东': Column('DSCP_MUGS', '9'),
+        '控股比率': Column('EQUITY', '9'),
+        '公司性质/公司类型': Column('MT_CORP_SALUTATION_NAME', '2'),
+        '企业出资人经济成分': Column('MT_CIF_CAT_NAME', '2'),
+        '是否我行关联方': Column('IS_BANK_REL', '2'),
+        '专职审批人': Column('CP_FTA', '9'),
+        '受权审批人': Column('CP_ATR', '9'),
+        '建档人': Column('ACCT_MGR', '9'),
+        '是否新客户': Column('IS_NEW_FAC', '2'),
+        '集团客户编号': Column('CIF_GRP_CD', '9'),
+        '集团简称': Column('GRP_ABBR', '9'),
+        '集团母公司名称': Column('GRP_NM', '9'),
+        '集团客户分类': Column('MT_CIF_GRP_CAT_NAME', '2'),
+        '集团客户控制额度': Column('CIF_LMT', '1'),
+        '集团客户控制额度到期日': Column('DT_MATURITY_GRP_LMT', '4'),
+        '主客户经理': Column('MAIN_RM_ID', '9'),
+        '主客户经理联系电话': Column('MAIN_RM_ID_TEL', '9'),
+        '信贷主管（集团客户经理）': Column('GRP_CSTM_MGR', '9'),
+        '与母公司关联关系': Column('MT_CIF_GRP_TYP_CD', '9'),
+        '是否集团客户': Column('IS_GRP', '2'),
+        '企业规模': Column('MT_CORP_TYP_NAME', '2'),
+        '09版标准评级': Column('TMP_RATING_GRADE_CD', '2'),
+        '09版参考评级': Column('FINY_RATING_GRADE_CD', '2'),
+        '评级有效日期': Column('DT_VALID', '4'),
+        '业务标识（一）': Column('FAC_MARK01', '2'),
+        '业务标识（二）': Column('FAC_MARK02', '2'),
+        '客户来源': Column('MT_CIF_SRC_NAME', '2'),
+        '是否科技型企业': Column('IS_TECH_SMALL_COMPANY', '2'),
+        '总行核准项目': Column('IS_HQ_APPROVED_DEALIN_LOAN', '2'),
+        '核心企业上下游客户': Column('CORE_CORP_CIF', '9'),
+        '合作方代码': Column('CORE_CO_OP_LMT_CD', '9'),
+        '核心企业名称': Column('CORE_CORP_DSCP', '9'),
+        '关联合作企业额度': Column('LMT_LINK_CO', '1'),
+        '合作企业': Column('CO_OP_LMT_CIF_NM', '9'),
+        '合作项名称': Column('CO_OP_LMT_DSCP', '9'),
+        '最高授信额度': Column('ALL_LMT', '1'),
+        '专项额度': Column('SPECIAL_LMT', '1'),
+        '组合额度': Column('COMBINED_LMT', '1'),
+        '供应链金融额度': Column('SUPPLY_CHAIN_LMT', '1'),
+        '受托支付起点金额': Column('ENTRUSTED_PAYMENT_AMT', '1'),
+        '业务标识(三)': Column('FAC_MARK03', '2'),
+        '是否总行核准项目': Column('IS_ZH_PRO', '2'),
+        '是否表外': Column('IS_BW', '2'),
+        '联保体编号': Column('LBT_NO', '2'),
+        '担保公司名称': Column('DB_COM_NM', '2'),
+        '平台客户名称': Column('PTKHMC', '2'),
+    }
     cs_cp_fields = {
         '报表数据日期': Column('DT_COMMIT', '4'),
         '分行名称': Column('BR_NM', '2'),
@@ -401,7 +487,7 @@ class CrpHttpRequest(BaseHttpRequest):
             date_str = str(self.imp_date.delta_date(-1))
         self.data_date = date_str
 
-    def query(self, fields_dict, strFrom, px, *col_name_cn, task='qry', step='submit', tran='dtcx_list', **filter_condition):
+    def query(self, fields_dict, strFrom, px, *col_name_cn, task='qry', step='submit', tran='dtcx_list', MT_BR_CD='MT_BR_CD', **filter_condition):
         # ↑以前从未注意到的问题：参数的摆放位置。可选参数要位于*args与**kwargs之间
         '''
         :param fields_dict:
@@ -438,7 +524,7 @@ class CrpHttpRequest(BaseHttpRequest):
             'strSelect': strSelect[:-1],
             'strFrom': strFrom + self.data_date.replace('-', ''),
             'strWhere': " AND (DT_COMMIT = to_date('" + self.data_date + "','yyyy-mm-dd'))" + strFilter +
-                        " AND MT_BR_CD IN (" +
+                        " AND " + MT_BR_CD + " IN (" +
                         "SELECT "
                         "JBBR_CD "
                         "FROM "
@@ -456,11 +542,12 @@ class CrpHttpRequest(BaseHttpRequest):
         response = self.post('CustZdy.do', **url_param)
         p = DcmsWebPage(response.text)
         max_page = int(p.HTML_soup.find('input', {'id': 'resMaxPages'}).attrs['value'])
-        yield p
-        for page_num in range(1, max_page):
-            url_param['pageNum'] = str(page_num + 1)
-            response = self.post('CustZdy.do', **url_param)
-            yield DcmsWebPage(response.text)
+        if max_page:
+            yield p
+            for page_num in range(1, max_page):
+                url_param['pageNum'] = str(page_num + 1)
+                response = self.post('CustZdy.do', **url_param)
+                yield DcmsWebPage(response.text)
         raise StopIteration
 
     def getQiDai(self, *col_name_cn, **filter_condition):
@@ -481,10 +568,15 @@ class CrpHttpRequest(BaseHttpRequest):
         px = 'br_nm as c1,cif_no as c2;c1,c2;br_nm,cif_no'
         return self.query(self.cp_fields, strFrom, px, *col_name_cn, **filter_condition)
 
+    def getSmeCp(self, *col_name_cn, **filter_condition):
+        strFrom = 'TBL_SMEMX_APP_'
+        px = ''
+        return self.query(self.sme_cp_fields, strFrom, px, *col_name_cn, **filter_condition)
+
     def getCsCp(self, *col_name_cn, **filter_condition):    # 个贷
         strFrom = 'TBL_CSMX_APP_'
         px = 'CREATOR_MT_BR_CD as c1,no as c2;c1,c2;CREATOR_MT_BR_CD,no'
-        return self.query(self.cs_cp_fields, strFrom, px, *col_name_cn, **filter_condition)
+        return self.query(self.cs_cp_fields, strFrom, px, MT_BR_CD='CREATOR_MT_BR_CD', *col_name_cn, **filter_condition)
 
     @staticmethod
     def parseQueryResultToDictList(response_page):
@@ -536,3 +628,7 @@ class CrpHttpRequest(BaseHttpRequest):
         @staticmethod
         def lt(num):
             return '<' + str(num)
+
+        @staticmethod
+        def between(num1, num2):
+            return 'BETWEEN ' + str(num1) + ' AND ' + str(num2)

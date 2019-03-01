@@ -148,10 +148,17 @@ class DcmsHttpRequest(BaseHttpRequest):
             deep_info = search_result.lists[0].parse_to_tag_dict_list()[int(index)]
             return (shallow_info, deep_info)
 
-    def get_into_cp(self, cp_num):
-        r = self.post(self.post_urls['search_cp'], searchValue=cp_num, searchCriteria=SearchBy.con_num)
-        rlk = RegExp.rlk.findall(r.text)[0]
-        return
+    def search_cp(self, cp_num):
+        r = self.post(
+            self.post_urls['search_cp'],
+            searchValue=cp_num,
+            searchCriteria=SearchBy.con_num
+        )
+        try:
+            rlk = RegExp.rlk.findall(r.text)[0]
+            return rlk
+        except:
+            return None
 
     def search_lu(self, lu_num):
         r = self.post(
@@ -161,4 +168,4 @@ class DcmsHttpRequest(BaseHttpRequest):
             stopLimit='N'
         )
         rlk = RegExp.rlk.findall(r.text)[0]
-        pass
+        return rlk

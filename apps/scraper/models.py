@@ -32,6 +32,7 @@ class CpLedger(models.Model):
     reply_date = models.DateField(blank=True, null=True, verbose_name='批复日')
     reply_code = models.CharField(max_length=32, blank=True, null=True, verbose_name='批复号')
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
+    expire_date = models.DateField(blank=True, null=True, verbose_name='授信到期日')
     # apply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='申报金额')
     # reply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='批复金额')
     # baozheng = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='保证担保')
@@ -55,7 +56,7 @@ class CpLedger(models.Model):
     #     pass
 
     @classmethod
-    def bulkCreateFromCrp(cls, reply_date__gte=None):
+    def _bulkCreateCpFromCrp(cls, reply_date__gte=None):
         crp = CrpHttpRequest()
         crp.login()
         dcms = DcmsHttpRequest()
@@ -63,16 +64,14 @@ class CpLedger(models.Model):
         imp_date = DateOperation()
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
-        shouxin = crp.getCp(
-            # *['客户名称', '客户编号', '授信参考编号', '申报金额（原币）', '批复金额(原币）', '批复时间', '批复编号', '批复期限', '建档人', '担保方式', '汇率'],
-            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '批复期限', '建档人'],
+        cp = crp.getCp(
+            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '建档人'],
             **{
-                '申报金额（原币）': crp.NumCondition.gt(0),
+                '申报金额（原币）': crp.NumCondition.between(1, 10000000000),
                 '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
-                # '是否特别授信': crp.CharCondition.equal('N')
             }
         )
-        for page in shouxin:
+        for page in cp:
             page_data = crp.parseQueryResultToDictList(page)
             for i in range(len(page_data)):
                 row_data = page_data[i]
@@ -99,15 +98,63 @@ class CpLedger(models.Model):
                     else:
                         kernel_num = customer[0].customer_id
                     print('准备添加授信', customer_name)
+                    expire_date = row_data['授信到期时间']
+                    if not expire_date:
+                        expire_date = imp_date.delta_date(365, row_data['批复时间'])
                     cls(
                         customer_id=kernel_num,
                         cp_num=cp_num,
                         staff=Staff.judgeStaffByName(row_data['建档人']),
                         reply_date=row_data['批复时间'],
                         reply_code=row_data['批复编号'],
+                        expire_date=expire_date,
+                        cp_rlk=dcms.search_cp(cp_num),
                         # apply_amount=float(row_data['申报金额（原币）'].replace(',', ''))*float(row_data['汇率']),
                         # reply_amount=float(row_data['批复金额(原币）'].replace(',', ''))*float(row_data['汇率']),
                     ).save()
+
+    @classmethod
+    def _bulkCreateSmeCpFromCrp(cls, reply_date__gte=None):
+        crp = CrpHttpRequest()
+        crp.login()
+        dcms = DcmsHttpRequest()
+        dcms.login()
+        imp_date = DateOperation()
+        last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
+        reply_date__gte = reply_date__gte or last_add
+        cp = crp.getSmeCp(
+            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '建档人'],
+            **{
+                '批复金额（原币）': crp.NumCondition.between(1, 10000000000),
+                '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
+            }
+        )
+        for page in cp:
+            page_data = crp.parseQueryResultToDictList(page)
+            pass
+
+
+
+
+    @classmethod
+    def _bulkCreateCsCpFromCrp(cls, reply_date__gte=None):
+        crp = CrpHttpRequest()
+        crp.login()
+        dcms = DcmsHttpRequest()
+        dcms.login()
+        imp_date = DateOperation()
+        last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
+        reply_date__gte = reply_date__gte or last_add
+        cp = crp.getCsCp(
+            *['客户名称', '客户编号', '授信编号', '授信开始时间', '批复编号', '授信到期时间', '客户经理'],
+            **{
+                '申报金额（原币）': crp.NumCondition.between(1, 10000000000),
+                '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
+            }
+        )
+
+
+
 
     @classmethod
     def fillReplyContentFromDcms(cls, dcms=None):
