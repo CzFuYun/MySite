@@ -39,13 +39,14 @@ class Staff(models.Model):
         return self.sub_department.caption + self.name       # '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
 
     @classmethod
-    def judgeStaffByName(cls, name):
+    def pickStaffByName(cls, name, exactly=False):
         '''
         根据姓名返回员工obj
         :param name:
+        :param exactly:是否精确搜索
         :return:
         '''
-        staff = cls.objects.filter(name__contains=name)
+        staff = cls.objects.filter(name=name.strip()) if exactly else cls.objects.filter(name__contains=name.strip())
         if staff.exists():
             index = 0
             if staff.count() > 1:
@@ -55,7 +56,16 @@ class Staff(models.Model):
                 index = input('>>>')
             return staff[int(index)]
         else:
-            return None
+            print('是否新建员工', name)
+            print('0.否\n1.是')
+            choice = input('>>>')
+            if choice == '1' or choice == '':
+                staff_id = input('工号>>>')
+                subdepartment_id = input('部门代码（二级）>>>')
+                cls(name=name, staff_id=staff_id, sub_department_id=subdepartment_id).save()
+                return cls.objects.get(staff_id=staff_id)
+            else:
+                return None
 
     @classmethod
     def pickStaffByDcmsName(cls, dcms_name):
@@ -64,7 +74,23 @@ class Staff(models.Model):
         )
         if staff.exists():
             return staff[0]
-        return
+        else:
+            print('将信贷系统用户名', dcms_name, '添加至现有员工')
+            staff_name = input('姓名>>>')
+            print('1.地区部\n2.小企业\n3.个贷')
+            dcms_type = {'1': '', '2': '_sme', '3': '_gr'}.get(input('>>>'), '')
+            staff = cls.pickStaffByName(staff_name)
+            staff.fillDcmsName(staff_name, dcms_type)
+
+    def fillDcmsName(self, dcms_name, dcms_type=''):
+        '''
+
+        :param dcms_name:
+        :param dcms_type:空或'_sme'或'_gr',小写
+        :return:
+        '''
+        exec('self.dcms_name' + dcms_type + '="' + dcms_name + '"')
+        self.save()
 
     @classmethod
     def bulkUpdate(cls, workbook_name):
@@ -125,19 +151,6 @@ class Staff(models.Model):
                     continue
                 ret.append(s['sub_department__superior__caption'] + '  ' + s['name'] + '  ' + s['staff_id'])
             return ret
-
-    @classmethod
-    def fillDcmsName(cls, name, dcms_name, dcms_type=''):
-        '''
-
-        :param name:
-        :param dcms_name: 空或'_sme'或'_gr',小写
-        :param dcms_type:
-        :return:
-        '''
-        staff = cls.judgeStaffByName(name)
-        exec('staff.dcms_name' + dcms_type + '="' + dcms_name + '"')
-        staff.save()
 
 
 ########################################################################################################################
@@ -211,7 +224,7 @@ class AccountedCompany(models.Model):
     cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件编号')
     rlk_cf = models.CharField(max_length=32, blank=True, null=True)
     rlk_customer = models.CharField(max_length=32, blank=True, null=True)
-    name = models.CharField(max_length=128, verbose_name='账户名称')
+    name = models.CharField(max_length=128, blank=True, null=True, verbose_name='账户名称')
     staff = models.ForeignKey(to='Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='管户人')
     sub_dept = models.ForeignKey(to='SubDepartment', blank=True, null=True, on_delete=models.CASCADE, verbose_name='经营部门')
     belong_to = models.IntegerField(choices=belong_to_choices, default=0, verbose_name='归属')
@@ -257,7 +270,7 @@ class AccountedCompany(models.Model):
             }
             cls(**customer_info).save()
             print('已添加新客户', customer_info['name'], customer_info['customer_id'])
-            return kernel_no
+            return cls.objects.get(customer_id=kernel_no)
 
     @classmethod
     def matchAccountByName(cls, name, return_mode=utilities.return_as['choice']):
@@ -333,6 +346,63 @@ class AccountedCompany(models.Model):
                         update_info['rlk_cf'] = cf_rlk
                     cls.objects.filter(pk=no_code[i].customer_id).update(**update_info)
                     print('已更新', i, '/', total_count, customer_name, update_info)
+
+    # @classmethod
+    # def judgeCustomer(cls, name, code=None):
+        # if code:
+        #     customer = cls.objects.filter(dcms_customer_code=code)
+        #     if customer.exists():
+        #         if customer.count() == 1:
+        #             return customer[0]
+        #         else:
+        #             print('客户号为', code, '的客户数大于1，请核实数据库中AC客户编号的唯一性')
+        #             input('')
+        #             return
+        # customer = cls.objects.filter(name=name.strip())
+        # if customer.exists():
+        #     if customer.count() == 1:
+        #         return customer[0]
+        #     else:
+        #         print('客户名为', name, '的客户数大于1，请选择')
+        #         for i in range(customer.count()):
+        #             print(i, '.', customer[i].pk)
+        #         choice = input('>>>')
+        #         return customer[int(choice)]
+
+    @classmethod
+    def pickCustomer(cls, customer_name, customer_code, dcms=None):
+        '''
+        根据客户名称或客户编号查找客户，若未找到，则提示输入核心客户号查找，或通过爬取dcms信息新建客户
+        :param name_or_code:
+        :return: objAC
+        '''
+        customer = cls.objects.filter(Q(dcms_customer_code=customer_code) | Q(name=customer_name))
+        if customer.exists():
+            if customer.count() == 1:
+                return customer[0]
+            else:
+                print('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请核实')
+                for i in range(customer.count()):
+                    print(i, customer[i].pk)
+                index = input('>>>')
+                return customer[int(index)]
+        else:
+            print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户')
+            print('\t0.手工输入核心客户号在AC中再次搜索\n\t1.通过爬取dcms信息新建')
+            choice = input('>>>')
+            if choice == '1' or choice == '':
+                return cls.createCustomerByDcms(customer_code, dcms)
+            else:
+                print('请输入该客户的16位核心客户号：')
+                kernel_num = input('>>>')
+                exist_customer = cls.objects.filter(customer_id=kernel_num)
+                if not exist_customer.exists():
+                    cls(customer_id=kernel_num, name=customer_name).save()
+                    print('再次搜索AC，未找到', kernel_num, '号客户，已直接添加新客户')
+                else:
+                    print('再次搜索AC，查找到', exist_customer[0].name, '已进行直接关联')
+                return cls.objects.get(customer_id=kernel_num)
+
 ########################################################################################################################
 
 

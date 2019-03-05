@@ -58,17 +58,24 @@ class DcmsHttpRequest(BaseHttpRequest):
     }
 
     def login(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
+        '''
+
+        :param userId:
+        :param password:
+        :param applicationCode: DCMSCP  SMEDCMS  DCMSCS
+        :return:
+        '''
         self.applicationCode = applicationCode
-        # self.post_urls = PostUrls(applicationCode)
-        # self.get_urls = GetUrls(applicationCode)
-        self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
+        self.dcms_type = 'sme' if applicationCode == 'SMEDCMS' else ''
         self.userId = userId
         self.password = password
         r = self.post(self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'}), userId=self.userId, password=self.password, applicationCode=self.applicationCode)
         assert 'HXB_DCMS_WINDOW_' in r.text, '登录失败，用户名或密码不正确'
         self.post_urls = {
-            # 'login': self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'}),
-            'search_cp': self.UrlPath(self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view', self.base_params.copy()),
+            'search_cp': self.UrlPath(
+                'dcms/consumer/application/inquiry/application_inquiry.view' if applicationCode == 'DCMSCS' else (self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view'),
+                self.base_params.copy()
+            ),
             'search_cf': self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy()),
             'search_lu': self.UrlPath(self.dcms_type + 'dcma/limit_utilization/application/application.view', self.base_params.copy()),
             'search_customer': self.UrlPath('mcif/customer_search.view', self.base_params.copy()),

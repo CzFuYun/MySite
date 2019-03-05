@@ -53,7 +53,7 @@ class ExpirePromptAdmin:
 
 
 class LoanDemandAdmin:
-    list_display = ['add_time', 'customer', 'get_expire_prompt_info', 'this_month_leishou', 'already_achieved']
+    list_display = ['add_time', 'customer', 'get_expire_prompt_info', 'expire_amount', 'this_month_leishou', 'already_achieved']
     list_filter = ['plan_date']
 
     def get_expire_prompt_info(self, instance):

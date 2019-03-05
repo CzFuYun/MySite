@@ -224,6 +224,7 @@ class LoanDemand(models.Model):
     expect = models.IntegerField(default=100, verbose_name='把握(%)')
     already_achieved = models.IntegerField(default=0, verbose_name='当月累放')
     remark = models.TextField(blank=True, null=True, verbose_name='备注（规模相关）')
+    # can_increase_deposit = models.BooleanField(default=False, verbose_name='存款增长来源')
     last_update = models.DateField(auto_now=True, blank=True, null=True, verbose_name='最后更新')
     # add_date = models.DateField(auto_now_add=True, blank=True , null=True, verbose_name='添加日期')
     finish_date = models.DateField(blank=True, null=True, verbose_name='办结日')

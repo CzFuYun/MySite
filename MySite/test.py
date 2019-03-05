@@ -7,3 +7,4 @@ if __name__ == '__main__':
     from app_customer_repository.models import ProjectExecution
     ProjectExecution.takePhoto()
 
+    from scraper.models import CpLedger
