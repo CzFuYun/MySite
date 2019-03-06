@@ -44,8 +44,10 @@ class CustomerRepository(models.Model):
         pass
 
     @classmethod
-    def no_kernel_id(cls):
-        no_kernel_id_customers = cls.objects.filter(customer__isnull=True).values('name')
+    def need_fill_kernel_id(cls):
+        projecting_customer = ProjectRepository.objects.filter(tmp_close_date__isnull=True).values('customer_id')
+        projecting_customer = {i['customer_id'] for i in projecting_customer}
+        no_kernel_id_customers = cls.objects.filter(customer__isnull=True, pk__in=projecting_customer).values('name')
         if no_kernel_id_customers.exists():
             return [customer['name'] for customer in no_kernel_id_customers]
         else:
@@ -65,7 +67,7 @@ class CustomerRepository(models.Model):
 
     @classmethod
     def fillKernelId(cls):
-        no_kernel_id_customers_name = cls.no_kernel_id()
+        no_kernel_id_customers_name = cls.need_fill_kernel_id()
         if no_kernel_id_customers_name:
             dcms = DcmsHttpRequest()
             dcms.login()
@@ -461,7 +463,7 @@ class ProjectExecution(models.Model):
             else:
                 return
             # ↓补充新开户客户的核心客户号
-            newly_account = AccountedCompany.objects.filter(name__in=CustomerRepository.no_kernel_id()).values('name', 'customer_id')
+            newly_account = AccountedCompany.objects.filter(name__in=CustomerRepository.need_fill_kernel_id()).values('name', 'customer_id')
             if newly_account.exists():
                 for new_customer in newly_account:
                     CustomerRepository.objects.filter(name=new_customer['name']).update(customer_id=new_customer['customer_id'])

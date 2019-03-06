@@ -30,7 +30,7 @@ class CustomerAdmin:
 
 
 class ProjectAdmin:
-    list_display = ['customer', 'staff', 'business', 'total_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'current_progress'
+    list_display = ['pk', 'customer', 'staff', 'business', 'total_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'current_progress'
         # , 'get_total_used', 'is_specially_focus', 'show_remark', 'tmp_close_date', 'close_reason'
                     ]
     list_editable = ['plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi']

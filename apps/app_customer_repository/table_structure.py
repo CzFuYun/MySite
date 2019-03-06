@@ -146,6 +146,7 @@ trackProjectExe_table_col = {
 }
 
 downloadProjectList_col_part1 = {
+    'id': '项目id',
     'customer__name': '项目主体',
     'customer__industry__caption': '行业门类',
     'customer__type_of_3311__level': '3311类型',
@@ -172,7 +173,6 @@ downloadProjectList_col_part1 = {
     'plan_xinshen': '计划到信审会',
     'plan_reply': '计划获批',
     'plan_luodi': '计划落地',
-    'id': '项目id'
 }
 
 downloadProjectList_col_part2 = {

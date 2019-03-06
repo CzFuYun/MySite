@@ -243,7 +243,7 @@ class AccountedCompany(models.Model):
         try:
             return self.name
         except:
-            return 'None'
+            return 'none'
 
     class Meta:
         verbose_name_plural = '已开户对公客户'

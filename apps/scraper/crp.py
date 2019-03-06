@@ -469,6 +469,14 @@ class CrpHttpRequest(BaseHttpRequest):
     def encode(string):
         return BaseHttpRequest.encode(string).replace('%', '%25')
 
+    @staticmethod
+    def strToNum(string):
+        string = string.replace(',', '')
+        try:
+            return int(string)
+        except:
+            return float(string)
+
     def __init__(self):
         super().__init__()
         self.imp_date = DateOperation()

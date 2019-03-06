@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from .crp import CrpHttpRequest
 from .dcms_request import DcmsHttpRequest
@@ -19,6 +19,16 @@ class DcmsBusiness(models.Model):
 
     def __str__(self):
         return self.code + '-' + self.caption
+
+    @classmethod
+    def pickObjectByCaption(cls, caption):
+        try:
+            return cls.objects.get(caption=caption)
+        except:
+            print('业务品种', caption, '不存在，请新建')
+            code = input('code>>>')
+            cls(code=code, caption=caption).save()
+            return cls.objects.get(caption=caption)
 
 
 class CpLedger(models.Model):
@@ -251,21 +261,21 @@ class LuLedger(models.Model):
     )
     add_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateField(auto_now=True, verbose_name='更新日')
-    loan_demand = models.ForeignKey(to='deposit_and_credit.LoanDemand', on_delete=models.PROTECT, verbose_name='规模安排')
+    # loan_demand = models.ForeignKey(to='deposit_and_credit.LoanDemand', blank=True, null=True, on_delete=models.PROTECT, verbose_name='规模安排')
     lu_num = models.CharField(max_length=32, primary_key=True, verbose_name='放款参考编号')
-    is_green = models.BooleanField(default=False, verbose_name='绿色金融')
+    is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
     pay_method = models.IntegerField(choices=pay_method_choices, default=1, verbose_name='支付方式')
     is_xvbao = models.NullBooleanField(blank=True, null=True, verbose_name='续保标志')
-    has_separation_of_duty = models.BooleanField(default=True, verbose_name='信贷责任划分状（有/无）')
-    has_sign_receipted = models.BooleanField(default=True, verbose_name='送达签收单合同（有/无）')
+    has_separation_of_duty = models.NullBooleanField(blank=True, null=True, verbose_name='信贷责任划分状（有/无）')
+    has_sign_receipted = models.NullBooleanField(blank=True, null=True, verbose_name='送达签收单合同（有/无）')
     policy_expire = models.DateField(blank=True, null=True, verbose_name='保单到期日')
-    has_used_relending_money = models.BooleanField(default=False, verbose_name='是否转贷资金')
-    cp = models.ForeignKey(to='CpLedger', db_column='cp_num', blank=True, null=True, on_delete=models.CASCADE, verbose_name='授信')
+    has_used_relending_money = models.NullBooleanField(blank=True, null=True, verbose_name='是否转贷资金')
     inspector = models.ForeignKey(to='root_db.Staff', blank=True, null=True, related_name='inspector', on_delete=models.PROTECT, verbose_name='审查人员')
+    cp = models.ForeignKey(to='CpLedger', db_column='cp_num', blank=True, null=True, on_delete=models.CASCADE, verbose_name='授信')
     department = models.ForeignKey(to='root_db.Department', blank=True, null=True, on_delete=models.PROTECT, verbose_name='经营部门')
     staff = models.ForeignKey(to='root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
     customer = models.ForeignKey(to='root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='单位名称')
-    customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户编号')
+    # customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户编号')
     dcms_business = models.ForeignKey(to='DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     lend_date = models.DateField(blank=True, null=True, verbose_name='放款日期')
     plan_expire = models.DateField(blank=True, null=True, verbose_name='计划到期日')
@@ -278,9 +288,9 @@ class LuLedger(models.Model):
     net_amount = models.FloatField(default=0, verbose_name='敞口金额')
     guarantee = models.TextField(verbose_name='担保方式', blank=True, null=True)
     contract_code = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='信贷合同编号')
-    reply_date = models.DateField(blank=True, null=True, verbose_name='授信批复日期')
-    reply_code = models.CharField(max_length=16, blank=True, null=True, verbose_name='授信批复编号')
-    reply_content = models.TextField(blank=True, null=True, verbose_name='授信批复内容')
+    # reply_date = models.DateField(blank=True, null=True, verbose_name='授信批复日期')
+    # reply_code = models.CharField(max_length=16, blank=True, null=True, verbose_name='授信批复编号')
+    # reply_content = models.TextField(blank=True, null=True, verbose_name='授信批复内容')
     current_amount = models.FloatField(default=0, verbose_name='当前地区余额（含特别授信）')
 
     class Meta:
@@ -292,6 +302,51 @@ class LuLedger(models.Model):
         return self.lu_num
 
     @classmethod
+    def _updateCurrentAmount(cls):
+        '''
+        上一步：爬取最近累收数据
+        :return:
+        '''
+        print('累收数据爬取完毕，准备更新放款台账余额……')
+        imp_date = DateOperation()
+        new_retract = DailyLeiShou.objects.filter(
+            add_date=imp_date.today_str,
+            dcms_business__caption__contains='贷',
+        ).exclude(
+            contract_code__startswith='CZZX'
+        )
+        print('根据累收数据更新放款台账余额……')
+        new_retract_values = new_retract.values(
+            'contract_code',
+            'customer__name'
+        ).annotate(
+            Sum('retract_amount')
+        )
+        not_found = []
+        for nr in new_retract_values:
+            customer_name = nr['customer__name']
+            contract_code = nr['contract_code']
+            retract_amount = nr['retract_amount__sum']
+            try:
+                lu = LuLedger.objects.get(contract_code=contract_code)
+                new_amount = lu.current_amount - retract_amount
+                if new_amount >= 0:
+                    lu.current_amount = new_amount
+                    lu.save()
+                    print('已更新', customer_name, contract_code, '余额')
+                else:
+                    print(customer_name, contract_code, '用信余额已小于零，请核实')
+                    input('>>>')
+            except:
+                not_found.append(
+                    (customer_name, contract_code)
+                )
+        print('以下回收数据未找到与之对应的放款记录：')
+        for i in range(len(not_found)):
+            print(i, '.', not_found[i])
+
+
+    @classmethod
     def fillInfo(cls, loan_date__gte=None):
         '''
         爬取企贷表，补完台账
@@ -301,7 +356,12 @@ class LuLedger(models.Model):
         crp.login()
         if loan_date__gte is not None:
             crp.setDataDate(loan_date__gte)
-        qidai = crp.getQiDai(*['放款参考编号', '业务余额(原币)', '总账汇率'], **{'业务余额(原币)': crp.NumCondition.gt(0)})
+        qidai = crp.getQiDai(
+            *['放款参考编号', '业务余额(原币)', '总账汇率'],
+            **{
+                '业务余额(原币)': crp.NumCondition.gt(0),
+            }
+        )
         for page in qidai:
             pass
 
@@ -318,15 +378,58 @@ class LuLedger(models.Model):
 
 
 class DailyLeiShou(models.Model):
+    '''
+    数据来源：企贷自定义明细-当月累收
+    '''
     add_date = models.DateField(auto_now_add=True)
+    customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
     contract_code = models.CharField(max_length=32, blank=True, null=True, verbose_name='信贷合同编号')
-    retract_amount = models.FloatField(default=0, verbose_name='收回金额（元）')
-    retract_date = models.FloatField(blank=True, null=True, verbose_name='收回日期')
+    retract_amount = models.FloatField(default=0, verbose_name='收回金额（人民币，元）')
+    retract_date = models.DateField(blank=True, null=True, verbose_name='收回日期')
+    dcms_business = models.ForeignKey('DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
 
     class Meta:
-        verbose_name = '累收'
+        verbose_name = '回收'
         verbose_name_plural = verbose_name
 
     @classmethod
     def getDailyLeishou(cls, retract_date__gte=None):
-        pass
+        imp_date = DateOperation()
+        crp = CrpHttpRequest()
+        crp.login()
+        leishou = crp.getLeiShou(
+            *('合同号', '客户名称', '客户编号', '收回日期', '收回金额(元)', '业务种类', '汇率'),
+            **{
+                '收回日期': crp.DateCondition.between(retract_date__gte, crp.data_date)
+            }
+        )
+        total_retract_loan = 0
+        data_for_bulk_create = []
+        for page in leishou:
+            page_data = crp.parseQueryResultToDictList(page)
+            for i in range(len(page_data)):
+                row_data = page_data[i]
+                exchange_rate = row_data['汇率']
+                customer = AccountedCompany.pickCustomer(row_data['客户名称'], row_data['客户编号'])
+                dcms_business = DcmsBusiness.pickObjectByCaption(row_data['业务种类'].strip())
+                if exchange_rate:
+                    exchange_rate = float(exchange_rate)
+                else:
+                    exchange_rate = 100.00
+                retract_amount = exchange_rate * crp.strToNum(row_data['收回金额(元)'].strip()) / 100
+                print('收回', row_data['客户名称'], row_data['业务种类'], '折合人民币', retract_amount / 10000)
+                if '贷' in row_data['业务种类']:
+                    total_retract_loan += retract_amount
+                data_for_bulk_create.append(
+                    cls(
+                        contract_code=row_data['合同号'].strip(),
+                        retract_date=row_data['收回日期'].strip(),
+                        retract_amount=retract_amount,
+                        dcms_business=dcms_business,
+                        customer=customer
+                    )
+                )
+        cls.objects.bulk_create(data_for_bulk_create)
+        print(retract_date__gte, '至', crp.data_date, '，收回贷款折合人民币', total_retract_loan / 10000, '万元')
+        LuLedger._updateCurrentAmount()
+

@@ -3,12 +3,12 @@ import re
 from collections import defaultdict, namedtuple, OrderedDict
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Sum
 
 from MySite.utilities import reverseDictKeyValue
 from root_db.models import AccountedCompany
 from .models_operation import DateOperation
-from scraper.models import LuLedger, DcmsBusiness
+from scraper.models import LuLedger, DcmsBusiness, DailyLeiShou
 from app_customer_repository.models import ProjectRepository, ProjectExecution
 from scraper.crp import CrpHttpRequest
 # from apps.app_customer_repository import models as crm
@@ -107,7 +107,7 @@ class ExpirePrompt(models.Model):
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_approver', verbose_name='专审')
 
     def __str__(self):
-        return self.customer
+        return self.customer.name
 
     def toDict(self):
         fields = []
@@ -464,3 +464,23 @@ class LoanDemand(models.Model):
     #     imp_date = DateOperation()
     #     last_update = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'last_update')
     #     newly_lu = LuLedger.objects.filter(add_date='')
+
+    @classmethod
+    def _updateThisMonthLeishou(cls):
+        '''
+        上一步：爬取最近累收数据
+        :return:
+        '''
+        print('累收数据爬取完毕，准备更新当月贷款需求中的累收字段……')
+        imp_date = DateOperation()
+        new_retract = DailyLeiShou.objects.filter(
+            add_date=imp_date.today_str,
+            dcms_business__caption__contains='贷',
+        ).exclude(
+            contract_code__startswith='CZZX'
+        ).values(
+            'contract_code',
+            'customer__name'
+        ).annotate(
+            Sum('retract_amount')
+        )
