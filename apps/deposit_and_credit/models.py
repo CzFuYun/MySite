@@ -210,7 +210,7 @@ class LoanDemand(models.Model):
     expire_prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='到期提示')
     project = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='项目储备')
     # lu_ledger = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
-    contract = models.CharField(max_length=16, blank=True, null=True, verbose_name='放款合同号')
+    contract = models.CharField(max_length=32, blank=True, null=True, verbose_name='放款合同号')
     expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
     expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
     this_month_leishou = models.IntegerField(default=0, verbose_name='当月累收')

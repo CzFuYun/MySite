@@ -44,6 +44,7 @@ class CpLedger(models.Model):
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
     expire_date = models.DateField(blank=True, null=True, verbose_name='授信到期日')
     is_special = models.BooleanField(default=False, verbose_name='特别授信')
+    is_approved = models.BooleanField(default=False, verbose_name='已批准')
     # apply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='申报金额')
     # reply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='批复金额')
     # baozheng = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='保证担保')
@@ -76,7 +77,7 @@ class CpLedger(models.Model):
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
         cp = crp.getCp(
-            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '建档人', '是否特别授信'],
+            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '建档人', '是否特别授信', '批复结论'],
             **{
                 '申报金额（原币）': crp.NumCondition.between(1, 10000000000),
                 '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
@@ -92,41 +93,32 @@ class CpLedger(models.Model):
                 customer_code = row_data['客户编号']
                 reply_date = row_data['批复时间']
                 reply_code = row_data['批复编号']
-                is_special = True if row_data['是否特别授信'].upper() == 'Y' else False
+                is_special = row_data['是否特别授信'].upper() == 'Y'
+                is_approved = '批准' in row_data['批复结论']
                 cp_rlk = dcms.search_cp(cp_num)
                 customer = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
                 expire_date = row_data['授信到期时间']
                 if not expire_date:
                     expire_date = imp_date.delta_date(365, row_data['批复时间'])
+                data_dict = {
+                    'customer': customer,
+                    'reply_date': reply_date,
+                    'reply_code': reply_code,
+                    'expire_date': expire_date,
+                    'cp_rlk': cp_rlk,
+                    'is_special': is_special,
+                    'is_approved': is_approved,
+                }
                 if not cls.objects.filter(cp_num=cp_num).exists():
-                    staff = Staff.pickStaffByName(row_data['建档人'])
-                    cls(
-                        customer=customer,
-                        cp_num=cp_num,
-                        staff=staff,
-                        reply_date=reply_date,
-                        reply_code=reply_code,
-                        expire_date=expire_date,
-                        cp_rlk=cp_rlk,
-                        is_special=is_special
-                        # apply_amount=float(row_data['申报金额（原币）'].replace(',', ''))*float(row_data['汇率']),
-                        # reply_amount=float(row_data['批复金额(原币）'].replace(',', ''))*float(row_data['汇率']),
-                    ).save()
-                # else:
-                #     staff_name = row_data['建档人']
-                #     obj = cls.objects.filter(cp_num=cp_num)
-                #     if obj[0].staff.name != staff_name:
-                #         staff = Staff.pickStaffByName(row_data['建档人'])
-                #         obj.update(staff=staff)
-                #     obj.update(
-                #         customer=customer,
-                #         reply_date=reply_date,
-                #         reply_code=reply_code,
-                #         expire_date=expire_date,
-                #         cp_rlk=cp_rlk,
-                #         is_special=is_special
-                #     )
-
+                    data_dict['staff'] = Staff.pickStaffByName(row_data['建档人'])
+                    data_dict['cp_num'] = cp_num
+                    cls(**data_dict).save()
+                else:
+                    staff_name = row_data['建档人']
+                    obj = cls.objects.filter(cp_num=cp_num)
+                    if obj[0].staff.name != staff_name:
+                        data_dict['staff'] = Staff.pickStaffByName(row_data['建档人'])
+                    obj.update(**data_dict)
 
     @classmethod
     def _bulkCreateSmeCpFromCrp(cls, reply_date__gte=None):
@@ -138,7 +130,7 @@ class CpLedger(models.Model):
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
         cp = crp.getSmeCp(
-            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '是否特别授信', '建档人'],
+            *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '是否特别授信', '建档人', '批复结论'],
             **{
                 '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
                 '批复金额（原币）': crp.NumCondition.between(1, 10000000000),
@@ -154,37 +146,33 @@ class CpLedger(models.Model):
                 customer_code = row_data['客户编号']
                 reply_date = row_data['批复时间']
                 reply_code = row_data['批复编号']
-                is_special = True if row_data['是否特别授信'].upper() == 'Y' else False
+                is_special = 'Y' in row_data['是否特别授信'].upper()
+                is_approved = '批准' in row_data['批复结论']
                 cp_rlk = dcms.search_cp(cp_num)
                 customer = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
                 expire_date = row_data['授信到期时间']
                 if not expire_date:
                     expire_date = imp_date.delta_date(365, row_data['批复时间'])
-                staff = Staff.pickStaffByDcmsName(row_data['建档人'])
+                data_dict = {
+                    'customer': customer,
+                    'reply_date': reply_date,
+                    'reply_code': reply_code,
+                    'expire_date': expire_date,
+                    'cp_rlk': cp_rlk,
+                    'is_special': is_special,
+                    'is_approved': is_approved,
+                }
                 if not cls.objects.filter(cp_num=cp_num).exists():
-                    cls(
-                        customer=customer,
-                        cp_num=cp_num,
-                        staff=staff,
-                        reply_date=reply_date,
-                        reply_code=reply_code,
-                        expire_date=expire_date,
-                        cp_rlk=cp_rlk,
-                        is_special=is_special
-                    ).save()
-                # else:
-                #     staff_name = row_data['建档人']
-                #     obj = cls.objects.filter(cp_num=cp_num)
-                #     if obj[0].staff is None or obj[0].staff.name != staff_name:
-                #         obj.update(staff=staff)
-                #     obj.update(
-                #         customer=customer,
-                #         reply_date=reply_date,
-                #         reply_code=reply_code,
-                #         expire_date=expire_date,
-                #         cp_rlk=cp_rlk,
-                #         is_special=is_special
-                #     )
+                    data_dict['staff'] = Staff.pickStaffByDcmsName(row_data['建档人'])
+                    data_dict['cp_num'] = cp_num
+                    cls(**data_dict).save()
+                else:
+                    staff_name = row_data['建档人']
+                    obj = cls.objects.filter(cp_num=cp_num)
+                    if obj[0].staff is None or obj[0].staff.name != staff_name:
+                        staff = Staff.pickStaffByDcmsName(row_data['建档人'])
+                        data_dict['staff'] = staff
+                    obj.update(**data_dict)
 
     @classmethod
     def _bulkCreateCsCpFromCrp(cls, reply_date__gte=None):
@@ -197,7 +185,7 @@ class CpLedger(models.Model):
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
         cp = crp.getCsCp(
-            *['客户名称', '客户编号', '授信编号', '批复时间', '批复编号', '授信到期时间', '客户经理'],
+            *['客户名称', '客户编号', '授信编号', '批复时间', '批复编号', '授信到期时间', '客户经理', '批复结论'],
             **{
                 '授信额度(元)': crp.NumCondition.gt(0),
                 '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
@@ -214,6 +202,7 @@ class CpLedger(models.Model):
                 reply_date = row_data['批复时间']
                 reply_code = row_data['批复编号']
                 is_special = False
+                is_approved = '批准' in row_data['批复结论']
                 cp_rlk = dcms.search_cp(cp_num)
                 customer = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
                 expire_date = row_data['授信到期时间']
@@ -229,13 +218,14 @@ class CpLedger(models.Model):
                         reply_code=reply_code,
                         expire_date=expire_date,
                         cp_rlk=cp_rlk,
-                        is_special=is_special
+                        is_special=is_special,
+                        is_approved=is_approved
                     ).save()
                 else:
-                    staff_name = row_data['客户经理']
+                    # staff_name = row_data['客户经理']
                     obj = cls.objects.filter(cp_num=cp_num)
-                    if obj[0].staff is None or obj[0].staff.name != staff_name:
-                        obj.update(staff=staff)
+                    # if obj[0].staff is None or obj[0].staff.name != staff_name:
+                    #     obj.update(staff=staff)
                     obj.update(
                         customer=customer,
                         reply_date=reply_date,
@@ -315,7 +305,6 @@ class LuLedger(models.Model):
         ).exclude(
             contract_code__startswith='CZZX'
         )
-        print('根据累收数据更新放款台账余额……')
         new_retract_values = new_retract.values(
             'contract_code',
             'customer__name'
@@ -341,9 +330,10 @@ class LuLedger(models.Model):
                 not_found.append(
                     (customer_name, contract_code)
                 )
-        print('以下回收数据未找到与之对应的放款记录：')
-        for i in range(len(not_found)):
-            print(i, '.', not_found[i])
+        if not_found:
+            print('以下回收数据未找到与之对应的放款记录：')
+            for i in range(len(not_found)):
+                print(i, '.', not_found[i])
 
 
     @classmethod
@@ -429,7 +419,11 @@ class DailyLeiShou(models.Model):
                         customer=customer
                     )
                 )
-        cls.objects.bulk_create(data_for_bulk_create)
         print(retract_date__gte, '至', crp.data_date, '，收回贷款折合人民币', total_retract_loan / 10000, '万元')
-        LuLedger._updateCurrentAmount()
+        if data_for_bulk_create:
+            cls.objects.bulk_create(data_for_bulk_create)
+            LuLedger._updateCurrentAmount()
+        else:
+            print('无需更新放款台账余额')
+            print('无需更新贷款需求')
 
