@@ -15,4 +15,4 @@ def test(request):
 
     # CpLedger._bulkCreateSmeCpFromCrp('2018-01-01')
     # DailyLeiShou.getDailyLeishou('2019-03-01')
-    LuLedger._updateCurrentAmount()
+    LuLedger.fillDetail()

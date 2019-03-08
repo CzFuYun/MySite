@@ -20,12 +20,13 @@ def test(request):
     # dac_models.LoanDemand.updateByLeiShou('2019-02-01')
     # dac_models.LoanDemand.linkToEpRecord('2019-02-10')
     # CpLedger._bulkCreateCpFromCrp('2019-01-31')
-    dac_models.LoanDemand.createFromProjectRepositoryForNextMonth()
+    # dac_models.LoanDemand.createFromProjectRepositoryForNextMonth()
+    dac_models.LoanDemand._updateThisMonthLeishou()
     pass
 
 def updateProgress(request):
     # http://127.0.0.1:8000/dc/progress.update
-    dac_models.ExpirePrompt.fill_cp_num()
+    # dac_models.ExpirePrompt.fillCpNum()
     dac_models.ExpirePrompt.updateProgress()
     return HttpResponse('finish')
 

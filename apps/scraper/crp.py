@@ -608,6 +608,13 @@ class CrpHttpRequest(BaseHttpRequest):
             ret.append(info)
         return ret
 
+    @staticmethod
+    def stringToNumber(string):
+        if string == '' or string is None:
+            return 0
+        else:
+            return eval(string.replace(',', '').strip())
+
 
     class DateCondition:
 

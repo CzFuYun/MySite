@@ -1,5 +1,6 @@
-# ↓每日执行
+# from MySite import daily_task
 
+# ↓每日执行
 def a_takePrPhoto():
     from app_customer_repository.models import ProjectExecution
     ProjectExecution.takePhoto()
@@ -21,7 +22,7 @@ def b_scrapeCp():
         reply_date_gte = input('>>>')
     CpLedger._bulkCreateCpFromCrp(reply_date_gte)
     CpLedger._bulkCreateSmeCpFromCrp(reply_date_gte)
-    # CpLedger._bulkCreateCsCpFromCrp(reply_date_gte)
+    CpLedger._bulkCreateCsCpFromCrp(reply_date_gte)
 
 
 # ↓每日执行，除月初，月初无法爬取上月的累收数
@@ -31,4 +32,5 @@ def c_scrapeLeiShou():
     imp_date = DateOperation()
     last_scrape = imp_date.last_data_date_str(DailyLeiShou, 'add_date')
     DailyLeiShou.getDailyLeishou(last_scrape)
+
 

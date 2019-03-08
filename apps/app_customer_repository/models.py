@@ -54,7 +54,7 @@ class CustomerRepository(models.Model):
             return
 
     @classmethod
-    def fill_cf_num(cls):
+    def fillCfNum(cls):
         no_cf_customers = cls.objects.filter(credit_file__isnull=True).values('id', 'name')
         if no_cf_customers.exists():
             dcms = DcmsHttpRequest()
@@ -65,36 +65,59 @@ class CustomerRepository(models.Model):
                     if int(input('>>>')):
                         cls.objects.filter(pk=customer['id']).update(cf_num=cf_num)
 
+    # @classmethod
+    # def fillKernelId(cls):
+    #     no_kernel_id_customers_name = cls.need_fill_kernel_id()
+    #     if no_kernel_id_customers_name:
+    #         dcms = DcmsHttpRequest()
+    #         dcms.login()
+    #         for customer_name in no_kernel_id_customers_name:
+    #             # 先从已开户客户中查找核心客户号
+    #             exist_customer = AccountedCompany.objects.filter(name=customer_name)
+    #             choice = 0
+    #             if exist_customer:
+    #                 print(exist_customer, '已开户，核心客户号', exist_customer.values('customer_id'))
+    #                 print('是否正确？\n0.否\n1.是')
+    #                 choice = input('>>>')
+    #                 if int(choice):
+    #                     cls.objects.filter(name=customer_name).update(customer=exist_customer[0])
+    #             if not exist_customer.exists() or not int(choice):
+    #                 search_result = dcms.search_customer(customer_name)
+    #                 if search_result:
+    #                     shallow_info, deep_info = search_result
+    #                     kernel_no = '{:0>16}'.format(shallow_info['核心客户号'][:-1])
+    #                     print(customer_name, '核心客户号', kernel_no, '是否正确？')
+    #                     print('0.否\n1.是')
+    #                     choice = input('>>>')
+    #                     if int(choice):
+    #                         customer = AccountedCompany.objects.filter(customer_id=kernel_no)
+    #                         if not customer.exists():
+    #                             customer = AccountedCompany.createCustomerByDcms(customer_name, dcms)
+    #                         cls.objects.filter(name=customer_name).update(customer=customer)
+
     @classmethod
-    def fillKernelId(cls):
-        no_kernel_id_customers_name = cls.need_fill_kernel_id()
-        if no_kernel_id_customers_name:
+    def linkNoKernelIdObjToAc(cls):
+        '''
+        关联至AC
+        :return:
+        '''
+        customer_need_kernel_id = CustomerRepository.need_fill_kernel_id()
+        customer_need_kernel_id_set = {*customer_need_kernel_id}
+        # ↓先在AC中查找
+        newly_account = AccountedCompany.objects.filter(name__in=customer_need_kernel_id)
+        if newly_account.exists():
+            newly_account = newly_account.values('name', 'customer_id')
+            for new_customer in newly_account:
+                customer_need_kernel_id_set.remove(new_customer['name'])        # 关联上的去掉
+                CustomerRepository.objects.filter(name=new_customer['name']).update(customer_id=new_customer['customer_id'])
+                print('新开户：【' + new_customer['name'] + '】【' + new_customer['customer_id'] + '】')
+        # ↓若还有需要补充核心客户号的
+        if customer_need_kernel_id_set:
             dcms = DcmsHttpRequest()
             dcms.login()
-            for customer_name in no_kernel_id_customers_name:
-                # 先从已开户客户中查找核心客户号
-                exist_customer = AccountedCompany.objects.filter(name=customer_name)
-                choice = 0
-                if exist_customer:
-                    print(exist_customer, '已开户，核心客户号', exist_customer.values('customer_id'))
-                    print('是否正确？\n0.否\n1.是')
-                    choice = input('>>>')
-                    if int(choice):
-                        cls.objects.filter(name=customer_name).update(customer=exist_customer[0])
-                if not exist_customer.exists() or not int(choice):
-                    search_result = dcms.search_customer(customer_name)
-                    if search_result:
-                        shallow_info, deep_info = search_result
-                        kernel_no = '{:0>16}'.format(shallow_info['核心客户号'][:-1])
-                        print(customer_name, '核心客户号', kernel_no, '是否正确？')
-                        print('0.否\n1.是')
-                        choice = input('>>>')
-                        if int(choice):
-                            customer = AccountedCompany.objects.filter(customer_id=kernel_no)
-                            if not customer.exists():
-                                AccountedCompany.createCustomerByDcms(customer_name, dcms)
-                                customer = AccountedCompany.objects.filter(customer_id=kernel_no)
-                            cls.objects.filter(name=customer_name).update(customer=customer[0])
+            for customer_name in customer_need_kernel_id_set:
+                newly_created_customer = AccountedCompany.createCustomerByDcms(customer_name, dcms)
+                cls.objects.filter(name=customer_name).update(customer=newly_created_customer)
 
 
 class ProjectRepository(models.Model):
@@ -463,13 +486,7 @@ class ProjectExecution(models.Model):
             else:
                 return
             # ↓补充新开户客户的核心客户号
-            newly_account = AccountedCompany.objects.filter(name__in=CustomerRepository.need_fill_kernel_id()).values('name', 'customer_id')
-            if newly_account.exists():
-                for new_customer in newly_account:
-                    CustomerRepository.objects.filter(name=new_customer['name']).update(customer_id=new_customer['customer_id'])
-                    print('新开户：【' + new_customer['name'] + '】【' + new_customer['customer_id'] + '】\n')
-            # ↓根据信贷系统补充未开户客户的核心客户号
-            CustomerRepository.fillKernelId()
+            CustomerRepository.linkNoKernelIdObjToAc()
             # ↓将临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(
                 tmp_close_date__isnull=False,
@@ -570,6 +587,8 @@ class ProjectExecution(models.Model):
         last_photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
         exe_qs = ProjectExecution.objects.filter(photo_date=last_photo_date)
         return exe_qs
+
+
 
 
 class Progress(models.Model):

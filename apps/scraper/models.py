@@ -264,7 +264,7 @@ class LuLedger(models.Model):
     cp = models.ForeignKey(to='CpLedger', db_column='cp_num', blank=True, null=True, on_delete=models.CASCADE, verbose_name='授信')
     department = models.ForeignKey(to='root_db.Department', blank=True, null=True, on_delete=models.PROTECT, verbose_name='经营部门')
     staff = models.ForeignKey(to='root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
-    customer = models.ForeignKey(to='root_db.AccountedCompany', on_delete=models.PROTECT, verbose_name='单位名称')
+    customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='单位名称')
     # customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='客户编号')
     dcms_business = models.ForeignKey(to='DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     lend_date = models.DateField(blank=True, null=True, verbose_name='放款日期')
@@ -276,7 +276,9 @@ class LuLedger(models.Model):
     pledge_ratio = models.FloatField(default=0, verbose_name='保证金或质押担保比例%')
     float_ratio = models.FloatField(default=0, verbose_name='浮动比例%')
     net_amount = models.FloatField(default=0, verbose_name='敞口金额')
-    guarantee = models.TextField(verbose_name='担保方式', blank=True, null=True)
+    has_baozheng = models.BooleanField(default=False, verbose_name='保证')
+    has_diya = models.BooleanField(default=False, verbose_name='抵押')
+    has_zhiya = models.BooleanField(default=False, verbose_name='质押')
     contract_code = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='信贷合同编号')
     # reply_date = models.DateField(blank=True, null=True, verbose_name='授信批复日期')
     # reply_code = models.CharField(max_length=16, blank=True, null=True, verbose_name='授信批复编号')
@@ -336,31 +338,81 @@ class LuLedger(models.Model):
                 print(i, '.', not_found[i])
 
 
-    @classmethod
-    def fillInfo(cls, loan_date__gte=None):
-        '''
-        爬取企贷表，补完台账
-        :return:
-        '''
-        crp = CrpHttpRequest()
-        crp.login()
-        if loan_date__gte is not None:
-            crp.setDataDate(loan_date__gte)
-        qidai = crp.getQiDai(
-            *['放款参考编号', '业务余额(原币)', '总账汇率'],
-            **{
-                '业务余额(原币)': crp.NumCondition.gt(0),
-            }
-        )
-        for page in qidai:
-            pass
+    # @classmethod
+    # def fillInfo(cls, loan_date__gte=None):
+    #     '''
+    #     爬取企贷表，补完台账
+    #     :return:
+    #     '''
+    #     crp = CrpHttpRequest()
+    #     crp.login()
+    #     if loan_date__gte is not None:
+    #         crp.setDataDate(loan_date__gte)
+    #     qidai = crp.getQiDai(
+    #         *['放款参考编号', '业务余额(原币)', '总账汇率'],
+    #         **{
+    #             '业务余额(原币)': crp.NumCondition.gt(0),
+    #         }
+    #     )
+    #     for page in qidai:
+    #         pass
 
     @classmethod
-    def create(cls, lu_num):
-        dcms = DcmsHttpRequest()
-        dcms.login()
-        dcms.search_lu(lu_num)
-        pass
+    def fillDetail(cls):
+        from root_db.models import Department, Staff
+        uncompleted = cls.objects.filter(
+            Q(contract_code__isnull=True) &
+            (
+                Q(lu_num__startswith='LU') |
+                Q(lu_num__startswith='SMELU')
+            )
+        )
+        if uncompleted.exists():
+            crp = CrpHttpRequest()
+            crp.login()
+            dcms = DcmsHttpRequest()
+            dcms.login()
+            for i in range(uncompleted.count()):
+                lu_num = uncompleted[i].lu_num
+                qidai = crp.getQiDai(
+                    *[
+                        '授信参考编号', '经办行', '管户客户经理', '客户编号', '业务种类',
+                        '发放日期', '业务到期日', '业务期限代码', '业务期限', '业务币种',
+                        '放款金额(元)', '利率', '费率(百分比)', '保证金比例', '利率浮动比例',
+                        '利率调整频率', '担保方式', '合同号', '客户名称'
+                    ],
+                    **{
+                        '放款参考编号': crp.CharCondition.equal(lu_num)
+                    }
+                )
+                for page in qidai:
+                    page_data = crp.parseQueryResultToDictList(page)
+                    for i in range(len(page_data)):
+                        row_data = page_data[i]
+                        if uncompleted[i].contract_code is None:
+                            customer_name = row_data['客户名称']
+                            customer_code = row_data['客户编号']
+                            data_dict = {
+                                'cp': row_data['授信参考编号'],
+                                'department': Department.pickObjByCaption(row_data['经办行']),
+                                'contract_code': row_data['合同号'],
+                                'staff': Staff.pickStaffByName(row_data['管户客户经理']),
+                                'customer': AccountedCompany.pickCustomer(customer_name, customer_code, dcms),
+                                'dcms_business': DcmsBusiness.pickObjectByCaption(row_data['业务种类']),
+                                'lend_date': row_data['发放日期'],
+                                'plan_expire': row_data['业务到期日'],
+                                'month_dif': row_data['业务期限'] + row_data['业务期限代码'],
+                                'currency_type': row_data['业务币种'],
+                                'lend_amount': row_data['放款金额(元)'],
+                                'rate': row_data['利率'] or row_data['费率(百分比)'],
+                                'pledge_ratio': row_data['保证金比例'],
+                                'float_ratio': row_data['利率浮动比例'] if '固定' not in row_data['利率调整频率'] else 0,
+                                'net_amount': (100 - crp.strToNum(row_data['保证金比例'])) * crp.strToNum(row_data['放款金额(元)']) / 100,
+                            }
+
+                        else:
+                            pass
+
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

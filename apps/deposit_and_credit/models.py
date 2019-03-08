@@ -126,7 +126,7 @@ class ExpirePrompt(models.Model):
         return d
 
     @classmethod
-    def fill_cp_num(cls):
+    def fillCpNum(cls):
         dcms = connection.DcmsConnection('http://110.17.1.21:9082')
         dcms.login('czfzc', 'hxb123')
         customer_list = cls.objects.filter(
@@ -478,9 +478,14 @@ class LoanDemand(models.Model):
             dcms_business__caption__contains='贷',
         ).exclude(
             contract_code__startswith='CZZX'
-        ).values(
-            'contract_code',
-            'customer__name'
-        ).annotate(
-            Sum('retract_amount')
         )
+        if new_retract.exists():
+            new_retract_value = new_retract.values(
+                'contract_code',
+                'customer__name'
+            ).annotate(
+                Sum('retract_amount')
+            )
+            for nr in new_retract_value:
+                pass
+

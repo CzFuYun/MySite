@@ -166,7 +166,15 @@ class Department(models.Model):
     def __str__(self):
         return self.caption
 
-
+    @classmethod
+    def pickObjByCaption(cls, caption):
+        try:
+            return cls.objects.get(caption=caption)
+        except:
+            print('部门', caption, '不存在，请新建')
+            code = input('code>>>')
+            cls(code=code, caption=caption).save()
+            return cls.objects.get(caption=caption)
 
     @classmethod
     def getDepartments(cls, return_mode=utilities.return_as['choice']):
@@ -294,41 +302,48 @@ class AccountedCompany(models.Model):
     @classmethod
     def fillDcmsInfo(cls, customer_name=None, dcms=None):
         '''
-        从信贷系统中获取客户编号、信贷文件编号、rlk等信息并保存
+        从信贷系统中获取客户编号、信贷文件编号、rlk等信息并保存，并
         :return:
         '''
         if customer_name:
-            no_code = cls.objects.filter(name=customer_name)
+            need_fill = cls.objects.filter(name=customer_name)
         else:
-            from deposit_and_credit.models import Contributor
-            imp_date = DateOperation()
-            last_data = imp_date.neighbour_date_date_str(Contributor, imp_date.today_str)
-            has_credit = Contributor.objects.filter(
-                Q(data_date=last_data) &
-                (
-                    Q(net_total__gt=0)
-                )
+            # ↓先将客户库中有核心客户号的客户添加进来，由于每日生成项目快照时会自动导核心客户号，故不用再次导
+            from app_customer_repository.models import CustomerRepository
+            # from deposit_and_credit.models import Contributor
+            # imp_date = DateOperation()
+            # last_data = imp_date.neighbour_date_date_str(Contributor, imp_date.today_str)
+            # has_credit = Contributor.objects.filter(
+            #     Q(data_date=last_data) &
+            #     (
+            #         Q(net_total__gt=0)
+            #     )
+            # )
+            # credit_customer = [hc.customer_id for hc in has_credit]
+            # no_code = cls.objects.filter(
+            #     Q(customer_id__in=credit_customer) &
+            #     (
+            #         Q(dcms_customer_code__isnull=True) |
+            #         Q(cf_num__isnull=True) |
+            #         Q(rlk_cf__isnull=True) |
+            #         Q(rlk_customer__isnull=True)
+            #     )
+            # )
+            need_fill = AccountedCompany.objects.filter(
+                Q(dcms_customer_code__isnull=True) |
+                Q(cf_num__isnull=True) |
+                Q(rlk_cf__isnull=True)
             )
-            credit_customer = [hc.customer_id for hc in has_credit]
-            no_code = cls.objects.filter(
-                Q(customer_id__in=credit_customer) &
-                (
-                    Q(dcms_customer_code__isnull=True) |
-                    Q(cf_num__isnull=True) |
-                    Q(rlk_cf__isnull=True) |
-                    Q(rlk_customer__isnull=True)
-                )
-            )
-        if no_code.exists():
+        if need_fill.exists():
             rgx_rlk = re.compile(r'[A-Z0-9]{32}')
             not_found = []
             from scraper.dcms_request import DcmsHttpRequest
             if not dcms:
                 dcms = DcmsHttpRequest()
                 dcms.login()
-            total_count = no_code.count()
+            total_count = need_fill.count()
             for i in range(total_count):
-                customer_name = no_code[i].name
+                customer_name = need_fill[i].name
                 if len(customer_name) < 5:
                     continue
                 update_info = {}
@@ -340,34 +355,12 @@ class AccountedCompany(models.Model):
                     shallow_info, deep_info = search_result
                     update_info['dcms_customer_code'] = shallow_info['客户编号']
                     update_info['rlk_customer'] = rgx_rlk.findall(str(deep_info['序号']))[0]
-                    if no_code[i].cf_num is None or no_code[i].rlk_cf is None:
+                    if need_fill[i].cf_num is None or need_fill[i].rlk_cf is None:
                         cf_num, cf_rlk = dcms.search_cf(update_info['dcms_customer_code'])
                         update_info['cf_num'] = cf_num
                         update_info['rlk_cf'] = cf_rlk
-                    cls.objects.filter(pk=no_code[i].customer_id).update(**update_info)
+                    cls.objects.filter(pk=need_fill[i].customer_id).update(**update_info)
                     print('已更新', i, '/', total_count, customer_name, update_info)
-
-    # @classmethod
-    # def judgeCustomer(cls, name, code=None):
-        # if code:
-        #     customer = cls.objects.filter(dcms_customer_code=code)
-        #     if customer.exists():
-        #         if customer.count() == 1:
-        #             return customer[0]
-        #         else:
-        #             print('客户号为', code, '的客户数大于1，请核实数据库中AC客户编号的唯一性')
-        #             input('')
-        #             return
-        # customer = cls.objects.filter(name=name.strip())
-        # if customer.exists():
-        #     if customer.count() == 1:
-        #         return customer[0]
-        #     else:
-        #         print('客户名为', name, '的客户数大于1，请选择')
-        #         for i in range(customer.count()):
-        #             print(i, '.', customer[i].pk)
-        #         choice = input('>>>')
-        #         return customer[int(choice)]
 
     @classmethod
     def pickCustomer(cls, customer_name, customer_code, dcms=None):
@@ -378,14 +371,22 @@ class AccountedCompany(models.Model):
         '''
         customer = cls.objects.filter(Q(dcms_customer_code=customer_code) | Q(name=customer_name))
         if customer.exists():
-            if customer.count() == 1:
-                return customer[0]
-            else:
+            index = 0
+            if customer.count() > 1:
                 print('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请核实')
                 for i in range(customer.count()):
                     print(i, customer[i].pk)
                 index = input('>>>')
-                return customer[int(index)]
+            customer = customer[int(index)]
+            now_customer_code = customer.dcms_customer_code
+            if now_customer_code is None or re.search(r'[\u4e00-\u9fa5]', now_customer_code) or now_customer_code != customer_code:
+                print(customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？')
+                print('0.否\n1.是')
+                choice = input('>>>')
+                if choice == '1' or choice == '':
+                    customer.dcms_customer_code = customer_code
+                    customer.save()
+            return customer
         else:
             print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户')
             print('\t0.手工输入核心客户号在AC中再次搜索\n\t1.通过爬取dcms信息新建')
