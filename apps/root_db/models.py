@@ -46,7 +46,8 @@ class Staff(models.Model):
         :param exactly:是否精确搜索
         :return:
         '''
-        staff = cls.objects.filter(name=name.strip()) if exactly else cls.objects.filter(name__contains=name.strip())
+        name = re.search(r'[\u4e00-\u9fa5]+', name).group()
+        staff = cls.objects.filter(name=name) if exactly else cls.objects.filter(name__contains=name)
         if staff.exists():
             index = 0
             if staff.count() > 1:
@@ -270,7 +271,7 @@ class AccountedCompany(models.Model):
             kernel_no = '{:0>16}'.format(shallow_info['核心客户号'][:-1])
             customer_info = {
                 'customer_id': kernel_no,
-                'dcms_customer_code': name_or_dcms_customer_code,
+                'dcms_customer_code': shallow_info['客户编号'],
                 'name': shallow_info['客户名称'],
                 'rlk_customer': re.findall(r'[A-Z0-9]{32}', str(deep_info['序号']))[0],
                 'rlk_cf': cf_rlk,
@@ -404,6 +405,14 @@ class AccountedCompany(models.Model):
                     print('再次搜索AC，查找到', exist_customer[0].name, '已进行直接关联')
                 return cls.objects.get(customer_id=kernel_num)
 
+    @classmethod
+    def uncorrect_dcms_code(cls):
+        uncorrect = cls.objects.filter(
+            Q(dcms_customer_code__isnull=False) &
+            ~Q(dcms_customer_code__startswith='C') &
+            ~Q(dcms_customer_code__startswith='P')
+        )
+        return uncorrect
 ########################################################################################################################
 
 

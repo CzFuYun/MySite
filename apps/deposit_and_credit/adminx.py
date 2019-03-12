@@ -3,7 +3,7 @@ from django.db.models import Sum
 import xadmin
 from xadmin import views
 
-from .models import Contributor, ExpirePrompt, LoanDemand
+from .models import Contributor, ExpirePrompt, LoanDemand, LoanDemandForThisMonth
 from root_db.models import DividedCompanyAccount
 
 class ContributorAdmin:
@@ -62,6 +62,17 @@ class LoanDemandAdmin:
     get_expire_prompt_info.short_description = '到期提示'
 
 
+class LoanDemandForThisMonthAdmin:
+    list_display = ('customer', 'staff', 'plan_amount', 'this_month_leishou', 'already_achieved')
+    ordering = ('staff__sub_department__superior__display_order', '-plan_amount')
+
+    def queryset(self):
+        qs = super().queryset()
+        return qs.filter(finish_date__isnull=True)
+
+
+
 xadmin.site.register(Contributor, ContributorAdmin)
 xadmin.site.register(ExpirePrompt, ExpirePromptAdmin)
 xadmin.site.register(LoanDemand, LoanDemandAdmin)
+xadmin.site.register(LoanDemandForThisMonth, LoanDemandForThisMonthAdmin)

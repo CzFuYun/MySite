@@ -489,3 +489,29 @@ class LoanDemand(models.Model):
             for nr in new_retract_value:
                 pass
 
+
+class LoanDemandForThisMonth(LoanDemand):
+    class Meta:
+        verbose_name = '本月地区贷款规模安排'
+        verbose_name_plural = verbose_name
+        proxy = True
+
+
+class CreditAmount(models.Model):
+    add_date = models.DateField(auto_now_add=True)
+    amount = models.FloatField(default=0, verbose_name='余额（万元）')
+    lu = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = '信贷余额'
+        verbose_name_plural = verbose_name
+
+    @classmethod
+    def takePhotoFromLuLedger(cls):
+        from scraper.models import LuLedger
+        amounted = LuLedger.objects.filter(current_amount__gt=0).values(
+            'pk',
+            'current_amount'
+        )
+        data_for_bulk_create = [cls(lu_id=a['pk'], amount=a['current_amount']) for a in amounted]
+        cls.objects.bulk_create(data_for_bulk_create)

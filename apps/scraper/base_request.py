@@ -15,7 +15,15 @@ class BaseHttpRequest:
         self.get_urls = None
 
     def get(self, url_path):
-        url = url_path if type(url_path) is str else url_path.path
+        if type(url_path) is str:
+            url = url_path
+        else:
+            url = url_path.path
+            params = url_path.params
+            if '?' not in url:
+                url += '?'
+            for k, v in params.items():
+                url += (k + '=' + v + '&')
         if not url.strip().lower().startswith('http'):
             url = self.origin_url + url
         while True:

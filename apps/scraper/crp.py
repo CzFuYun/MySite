@@ -472,10 +472,14 @@ class CrpHttpRequest(BaseHttpRequest):
     @staticmethod
     def strToNum(string):
         string = string.replace(',', '')
-        try:
-            return int(string)
-        except:
-            return float(string)
+        if string:
+            try:
+                return int(string)
+            except:
+                return float(string)
+        else:
+            return 0
+
 
     def __init__(self):
         super().__init__()

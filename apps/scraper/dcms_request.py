@@ -17,35 +17,6 @@ class SearchBy:
     cf_num = 'CREDIT_FILE_NO'
     customer_code = 'CUSTOMER_NO'
 
-# class PostUrls:
-#     UrlPath = namedtuple('UrlPath', ['path', 'params'])
-#     base_params = {
-#         'do': 'Search',
-#         'searchBranchCode': 'HQ',
-#         'scope': 'A',
-#         'searchCriteria': None,
-#         'searchValue': None
-#     }
-#
-#     def __init__(self, applicationCode):
-#         self.dcms_type = '' if applicationCode == 'DCMSCP' else 'sme'
-#
-#     @property
-#     def login(self):
-#         return self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'})
-#
-#     @property
-#     def search_cp(self):
-#         return self.UrlPath(self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view', self.base_params.copy())
-#
-#     @property
-#     def search_cf(self):
-#         return self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy())
-#
-#     @property
-#     def search_lu(self):
-#         return self.UrlPath(self.dcms_type + 'dcma/limit_utilization/application/application.view', self.base_params.copy())
-
 
 class DcmsHttpRequest(BaseHttpRequest):
     origin_url = 'http://110.17.1.21:9082/'
@@ -57,7 +28,27 @@ class DcmsHttpRequest(BaseHttpRequest):
         'searchValue': None
     }
 
-    def login(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP'):
+    class DcmsType:
+        cp = 'DCMSCP'
+        sme = 'SMEDCMS'
+        cs = 'DCMSCS'
+
+    def setDcmsType(self, dcms_type):
+        self.dcms_type = 'sme' if dcms_type == self.DcmsType.sme else ''
+        self.post_urls = {
+            'search_cp': self.UrlPath(
+                'dcms/consumer/application/inquiry/application_inquiry.view' if self.applicationCode == 'DCMSCS' else (self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view'),
+                self.base_params.copy()
+            ),
+            'search_cf': self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy()),
+            'search_lu': self.UrlPath(self.dcms_type + 'dcma/limit_utilization/application/application.view', self.base_params.copy()),
+            'search_customer': self.UrlPath('mcif/customer_search.view', self.base_params.copy()),
+        }
+        self.get_urls = {
+            'keep_connection': 'http://110.17.1.21:9082/dcms_index.view',
+        }
+
+    def login(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP', dcms_type='DCMSCP', keep_long=False):
         '''
 
         :param userId:
@@ -66,23 +57,14 @@ class DcmsHttpRequest(BaseHttpRequest):
         :return:
         '''
         self.applicationCode = applicationCode
-        self.dcms_type = 'sme' if applicationCode == 'SMEDCMS' else ''
+        self.setDcmsType(dcms_type)
         self.userId = userId
         self.password = password
         r = self.post(self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'}), userId=self.userId, password=self.password, applicationCode=self.applicationCode)
         assert 'HXB_DCMS_WINDOW_' in r.text, '登录失败，用户名或密码不正确'
-        self.post_urls = {
-            'search_cp': self.UrlPath(
-                'dcms/consumer/application/inquiry/application_inquiry.view' if applicationCode == 'DCMSCS' else (self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view'),
-                self.base_params.copy()
-            ),
-            'search_cf': self.UrlPath(self.dcms_type + 'mcif/credit_file_setup/credit_file.view', self.base_params.copy()),
-            'search_lu': self.UrlPath(self.dcms_type + 'dcma/limit_utilization/application/application.view', self.base_params.copy()),
-            'search_customer': self.UrlPath('mcif/customer_search.view', self.base_params.copy()),
-        }
-        self.get_urls = {
-            'keep_connection': 'http://110.17.1.21:9082/dcms_index.view'
-        }
+        self.setDcmsType(dcms_type)
+        if keep_long:
+            self.keepConnection()
         return self
 
     def keepConnection(self):
@@ -176,3 +158,4 @@ class DcmsHttpRequest(BaseHttpRequest):
         )
         rlk = RegExp.rlk.findall(r.text)[0]
         return rlk
+

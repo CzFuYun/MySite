@@ -15,4 +15,9 @@ def test(request):
 
     # CpLedger._bulkCreateSmeCpFromCrp('2018-01-01')
     # DailyLeiShou.getDailyLeishou('2019-03-01')
-    LuLedger.fillDetail()
+    # LuLedger.fillDetail()
+
+
+    lu = LuLedger.objects.get(lu_num='LU/CZ01/2019/03/00001497').as_dcms_work_flow()
+    r = lu.apply_info()
+    pass

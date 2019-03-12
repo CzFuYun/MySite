@@ -80,6 +80,15 @@ class DateOperation():
         date_dif = d1 - d2
         return date_dif.days
 
+    def month_count(self, date1, date2):
+        # 计算相差月数 date1 - date2
+        d1 = self.strToDate(date1) if type(date1) == str else date1
+        d2 = self.strToDate(date2) if type(date2) == str else date2
+        assert d1 >= d2
+        delta_year = d1.year - d2.year
+        delta_month = d1.month - d2.month
+        return delta_year * 12 + delta_month + (1 if d1.day > d2.day else 0)
+
     def delta_date(self, days, date=''):
         if date:
             if type(date) == str:
