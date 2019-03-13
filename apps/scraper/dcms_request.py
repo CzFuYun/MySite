@@ -1,4 +1,5 @@
 import re, sys, threading
+from enum import Enum
 from collections import namedtuple
 
 import requests, bs4
@@ -11,7 +12,7 @@ class RegExp:
     rlk = re.compile(r"'([A-Z0-9]{32})'")
 
 
-class SearchBy:
+class SearchBy(Enum):
     con_num = 'ref_no'
     customer_name = 'CUSTOMER_NM'
     cf_num = 'CREDIT_FILE_NO'
@@ -28,13 +29,13 @@ class DcmsHttpRequest(BaseHttpRequest):
         'searchValue': None
     }
 
-    class DcmsType:
+    class DcmsType(Enum):
         cp = 'DCMSCP'
         sme = 'SMEDCMS'
         cs = 'DCMSCS'
 
     def setDcmsType(self, dcms_type):
-        self.dcms_type = 'sme' if dcms_type == self.DcmsType.sme else ''
+        self.dcms_type = 'sme' if dcms_type == self.DcmsType.sme.value else ''
         self.post_urls = {
             'search_cp': self.UrlPath(
                 'dcms/consumer/application/inquiry/application_inquiry.view' if self.applicationCode == 'DCMSCS' else (self.dcms_type + 'dcms/corporate/application/inquiry/application_inquiry.view'),
@@ -75,11 +76,11 @@ class DcmsHttpRequest(BaseHttpRequest):
 
     def search_cf(self, name_or_cf_code):
         if name_or_cf_code.startswith('CF'):
-            searchCriteria = SearchBy.cf_num
+            searchCriteria = SearchBy.cf_num.value
         elif name_or_cf_code.startswith('C'):
-            searchCriteria = SearchBy.customer_code
+            searchCriteria = SearchBy.customer_code.value
         else:
-            searchCriteria = SearchBy.customer_name
+            searchCriteria = SearchBy.customer_name.value
         # searchCriteria = SearchBy.cf_num if name_or_cf.startswith('CF') else SearchBy.customer_name
         response = self.post(self.post_urls['search_cf'], searchCriteria=searchCriteria, searchValue=name_or_cf_code)
         try:
@@ -141,7 +142,7 @@ class DcmsHttpRequest(BaseHttpRequest):
         r = self.post(
             self.post_urls['search_cp'],
             searchValue=cp_num,
-            searchCriteria=SearchBy.con_num
+            searchCriteria=SearchBy.con_num.value
         )
         try:
             rlk = RegExp.rlk.findall(r.text)[0]
@@ -153,7 +154,7 @@ class DcmsHttpRequest(BaseHttpRequest):
         r = self.post(
             self.post_urls['search_lu'],
             searchValue=lu_num,
-            searchCriteria=SearchBy.con_num,
+            searchCriteria=SearchBy.con_num.value,
             stopLimit='N'
         )
         rlk = RegExp.rlk.findall(r.text)[0]

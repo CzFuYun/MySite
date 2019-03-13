@@ -173,6 +173,7 @@ downloadProjectList_col_part1 = {
     'plan_xinshen': '计划到信审会',
     'plan_reply': '计划获批',
     'plan_luodi': '计划落地',
+    'pretrial_doc__stockholder': '控股方',
 }
 
 downloadProjectList_col_part2 = {

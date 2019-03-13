@@ -34,3 +34,7 @@ def c_scrapeLeiShou():
     DailyLeiShou.getDailyLeishou(last_scrape)
 
 
+def d_updateEp():
+    from deposit_and_credit.models import ExpirePrompt
+    ExpirePrompt.fillCpNum()
+    ExpirePrompt.updateProgress()

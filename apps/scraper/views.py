@@ -2,6 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from .crp import CrpHttpRequest
+from .dcms_request import DcmsHttpRequest
 from .models import LuLedger, CpLedger, DailyLeiShou
 
 def test(request):
@@ -15,9 +16,13 @@ def test(request):
 
     # CpLedger._bulkCreateSmeCpFromCrp('2018-01-01')
     # DailyLeiShou.getDailyLeishou('2019-03-01')
-    # LuLedger.fillDetail()
+    LuLedger.fillDetail()
 
 
-    lu = LuLedger.objects.get(lu_num='LU/CZ01/2019/03/00001497').as_dcms_work_flow()
-    r = lu.apply_info()
+    # lu = LuLedger.objects.get(lu_num='LU/CZ01/2019/03/00001497').as_dcms_work_flow()
+    # r = lu.apply_info().named_lists
+    #
+    # dcms = DcmsHttpRequest()
+    # dcms.login()
+    # r = dcms.search_customer('江苏武进经济发展集团有限公司')
     pass

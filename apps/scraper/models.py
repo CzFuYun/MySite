@@ -51,6 +51,8 @@ class CpLedger(models.Model):
     # diya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='抵押担保')
     # zhiya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='质押担保')
     # is_auto_added = models.BooleanField(default=False, verbose_name='是否自动生成')
+    is_virtual = models.BooleanField(default=False, verbose_name='虚拟')      # 针对未建档，甚至客户都不存在的业务
+    remark = models.TextField(blank=True, null=True, verbose_name='备注')
 
     class Meta:
         verbose_name = '授信台账'
@@ -119,7 +121,7 @@ class CpLedger(models.Model):
         crp.login()
         dcms = DcmsHttpRequest()
         # dcms.login('czzxsk', '111111', 'SMEDCMS')
-        dcms.login(dcms_type=dcms.DcmsType.sme)
+        dcms.login(dcms_type=dcms.DcmsType.sme.value)
         imp_date = DateOperation()
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
@@ -174,7 +176,7 @@ class CpLedger(models.Model):
         crp.login()
         dcms = DcmsHttpRequest()
         # dcms.login('czhn', 'hn106412', 'DCMSCS')
-        dcms.login(dcms_type=dcms.DcmsType.cs)
+        dcms.login(dcms_type=dcms.DcmsType.cs.value)
         imp_date = DateOperation()
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
         reply_date__gte = reply_date__gte or last_add
@@ -370,6 +372,14 @@ class LuLedger(models.Model):
                 for page in qidai:
                     page_data = crp.parseQueryResultToDictList(page)
                     for row_data in page_data:
+                        lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
+                        lu_flow_base_info = lu_flow_base_info_page.named_values
+                        lu_flow_info_lists = lu_flow_base_info_page.named_lists
+
+
+                        # lu_flow_info_lists['业务费'].parse_to_tag_dict_list()
+
+
                         data_dict = {}
                         if '保证' in row_data['担保方式']:
                             data_dict['has_baozheng'] = True
@@ -381,12 +391,8 @@ class LuLedger(models.Model):
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
                             data_dict['rlk'] = dcms.search_lu(lu_num)
-                            if row_data['授信参考编号']:
-                                data_dict['cp'] = CpLedger.objects.get(cp_num=row_data['授信参考编号'])
-                            else:
-                                lu_flow_base_info = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info().details
-
-                                pass
+                            cp_num = row_data['授信参考编号'] if row_data['授信参考编号'].strip() else lu_flow_base_info['申请明细']['对应的授信申请'][0]
+                            data_dict['cp'] = CpLedger.objects.get(cp_num=cp_num)
                             data_dict['contract_code'] = row_data['合同号']
                             data_dict['department'] = Department.pickObjByCaption(row_data['经办行'].split('-')[1])
                             data_dict['staff'] = Staff.pickStaffByName(row_data['管户客户经理'])

@@ -1,5 +1,5 @@
 import re
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, defaultdict
 
 from bs4 import BeautifulSoup as BS
 from bs4.element import Tag
@@ -22,7 +22,10 @@ class Parser:
 
 class List(Parser):
     def parse_to_tag_dict_list(self):
-        cols_name = [td.text.strip() for td in self.bs_obj.find('tr', {'class': 'clsSubHeader'}).find_all('td')]
+        try:
+            cols_name = [td.text.strip() for td in self.bs_obj.find('tr', {'class': 'clsSubHeader'}).find_all('td')]
+        except:
+            cols_name = [td.text.strip() for td in self.bs_obj.find_all('tr', {'class': 'clsHeader'})[1].find_all('td')]
         list_trs = self.bs_obj.find_all('tr')[2: ]
         ret = []
         for tr in list_trs:
@@ -70,7 +73,7 @@ class WebPage:
         return
 
     @property
-    def details(self):
+    def named_values(self):
         return
 
     # @property
@@ -103,6 +106,9 @@ class WebPage:
 
 class DcmsWebPage(WebPage):
     rgx_rlk = re.compile(r'[A-Z0-9]{32}')
+
+    NamedCell = namedtuple('NamedCell', ['name', 'value', 'inner_html'])
+
     @property
     def search_result(self):
         result_table = self.HTML_soup.find_all(class_='clsForm')[0].find_all('tr')[1:]
@@ -127,8 +133,49 @@ class DcmsWebPage(WebPage):
         return [List(table) for table in tables if table.find('tr', {'class': 'clsSubHeader'})]
 
     @property
-    def details(self):
-        detail_tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
-        return [List(table) for table in detail_tables if not table.find('tr', {'class': 'clsSubHeader'})]
+    def named_lists(self):
+        tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
+        ret = {}
+        for table in tables:
+            header = table.find_all('tr', attrs={'class': 'clsHeader'})
+            sub_header = table.find('tr', attrs={'class': 'clsSubHeader'})
+            if len(header) > 1 :
+                header, sub_header = header[0], header[1]
+            elif header and sub_header:
+                header = header[0]
+            else:
+                continue
+            header_td_count = len(sub_header.find_all('td'))
+            content_td_count = len(table.find('tr', attrs={'class': 'clsOdd'}).find_all('td'))
+            if header_td_count != content_td_count:
+                continue
+            ret[header.find('td').text.strip()] = List(table)
+        return ret
+
+    @property
+    def named_values(self):
+        tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
+        ret = {}
+        rgx_clean = re.compile(r'[\t\n\r]')
+        for table in tables:
+            if not table.find('td', attrs={'class': 'clsLabel'}):
+                continue
+            trs = table.find_all('tr')
+            current_hader = ''
+            for tr in trs:
+                if 'header' in str(tr.attrs.get('class')).lower():
+                    current_hader = tr.find('td').text.strip()
+                    if current_hader not in ret.keys():
+                        ret[current_hader] = {}
+                else:
+                    tds = tr.find_all('td')
+                    current_label = ''
+                    for td in tds:
+                        if 'label' in str(td.attrs.get('class')).lower():
+                            current_label = td.text.strip()
+                            ret[current_hader][current_label] = []
+                        else:
+                            ret[current_hader][current_label].append(rgx_clean.sub(' ', td.text.strip()))
+        return ret
 
 

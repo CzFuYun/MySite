@@ -6,16 +6,18 @@ class DcmsWorkFlow:
         if dcms is None:
             self.dcms = DcmsHttpRequest()
             self.dcms.login()
+        else:
+            self.dcms = dcms
 
 
 class LuWorkFlow(DcmsWorkFlow):
     def __init__(self, lu_num, *args, dcms=None, rlk=None, **kwargs):
         super().__init__(self, *args, dcms=dcms, **kwargs)
-        dcms_type = self.dcms.DcmsType.cp
+        dcms_type = self.dcms.DcmsType.cp.value
         if lu_num.startswith('SMELU'):
-            dcms_type = self.dcms.DcmsType.sme
+            dcms_type = self.dcms.DcmsType.sme.value
         elif lu_num.startswith('CSLU'):
-            dcms_type = self.dcms.DcmsType.cs
+            dcms_type = self.dcms.DcmsType.cs.value
         self.dcms.setDcmsType(dcms_type)
         self.rlk = rlk or self.dcms.search_lu(lu_num)
         self.lu_num = lu_num

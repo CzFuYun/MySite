@@ -1,5 +1,6 @@
 import re, sys, threading, urllib
 from collections import namedtuple, OrderedDict
+from enum import Enum
 
 import requests, bs4
 
@@ -11,6 +12,9 @@ from dcms_shovel.page_parser import DcmsWebPage
 RGX = {
     'date': re.compile(r"\d{4}-\d{2}-\d{2}")
 }
+
+class QiDaiFields(Enum):
+    pass
 
 class CrpHttpRequest(BaseHttpRequest):
     origin_url = 'http://102.104.254.14/crp/'
