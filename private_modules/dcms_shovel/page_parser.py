@@ -6,6 +6,10 @@ from bs4.element import Tag
 
 from .customer import SearchResult
 
+
+Element = namedtuple('Element', ['outer_html', 'inner_text'])
+
+
 class Parser:
     def __init__(self, bs_obj):
         self.bs_obj = bs_obj
@@ -34,16 +38,12 @@ class List(Parser):
         return ret
 
     def parse_to_dict_list(self):
+        rgx_clean = re.compile(r'[\t\n\r]')
         tag_dict_list = self.parse_to_tag_dict_list()
         ret = []
         for tag_dict in tag_dict_list:
-            ret.append({key: value.text.strip() for key, value in tag_dict.items()})
+            ret.append({key: rgx_clean.sub('', value.text) for key, value in tag_dict.items()})
         return ret
-
-
-class Detail(Parser):
-    def parse_to_dict(self):
-        pass
 
 
 class WebPage:
@@ -73,7 +73,7 @@ class WebPage:
         return
 
     @property
-    def named_values(self):
+    def label_value_areas(self):
         return
 
     # @property
@@ -106,7 +106,7 @@ class WebPage:
 
 class DcmsWebPage(WebPage):
     rgx_rlk = re.compile(r'[A-Z0-9]{32}')
-
+    rgx_clean = re.compile(r'[\n\r\t]')
     NamedCell = namedtuple('NamedCell', ['name', 'value', 'inner_html'])
 
     @property
@@ -133,49 +133,68 @@ class DcmsWebPage(WebPage):
         return [List(table) for table in tables if table.find('tr', {'class': 'clsSubHeader'})]
 
     @property
-    def named_lists(self):
+    def list_areas(self):
         tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
         ret = {}
+        list_index = 0
         for table in tables:
-            header = table.find_all('tr', attrs={'class': 'clsHeader'})
-            sub_header = table.find('tr', attrs={'class': 'clsSubHeader'})
-            if len(header) > 1 :
-                header, sub_header = header[0], header[1]
-            elif header and sub_header:
-                header = header[0]
+            headers = table.find_all('tr', attrs={'class': 'clsHeader'})
+            sub_headers = table.find_all('tr', attrs={'class': 'clsSubHeader'})
+            if not headers and not sub_headers:
+                continue
+            area_name = headers[0].find('td').text.strip()
+            first_data_tr_index = len(headers) + len(sub_headers)     # 第一个数据行在这个table所有行中的索引号
+            if sub_headers:
+                sub_header = sub_headers[-1]
             else:
+                if len(headers) > 1:
+                    sub_header = headers[-1]
+                else:
+                    area_name = list_index
+                    sub_header = headers[0]
+            try:
+                list_header_col_count = len(sub_header.find_all('td'))
+            except AttributeError:
+                list_header_col_count = 0
+            table_all_trs = table.find_all('tr')
+            try:
+                list_data_col_count = len(table_all_trs[first_data_tr_index].find_all('td'))
+            except AttributeError:
+                list_data_col_count = 0
+            if list_header_col_count != list_data_col_count or (list_header_col_count == 0 and list_data_col_count == 0):
                 continue
-            header_td_count = len(sub_header.find_all('td'))
-            content_td_count = len(table.find('tr', attrs={'class': 'clsOdd'}).find_all('td'))
-            if header_td_count != content_td_count:
-                continue
-            ret[header.find('td').text.strip()] = List(table)
+            col_names = [td.text.strip() for td in sub_header.find_all('td')]
+            data_trs = table_all_trs[first_data_tr_index: ]
+            data_list = []
+            for data_tr in data_trs:
+                data_td = data_tr.find_all('td')
+                data_list.append({col_names[i - 1]: Element(data_td[i - 1], self.rgx_clean.sub('', data_td[i - 1].text.strip())) for i in range(list_header_col_count)})
+            ret[area_name] = data_list
+            list_index += 1
         return ret
 
     @property
-    def named_values(self):
+    def label_value_areas(self):
         tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
         ret = {}
-        rgx_clean = re.compile(r'[\t\n\r]')
         for table in tables:
             if not table.find('td', attrs={'class': 'clsLabel'}):
                 continue
             trs = table.find_all('tr')
-            current_hader = ''
+            area_name = ''
             for tr in trs:
                 if 'header' in str(tr.attrs.get('class')).lower():
-                    current_hader = tr.find('td').text.strip()
-                    if current_hader not in ret.keys():
-                        ret[current_hader] = {}
+                    area_name = tr.find('td').text.strip()
+                    ret[area_name] = defaultdict(list)
                 else:
                     tds = tr.find_all('td')
                     current_label = ''
                     for td in tds:
                         if 'label' in str(td.attrs.get('class')).lower():
                             current_label = td.text.strip()
-                            ret[current_hader][current_label] = []
                         else:
-                            ret[current_hader][current_label].append(rgx_clean.sub(' ', td.text.strip()))
+                            ret[area_name][current_label].append(Element(td, self.rgx_clean.sub('', td.text.strip())))
         return ret
+
 
 

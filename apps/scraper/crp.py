@@ -468,21 +468,177 @@ class CrpHttpRequest(BaseHttpRequest):
         '利率浮动标识': Column('mt_sign_name', '2'),
         '利率浮动比例': Column('margin', '9'),
     }
+    gedai_fields = {
+        '报表数据日期': Column('DT_COMMIT', '4'),
+        '分行名称（一级）': Column('BR_NM1', '2'),
+        '分行名称（二级）': Column('BR_NM', '2'),
+        '经办行': Column('JBBR_NM', '2'),
+        '客户编号': Column('NO', '9'),
+        '客户名称': Column('NM', '9'),
+        '从事行业门类': Column('EMPLOYER_MT_IND_TYP_NAME', '2'),
+        '帐号': Column('ACCT_NO', '9'),
+        '放款编号': Column('TRXN_ID', '9'),
+        '授信参考编号': Column('REF_NO', '9'),
+        '合同号': Column('CONTRACT_NO', '9'),
+        '是否自助贷款': Column('IS_SELF_SRV_LOAN', '2'),
+        '业务名称': Column('MT_FAC_NAME', '2'),
+        '业务开始时间(发放日)': Column('DT_FIRST_DISB', '4'),
+        '业务到期日': Column('DT_MATURITY', '4'),
+        '授信开始日期': Column('SXBEGDATE', '4'),
+        '授信到期日期': Column('SXENDDATE', '4'),
+        '期限': Column('APPR_TENURE', '4'),
+        '期限代码': Column('TENURE_MT_TIME_CD', '2'),
+        '利率': Column('INT_RATE', '9'),
+        '原币余额': Column('OUTSTD_AMT', '1'),
+        '币种': Column('CUR_NM', '2'),
+        '汇率': Column('EXCHG_RATE', '9'),
+        '押品一级分类': Column('MT_COLL_TYP_NAME', '2'),
+        '押品二级分类': Column('ERJI', '2'),
+        '押品三级分类': Column('MT_COLL_NAME', '2'),
+        '担保方式': Column('MT_COLL_CLS_TYP_NAME', '2'),
+        '账户状态': Column('MT_ACCT_STS_NAME', '2'),
+        '五级分类': Column('LAST_RATING_NAME', '2'),
+        '是否欠息': Column('IS_QX', '2'),
+        '表外欠息(元)': Column('INT_IN_SUSPENSE', '7'),
+        '表内欠息(元)': Column('INT_RECEIVABLE', '7'),
+        '是否展期': Column('IS_EXT', '2'),
+        '是否借新还旧': Column('IS_JXHJ', '2'),
+        '拨备金额(元)': Column('DV_ACCT_AMT', '1'),
+        '担保品价值(元)': Column('COLL_VALUE', '1'),
+        '本月提前还款金额(元)': Column('PREPARE_BACK_AMT', '1'),
+        '已还本金(元)': Column('REP_AMT', '1'),
+        '已还利息(元)': Column('BACK_AMT', '1'),
+        '当月实还本金(元)': Column('MONTHLY_INT_AMT', '1'),
+        '当月实还利息(元)': Column('MONTHLY_BACK_AMT', '1'),
+        '本月全部提前还款本金': Column('MON_SUM_PRE_CAPI', '1'),
+        '本月全部提前还款利息': Column('MON_SUM_PRE_INTE', '1'),
+        '本月部分提前还款本金': Column('MON_PART_PRE_CAPI', '1'),
+        '本月部分提前还款利息': Column('MON_PART_PRE_INTE', '1'),
+        '主办客户经理': Column('ACCT_MGR_SEC_USER_ID', '9'),
+        '是否减值帐号': Column('IS_DV_ACCT', '2'),
+        '利率浮动标识': Column('MT_SIGN_NM', '9'),
+        '利率浮动比例': Column('MARGIN', '9'),
+        '发放金额': Column('DISB_AMT', '1'),
+        '合作企业名称': Column('CON_NM', '9'),
+        '销售合同编号': Column('CL_CONTRACT_NO', '9'),
+        '销售合同金额': Column('CL_CONTRACT_AMT', '1'),
+        '首付款金额': Column('CL_DOWNPYMT', '1'),
+        '管户客户经理': Column('SEC_NM', '9'),
+        '管户客户经理用户代码': Column('SEC_ID', '9'),
+        '利息调整频率': Column('MT_FRQ_ADJ_TYP_NAME', '2'),
+        '第一证件号码（测试）': Column('ID_NO_1', '9'),
+        '第二证件号码（测试）': Column('ID_NO_2', '9'),
+        '第三证件号码（测试）': Column('ID_NO_3', '9'),
+        '客户工作单位名称（测试）': Column('EMPLOYER_NM', '9'),
+        '客户工作单位行业分类（测试）': Column('EMPLOYER_MT_IND_NAME', '9'),
+        '合同号（测试）': Column('CONTRACT_NO', '9'),
+        '客户编号（测试）': Column('NO', '9'),
+        '授信金额（测试）': Column('LMT_APPR', '1'),
+        '批复时间（测试）': Column('DT_APPR', '4'),
+        '核心业务名称': Column('CB_PROD_NM', '2'),
+        '罚息浮动标识': Column('SUSPENSE_MT_SIGN_NM', '2'),
+        '罚息浮动比例': Column('SUSPENSE_MARGIN', '3'),
+        '罚息利率': Column('INT_RATE_IN_SUSPENSE', '3'),
+        '拖欠日期': Column('DT_CB_PRINCIPAL_DUE', '4'),
+        '行业门类（客户）': Column('MT_IND_TYP_NAME', '2'),
+        '行业大类（客户）': Column('MT_IND_CAT_NAME', '2'),
+        '行业中类（客户）': Column('MT_IND_NAME', '2'),
+        '行业小类（客户）': Column('MT_IND_DETAIL_NAME', '2'),
+        '行业门类（投向）': Column('INVEST_MT_IND_TYP_NAME', '2'),
+        '行业大类（投向）': Column('INVEST_MT_IND_CAT_NAME', '2'),
+        '行业中类（投向）': Column('INVEST_MT_IND_NAME', '2'),
+        '行业小类（投向）': Column('INVEST_MT_IND_DETAIL_NAME', '2'),
+        '是否个人经营性贷款': Column('IS_SELF_BIZ', '2'),
+        '是否表外': Column('IS_BW', '2'),
+        '是否特别授信': Column('IS_LOW_RISK', '2'),
+        '上次五级分类': Column('APPR_RATING_DSCP', '2'),
+        '系统计算五级分类结果': Column('SYS_RATING_DSCP', '2'),
+        '五级分类认定原因': Column('APPR_JUSTIFICATION', '9'),
+        '是否逾期（监管口径）': Column('OVER_FLAG', '2'),
+        '逾期期限（监管口径）': Column('OVER_CAT', '9'),
+        '逾期本金（监管口径）': Column('UNPD_PRIN_BAL', '1'),
+        '欠本日期（监管口径）': Column('DEB_BAL_DATE', '4'),
+        '欠息日期（监管口径）': Column('DEB_TXN_DATE', '4'),
+        '是否欠息（监管口径）': Column('DEBT_FLAG', '2'),
+        '表内欠息（监管口径）': Column('INNER_TXN', '1'),
+        '表外欠息（监管口径）': Column('OUTER_TXN', '1'),
+        '计提累计欠息（监管口径）': Column('TOTAL_TXN', '1'),
+        '放款类型': Column('MT_LOAN_DISB_TYP_DSCP', '2'),
+        '还款类型': Column('MT_REPYMT_TYP_DSCP', '9'),
+        '分期还款方式': Column('MT_REPYMT_SCHD_DSCP', '9'),
+        '还款周期': Column('MT_PYMT_TERM_DSCP', '9'),
+        '房屋套数': Column('MT_HOUSE_COUNT_CD', '9'),
+        '面积': Column('BUILT_UP_AREA', '9'),
+        '分期付款金额': Column('REPYMT_AMT', '1'),
+        '月物业费': Column('CL_PROPERTY_FEE', '1'),
+        '月收入': Column('MONTHLY_INC_AMT', '1'),
+        '家庭月收入': Column('HOUSEHOLD_MONTHLY_INC_AMT', '1'),
+        '统计指标（业务）': Column('ACCT_INDEX', '9'),
+        '统计指标（客户）': Column('CIF_INDEX', '9'),
+        '原账号（借新还旧）': Column('ACCT_NO_OLD', '9'),
+        '原发放日期（借新还旧）': Column('DT_FIRST_DISB_0', '4'),
+        '原到期日（借新还旧）': Column('DT_MATURITY_0', '4'),
+        '担保币种': Column('COLL_MT_CUR_NAME', '2'),
+        '辅办客户经理': Column('acct_mgr2', '2'),
+        '最近一期五级分类时间': Column('DT_APPROVED', '4'),
+        '信贷计提金额': Column('TAKE_AMT', '1'),
+        'AP': Column('AP', '2'),
+        '抵质押品价值': Column('DZYVALUE', '1'),
+        '累计应还过账本金': Column('SUMUNPD_PRIN_BAL', '1'),
+        '累计应还过账利息': Column('SUMINNER_TXN', '1'),
+        '还款账号余额': Column('HKBAL', '1'),
+        '差额（还款账号余额-本月应还本金、利息）': Column('CHAE', '1'),
+        '贷款价值比': Column('JIAZHIBI', '2'),
+        '偿债收入比': Column('shourubi', '2'),
+        '权利凭证类型': Column('MT_REG_PLC_CAT_CD', '2'),
+        '所有权凭证编号': Column('PRESENTATION_NO', '2'),
+        '登记日期': Column('DT_REG', '4'),
+        '渠道': Column('LAKD', '2'),
+        '省': Column('MT_STATE_NAME', '2'),
+        '市': Column('MT_CITY_NAME', '2'),
+        '县/区': Column('MT_COUNTY_NAME', '2'),
+        '业务期限（天）': Column('YWQX_T', '2'),
+        '业务期限（短期、中长期）': Column('YWQX2', '2'),
+        '逾欠日期': Column('YQRQ', '4'),
+        '逾欠天数': Column('YQTS', '3'),
+        '上年末五级分类': Column('last_rating2', '2'),
+        '首次下调不良日期': Column('scxtblrq', '4'),
+        '首次下调不良结果': Column('SCXTBLJG', '2'),
+        '是否中小部业务': Column('IS_ZX', '2'),
+        '授信编号': Column('TBL_FAC_NO', '2'),
+        '是否循环授信': Column('IS_REVOLVING_ALLOWED', '2'),
+        '项目名称': Column('PROJECT_NAME', '2'),
+        '押品编号': Column('GUAR_NO', '2'),
+        '客户经理所属机构': Column('KHJLSSJG', '2'),
+        '是否有客户经理(个贷监控)角色': Column('KHJLJKJS', '2'),
+        '是否有效用户': Column('SFYXYH', '2'),
+        '总账汇率': Column('ZZHL', '2'),
+        '是否菁英贷': Column('IS_ELITE_E_LOAN', '2'),
+    }
 
     @staticmethod
     def encode(string):
         return BaseHttpRequest.encode(string).replace('%', '%25')
 
     @staticmethod
-    def strToNum(string):
-        string = string.replace(',', '')
+    def strToNum(string, empty_string_return=0):
+        rgx_numlike = re.compile(r'[+-]?\d[\d,.]*[%\d]?')
+        try:
+            string = rgx_numlike.search(string).group().replace(',', '')
+        except AttributeError:
+            return empty_string_return
         if string:
+            div = 100 if string.endswith('%') else 1
+            string = string.replace('%', '')
             try:
-                return int(string)
-            except:
-                return float(string)
+                return int(string) / div
+            except ValueError:
+                try:
+                    return float(string) / div
+                except ValueError:
+                    return 0
         else:
-            return 0
+            return empty_string_return
 
 
     def __init__(self):
@@ -566,13 +722,18 @@ class CrpHttpRequest(BaseHttpRequest):
                 yield DcmsWebPage(response.text)
         raise StopIteration
 
-    def getQiDai(self, *col_name_cn, **filter_condition):
+    def getQiDaiLu(self, *col_name_cn, **filter_condition):
         '''
         爬取企贷表
         '''
         strFrom = 'TBL_CPMX_COLL_'
         px = 'br_nm as c1,no as c2;c1,c2;br_nm,no'
         return self.query(self.qidai_fields, strFrom, px, *col_name_cn, **filter_condition)
+
+    def getGeDaiLu(self, *col_name_cn, **filter_condition):
+        strFrom = 'TBL_CSMX_COLL_'
+        px = 'MT_BR_CD as c1,acct_no as c2;c1,c2;MT_BR_CD,acct_no'
+        return self.query(self.gedai_fields, strFrom, px, *col_name_cn, **filter_condition)
 
     def getLeiShou(self, *col_name_cn, **filter_condition):
         strFrom = 'TBL_CPMX_LS_'
