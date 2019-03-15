@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup as BS
 from bs4.element import Tag
 
 from .customer import SearchResult
-
+from scraper.dcms_request import DcmsHttpRequest
 
 Element = namedtuple('Element', ['outer_html', 'inner_text'])
 
@@ -46,10 +46,41 @@ class List(Parser):
         return ret
 
 
+class MutiplePageList:
+    def __init__(self, url_path, page_param_name, dcms, max_page, cur_page=1):
+        '''
+
+        :param url_path:
+        :param page_param_name: url_path中，控制当前页数的参数名，例如‘savedListCurrentPage’
+        :param dcms:
+        :param max_page:
+        :param cur_page:
+        '''
+        if dcms is None:
+            dcms = DcmsHttpRequest()
+            dcms.login()
+            # dcms.setDcmsType(dcms_type)
+        self.url_path = url_path
+        self.page_param_name = page_param_name
+        self.dcms = dcms
+        self.dcms_type = dcms.dcms_type
+        self.cur_page = cur_page
+        self.max_page = max_page
+
+    def jumpToPage(self, page_num):
+        self.url_path.params[self.page_param_name] = page_num
+        r = self.dcms.get(self.url_path.params)
+
+    def __iter__(self):
+        for page_num in range(self.max_page):
+            self.url_path.params[self.page_param_name] = page_num
+            r = self.dcms.get(self.url_path.params)
+
+
 class WebPage:
     parser = ('lxml', 'html.parser')
-    def __init__(self, HTML_text, path_url=None, connection=None):
-        self.path_url = path_url
+    def __init__(self, HTML_text, url_path=None, connection=None):
+        self.url_path = url_path
         self.HTML_text = HTML_text
         self.HTML_soup = BS(HTML_text, self.parser[0])
         self.connection = connection
@@ -107,6 +138,7 @@ class WebPage:
 class DcmsWebPage(WebPage):
     rgx_rlk = re.compile(r'[A-Z0-9]{32}')
     rgx_clean = re.compile(r'[\n\r\t]')
+    rgx_get_page = re.compile(r'第\s*(\d+)\s*页\s共\s*(\d+)\s*页')
     NamedCell = namedtuple('NamedCell', ['name', 'value', 'inner_html'])
 
     @property
@@ -132,48 +164,66 @@ class DcmsWebPage(WebPage):
         tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
         return [List(table) for table in tables if table.find('tr', {'class': 'clsSubHeader'})]
 
-    @property
+    # def list_areas(self):
+    #     ret = {}
+    #     tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
+    #     list_index = 0
+    #     for table in tables:
+    #         headers = table.find_all('tr', attrs={'class': 'clsHeader'})
+    #         sub_headers = table.find_all('tr', attrs={'class': 'clsSubHeader'})
+    #         if not headers and not sub_headers:
+    #             continue
+    #         area_name = headers[0].find('td').text.strip()
+    #         first_data_tr_index = len(headers) + len(sub_headers)     # 第一个数据行在这个table所有行中的索引号
+    #         if sub_headers:
+    #             sub_header = sub_headers[-1]
+    #         else:
+    #             if len(headers) > 1:
+    #                 sub_header = headers[-1]
+    #             else:
+    #                 area_name = list_index
+    #                 sub_header = headers[0]
+    #         try:
+    #             list_header_col_count = len(sub_header.find_all('td'))
+    #         except AttributeError:
+    #             list_header_col_count = 0
+    #         table_all_trs = table.find_all('tr')
+    #         try:
+    #             list_data_col_count = len(table_all_trs[first_data_tr_index].find_all('td'))
+    #         except AttributeError:
+    #             list_data_col_count = 0
+    #         if list_header_col_count != list_data_col_count or (list_header_col_count == 0 and list_data_col_count == 0):
+    #             continue
+    #         col_names = [td.text.strip() for td in sub_header.find_all('td')]
+    #         data_trs = table_all_trs[first_data_tr_index: ]
+    #         data_list = []
+    #         for data_tr in data_trs:
+    #             data_td = data_tr.find_all('td')
+    #             data_list.append({col_names[i - 1]: Element(data_td[i - 1], self.rgx_clean.sub('', data_td[i - 1].text.strip())) for i in range(list_header_col_count)})
+    #         ret[area_name] = data_list
+    #         list_index += 1
+    #     return ret
+
     def list_areas(self):
-        tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
         ret = {}
+        tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
         list_index = 0
         for table in tables:
-            headers = table.find_all('tr', attrs={'class': 'clsHeader'})
-            sub_headers = table.find_all('tr', attrs={'class': 'clsSubHeader'})
-            if not headers and not sub_headers:
+            area_name, data = self._parse_list(table)
+            if area_name is None and data is None:
                 continue
-            area_name = headers[0].find('td').text.strip()
-            first_data_tr_index = len(headers) + len(sub_headers)     # 第一个数据行在这个table所有行中的索引号
-            if sub_headers:
-                sub_header = sub_headers[-1]
-            else:
-                if len(headers) > 1:
-                    sub_header = headers[-1]
-                else:
-                    area_name = list_index
-                    sub_header = headers[0]
-            try:
-                list_header_col_count = len(sub_header.find_all('td'))
-            except AttributeError:
-                list_header_col_count = 0
-            table_all_trs = table.find_all('tr')
-            try:
-                list_data_col_count = len(table_all_trs[first_data_tr_index].find_all('td'))
-            except AttributeError:
-                list_data_col_count = 0
-            if list_header_col_count != list_data_col_count or (list_header_col_count == 0 and list_data_col_count == 0):
-                continue
-            col_names = [td.text.strip() for td in sub_header.find_all('td')]
-            data_trs = table_all_trs[first_data_tr_index: ]
-            data_list = []
-            for data_tr in data_trs:
-                data_td = data_tr.find_all('td')
-                data_list.append({col_names[i - 1]: Element(data_td[i - 1], self.rgx_clean.sub('', data_td[i - 1].text.strip())) for i in range(list_header_col_count)})
-            ret[area_name] = data_list
-            list_index += 1
+            area_name = area_name or list_index
+            ret[area_name] = data
         return ret
 
-    @property
+    def multiple_page_list(self, table):#, area_name, url_path, dcms=None, dcms_type=DcmsHttpRequest.DcmsType.cp.value):
+        header_right = table.find_all('tr', attrs={'class': 'clsHeader'}).find_all('td')[-1]
+        try:
+            cur_page, max_page = self.rgx_get_page.search(header_right.text).groups()
+            return MutiplePageList(self.url_path, self.connection, int(max_page))
+        except AttributeError:
+            return None
+
     def label_value_areas(self):
         tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
         ret = {}
@@ -196,5 +246,44 @@ class DcmsWebPage(WebPage):
                             ret[area_name][current_label].append(Element(td, self.rgx_clean.sub('', td.text.strip())))
         return ret
 
-
-
+    @classmethod
+    def _parse_list(cls, table):
+        '''
+        tables = self.HTML_soup.find_all('table', attrs={'class': 'clsForm'})
+        for table in tables:
+        :param table:
+        :return: 列表名称、列表内容
+        '''
+        headers = table.find_all('tr', attrs={'class': 'clsHeader'})
+        sub_headers = table.find_all('tr', attrs={'class': 'clsSubHeader'})
+        if not headers and not sub_headers:
+            return None, None
+        area_name = headers[0].find('td').text.strip()
+        first_data_tr_index = len(headers) + len(sub_headers)  # 第一个数据行在这个table所有行中的索引号
+        if sub_headers:
+            sub_header = sub_headers[-1]
+        else:
+            if len(headers) > 1:
+                sub_header = headers[-1]
+            else:
+                area_name = None
+                sub_header = headers[0]
+        try:
+            list_header_col_count = len(sub_header.find_all('td'))
+        except AttributeError:
+            list_header_col_count = 0
+        table_all_trs = table.find_all('tr')
+        try:
+            list_data_col_count = len(table_all_trs[first_data_tr_index].find_all('td'))
+        except AttributeError:
+            list_data_col_count = 0
+        if list_header_col_count != list_data_col_count or (list_header_col_count == 0 and list_data_col_count == 0):
+            return None, None
+        col_names = [td.text.strip() for td in sub_header.find_all('td')]
+        data_trs = table_all_trs[first_data_tr_index:]
+        data_list = []
+        for data_tr in data_trs:
+            data_td = data_tr.find_all('td')
+            data_list.append(
+                {col_names[i]: Element(data_td[i], cls.rgx_clean.sub('', data_td[i].text.strip())) for i in range(list_header_col_count)})
+        return area_name, data_list

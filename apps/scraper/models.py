@@ -7,7 +7,7 @@ from .crp import CrpHttpRequest
 from .dcms_request import DcmsHttpRequest
 from deposit_and_credit.models_operation import DateOperation
 from root_db.models import AccountedCompany, Staff
-from scraper.dcms_work_flow import LuWorkFlow
+from scraper.dcms_work_flow import LuWorkFlow, CpWorkFlow
 
 
 class DcmsBusiness(models.Model):
@@ -33,6 +33,11 @@ class DcmsBusiness(models.Model):
 
 
 class CpLedger(models.Model):
+    cp_type_choice = (
+        ('CP', '地区'),
+        ('SME', '小微'),
+        ('CS', '个人'),
+    )
     add_date = models.DateField(auto_now_add=True)
     cp_num = models.CharField(max_length=32, blank=True, null=True, unique=True, verbose_name='参考编号')
     cp_rlk = models.CharField(max_length=32, blank=True, null=True)
@@ -45,6 +50,7 @@ class CpLedger(models.Model):
     expire_date = models.DateField(blank=True, null=True, verbose_name='授信到期日')
     is_special = models.BooleanField(default=False, verbose_name='特别授信')
     is_approved = models.BooleanField(default=False, verbose_name='已批准')
+    cp_type = models.CharField(max_length=8, choices=cp_type_choice, blank=True, null=True, verbose_name='类型')
     # apply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='申报金额')
     # reply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='批复金额')
     # baozheng = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='保证担保')
@@ -61,6 +67,8 @@ class CpLedger(models.Model):
     def __str__(self):
         return self.cp_num
 
+    def as_dcms_work_flow(self, dcms=None):
+        return CpWorkFlow(cp_num=self.cp_num, rlk=self.cp_rlk, dcms=dcms)
 
     @classmethod
     def _bulkCreateCpFromCrp(cls, reply_date__gte=None):
@@ -103,6 +111,7 @@ class CpLedger(models.Model):
                     'cp_rlk': cp_rlk,
                     'is_special': is_special,
                     'is_approved': is_approved,
+                    'cp_type': 'CP',
                 }
                 if not cls.objects.filter(cp_num=cp_num).exists():
                     data_dict['staff'] = Staff.pickStaffByName(row_data['建档人'])
@@ -157,6 +166,7 @@ class CpLedger(models.Model):
                     'cp_rlk': cp_rlk,
                     'is_special': is_special,
                     'is_approved': is_approved,
+                    'cp_type': 'SME',
                 }
                 if not cls.objects.filter(cp_num=cp_num).exists():
                     data_dict['staff'] = Staff.pickStaffByDcmsName(row_data['建档人'])
@@ -215,7 +225,8 @@ class CpLedger(models.Model):
                         expire_date=expire_date,
                         cp_rlk=cp_rlk,
                         is_special=is_special,
-                        is_approved=is_approved
+                        is_approved=is_approved,
+                        cp_type='CS',
                     ).save()
                 else:
                     # staff_name = row_data['客户经理']
@@ -373,8 +384,8 @@ class LuLedger(models.Model):
                     page_data = crp.parseQueryResultToDictList(page)
                     for row_data in page_data:
                         lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
-                        lu_flow_base_info = lu_flow_base_info_page.label_value_areas
-                        lu_flow_info_lists = lu_flow_base_info_page.list_areas
+                        lu_flow_base_info = lu_flow_base_info_page.label_value_areas()
+                        lu_flow_info_lists = lu_flow_base_info_page.list_areas()
                         data_dict = {}
                         if '保证' in row_data['担保方式']:
                             data_dict['has_baozheng'] = True
@@ -426,8 +437,8 @@ class LuLedger(models.Model):
             for uc in uncompleted:
                 lu_num = uc['lu_num']
                 lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
-                lu_flow_base_info = lu_flow_base_info_page.label_value_areas
-                # lu_flow_info_lists = lu_flow_base_info_page.list_areas
+                lu_flow_base_info = lu_flow_base_info_page.label_value_areas()
+                # lu_flow_info_lists = lu_flow_base_info_page.list_areas()
                 contract_code = lu_flow_base_info['额度使用明细']['合同编号'][0].inner_text
                 gedai = crp.getGeDaiLu(
                     *[

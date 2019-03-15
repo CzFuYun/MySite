@@ -22,8 +22,12 @@ class BaseHttpRequest:
             params = url_path.params
             if '?' not in url:
                 url += '?'
-            for k, v in params.items():
-                url += (k + '=' + v + '&')
+            for key, value in params.items():
+                if type(value) is list:
+                    for v in value:
+                        url += (key + '=' + value + '&')
+                else:
+                    url += (key + '=' + value + '&')
         if not url.strip().lower().startswith('http'):
             url = self.origin_url + url
         while True:

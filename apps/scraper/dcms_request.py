@@ -10,7 +10,7 @@ from  private_modules.dcms_shovel.page_parser import DcmsWebPage
 
 class RegExp:
     rlk = re.compile(r"'([A-Z0-9]{32})'")
-
+    reply_code = re.compile(r'[\u4e00-\u9fa5]*复\[\d{4}\]\d{4}')
 
 class SearchBy(Enum):
     con_num = 'ref_no'

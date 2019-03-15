@@ -26,12 +26,12 @@ class LuCreationModelForm(forms.ModelForm):
 class LuLedgerAdmin:
     ordering = ('-lend_date', )
     list_display = ('lu_num', 'add_date', 'customer', 'lend_date')
-    list_filter = ('lend_date', 'department', 'lu_num')
+    list_filter = ('lend_date', 'department', 'lu_num', 'cp__cp_type')
     search_fields = ('customer__name', 'contract_code', 'lu_num')
     list_bookmarks = [
         {
             'title': '地区',
-            'query': {'cp__cp_num__contains': 'CP'},
+            'query': {'cp__cp_type__contains': 'CP'},
             'cols': ('pk', ),
         }
     ]
