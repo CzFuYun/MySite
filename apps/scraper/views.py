@@ -29,6 +29,7 @@ def test(request):
 
     # CpLedger.objects.get(cp_num='SME/CZZX05/2017/12/00002783').as_dcms_work_flow().getReplyContent()
 
+
     no_reply = CpLedger.objects.filter(
         Q(reply_content__isnull=True) &
         (
@@ -41,4 +42,6 @@ def test(request):
         print(i, '/', count, no_reply[i].customer.name, no_reply[i].cp_num)
         no_reply[i].reply_code, no_reply[i].reply_content = no_reply[i].as_dcms_work_flow(dcms).getReply()
         no_reply[i].save()
+
+
     return HttpResponse('完成')

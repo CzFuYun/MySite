@@ -60,10 +60,6 @@ class CpWorkFlow(DcmsWorkFlow):
         授信流程中文件生成标签
         :return:
         '''
-        # url_path = self.dcms.UrlPath(
-        #     self.dcms.dcms_type + 'dcms/corporate/application/document_generation.view',
-        #     {'do': 'List', 'taskId': 'false', 'resultLinkKey': self.rlk, 'applicationId': self.rlk}
-        # )
         url_path = self.dcms.UrlPath(
             self.dcms.dcms_type + 'dcms/corporate/application/document_generation.view',
             {'do': 'List', 'taskId': 'false', 'resultLinkKey': self.rlk, 'applicationId': self.rlk}
@@ -73,7 +69,7 @@ class CpWorkFlow(DcmsWorkFlow):
 
     def getReply(self):
         doc_gen = self.document_generation()
-        doc_list = doc_gen.list_areas()['文件保存列表']
+        doc_list = doc_gen.areas['文件保存列表'].parse()
         for doc in doc_list:
             if '批复' in doc['文件名称'].inner_text:
                 reply_rlk = RegExp.rlk.search(str(doc['文件名称'].outer_html)).groups()[0]

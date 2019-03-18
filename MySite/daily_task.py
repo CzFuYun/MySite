@@ -23,6 +23,7 @@ def b_scrapeCp():
     CpLedger._bulkCreateCpFromCrp(reply_date_gte)
     CpLedger._bulkCreateSmeCpFromCrp(reply_date_gte)
     CpLedger._bulkCreateCsCpFromCrp(reply_date_gte)
+    print('success')
 
 
 # ↓每日执行，除月初，月初无法爬取上月的累收数
@@ -36,5 +37,8 @@ def c_scrapeLeiShou():
 
 def d_updateEp():
     from deposit_and_credit.models import ExpirePrompt
-    ExpirePrompt.fillCpNum()
+    print('是否填充授信参考号？\n0.否\n1.是')
+    need_fill_cp_num = input('>>>')
+    if need_fill_cp_num == '1' or need_fill_cp_num == '':
+        ExpirePrompt.fillCpNum()
     ExpirePrompt.updateProgress()
