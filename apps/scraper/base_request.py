@@ -25,9 +25,9 @@ class BaseHttpRequest:
             for key, value in params.items():
                 if type(value) is list:
                     for v in value:
-                        url += (key + '=' + value + '&')
+                        url += (key + '=' + str(v) + '&')
                 else:
-                    url += (key + '=' + value + '&')
+                    url += (key + '=' + str(value) + '&')
         if not url.strip().lower().startswith('http'):
             url = self.origin_url + url
         while True:

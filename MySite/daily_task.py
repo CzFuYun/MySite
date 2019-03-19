@@ -35,7 +35,15 @@ def c_scrapeLeiShou():
     DailyLeiShou.getDailyLeishou(last_scrape)
 
 
-def d_updateEp():
+# ↓每日执行
+def d_fillLu():
+    from scraper.models import LuLedger
+    LuLedger.fillCpSmeDetail()
+    LuLedger.fillCsDetail()
+    print('success')
+
+
+def e_updateEp():
     from deposit_and_credit.models import ExpirePrompt
     print('是否填充授信参考号？\n0.否\n1.是')
     need_fill_cp_num = input('>>>')

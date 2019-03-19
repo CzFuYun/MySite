@@ -83,7 +83,7 @@ class CpLedger(models.Model):
             *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '建档人', '是否特别授信', '批复结论'],
             **{
                 '申报金额（原币）': crp.NumCondition.between(1, 10000000000),
-                '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
+                '批复时间': crp.DateCondition.between(reply_date__gte, imp_date.today_str),
             }
         )
         for page in cp:
@@ -137,7 +137,7 @@ class CpLedger(models.Model):
         cp = crp.getSmeCp(
             *['客户名称', '客户编号', '授信参考编号', '批复时间', '批复编号', '授信到期时间', '是否特别授信', '建档人', '批复结论'],
             **{
-                '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
+                '批复时间': crp.DateCondition.between(reply_date__gte, imp_date.today_str),
                 '批复金额（原币）': crp.NumCondition.between(1, 10000000000),
             }
         )
@@ -194,7 +194,7 @@ class CpLedger(models.Model):
             *['客户名称', '客户编号', '授信编号', '批复时间', '批复编号', '授信到期时间', '客户经理', '批复结论'],
             **{
                 '授信额度(元)': crp.NumCondition.gt(0),
-                '批复时间': crp.DateCondition.between(reply_date__gte, crp.data_date),
+                '批复时间': crp.DateCondition.between(reply_date__gte, imp_date.today_str),
             }
         )
         for page in cp:
@@ -587,7 +587,7 @@ class DailyLeiShou(models.Model):
         leishou = crp.getLeiShou(
             *('合同号', '客户名称', '客户编号', '收回日期', '收回金额(元)', '业务种类', '汇率'),
             **{
-                '收回日期': crp.DateCondition.between(retract_date__gte, crp.data_date)
+                '收回日期': crp.DateCondition.between(retract_date__gte, imp_date.today_str)
             }
         )
         total_retract_loan = 0

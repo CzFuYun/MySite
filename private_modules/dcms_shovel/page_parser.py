@@ -94,11 +94,11 @@ class List(PageArea):
         return data_list
 
 
-class OnePageListArea(List):
+class SinglePageListArea(List):
     pass
 
 
-class MultiplePageListArea(List):
+class MultiPageListArea(List):
     def __init__(self, bs_obj, area_name=None, data_start_at=None, max_page=None):      #, url_path, page_param_name, max_page, cur_page=1):
         '''
 
@@ -114,29 +114,43 @@ class MultiplePageListArea(List):
             cur_page, max_page = DcmsWebPage.rgx_get_page.search(header_right.text).groups()
             max_page = int(max_page)
         self.max_page = max_page
-        self.has_linked_to_dcms = max_page == 1 or False
+        self.cur_page = 1
+        self.cache = {}
+        self.has_linked = max_page == 1 or False
 
-    def linkToDcms(self, dcms, dcms_type, url, page_param_name):
-        self.dcms = dcms
-        self.dcms_type = dcms_type
-        dcms.setDcmsType(dcms_type)
-        self.url = url
-        self.page_para_name = page_param_name
-        self.has_linked_to_dcms = True
+    def linkToDcms(self, dcms, dcms_type, url_path, page_param_name):
+        if not self.has_linked:
+            dcms.setDcmsType(dcms_type)
+            self.dcms = dcms
+            self.dcms_type = dcms_type
+            self.url_path = url_path
+            self.page_param_name = page_param_name
+            self.has_linked = True
+
+    def turnToPage(self, page_num):
+        if page_num == 1:
+            return self.bs_obj
+        else:
+            self.cur_page = page_num
+            try:
+                return self.cache[page_num]
+            except KeyError:
+                page_num = min(self.max_page, page_num)
+                self.url_path.params[self.page_param_name] = page_num - 1
+                self.bs_obj = DcmsWebPage(self.dcms.get(self.url_path).text).areas[self.area_name].bs_obj
+                self.cache[page_num] = self.bs_obj
+                pass
 
     def parse(self):
         return super().parse()
 
-    def jumpTo(self, page_num):
-        self.url_path.params[self.page_param_name] = page_num
-        r = self.dcms.get(self.url_path.params)
+    @property
+    def last_page_content(self):
+        self.turnToPage(self.max_page)
+        return self.parse()
 
     @property
-    def last_page(self):
-        return
-
-    @property
-    def first_page(self):
+    def first_page_content(self):
         return
 
     def __iter__(self):
@@ -144,6 +158,8 @@ class MultiplePageListArea(List):
             self.url_path.params[self.page_param_name] = page_num
             r = self.dcms.get(self.url_path.params)
 
+    def __getitem__(self, item):
+        pass
 
 class WebPage:
     parser = ('lxml', 'html.parser')
@@ -225,9 +241,9 @@ class DcmsWebPage(WebPage):
             header_right = area_bs_obj.find_all('tr', attrs={'class': 'clsHeader'})[0].find_all('td')[-1]
             try:
                 cur_page, max_page = cls.rgx_get_page.search(header_right.text).groups()
-                return area_name, MultiplePageListArea(area_bs_obj, area_name, max_page=int(max_page))
+                return area_name, MultiPageListArea(area_bs_obj, area_name, max_page=int(max_page))
             except AttributeError:
-                return area_name, OnePageListArea(area_bs_obj, area_name)
+                return area_name, SinglePageListArea(area_bs_obj, area_name)
         else:
             if area_bs_obj.find('td', attrs={'class': 'clsLabel'}):
                 return area_name, LabelValueArea(area_bs_obj, area_name)

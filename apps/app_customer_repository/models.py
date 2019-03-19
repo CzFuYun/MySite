@@ -277,7 +277,7 @@ class PretrialMeeting(models.Model):
 class PretrialDocument(models.Model):
     result_choices = (
         (10, '待预审'),
-        (12, '维持原额度'),
+        (12, '维持原额度或压缩'),
         (14, '有条件通过'),
         (20, '通过'),
         (30, '续议'),

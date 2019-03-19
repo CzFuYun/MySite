@@ -68,16 +68,25 @@ class CpWorkFlow(DcmsWorkFlow):
         return DcmsWebPage(r.text)
 
     def getReply(self):
+        url_path = self.dcms.UrlPath(
+            self.dcms.dcms_type + 'dcms/corporate/application/document_generation.view',
+            {'do': ['SavedListNext', 'list'], 'applicationId': self.rlk, 'resultLinkKey': self.rlk, 'taskId': 'false'}
+        )
         doc_gen = self.document_generation()
-        doc_list = doc_gen.areas['文件保存列表'].parse()
-        for doc in doc_list:
-            if '批复' in doc['文件名称'].inner_text:
-                reply_rlk = RegExp.rlk.search(str(doc['文件名称'].outer_html)).groups()[0]
-                url_path = self.dcms.UrlPath(
-                    self.dcms.dcms_type + 'dcms/corporate/application/document_generation.view',
-                    {'do': 'SavedDetail', 'id': reply_rlk, 'requestAction': 'save'}
-                )
-                r = self.dcms.get(url_path)
-                content = DcmsWebPage(html.unescape(html.unescape(r.text))).HTML_soup.find('textarea').text.split('审批意见：')[1].strip()
-                code = RegExp.reply_code.search(r.text).group()
-                return code, content
+        doc_list = doc_gen.areas['文件保存列表']
+        doc_list.linkToDcms(self.dcms, self.dcms.dcms_type, url_path, 'savedListCurrentPage')
+        for page in range(doc_list.max_page):
+            doc_list.turnToPage(page + 1)
+            doc_cur_page_content = doc_list.parse()
+            for doc in doc_cur_page_content:
+                if '批复' in doc['文件名称'].inner_text:
+                    reply_rlk = RegExp.rlk.search(str(doc['文件名称'].outer_html)).groups()[0]
+                    url_path = self.dcms.UrlPath(
+                        self.dcms.dcms_type + 'dcms/corporate/application/document_generation.view',
+                        {'do': 'SavedDetail', 'id': reply_rlk, 'requestAction': 'save'}
+                    )
+                    r = self.dcms.get(url_path)
+                    content = DcmsWebPage(html.unescape(html.unescape(r.text))).HTML_soup.find('textarea').text.split('审批意见：')[1].strip()
+                    code = RegExp.reply_code.search(r.text).group()
+                    return code, content
+        return None, None
