@@ -20,30 +20,31 @@ def b_scrapeCp():
     else:
         print('批复日大于等于：')
         reply_date_gte = input('>>>')
-    CpLedger._bulkCreateCpFromCrp(reply_date_gte)
-    CpLedger._bulkCreateSmeCpFromCrp(reply_date_gte)
-    CpLedger._bulkCreateCsCpFromCrp(reply_date_gte)
+    CpLedger.createCpFromCrp(reply_date_gte)
+    CpLedger.createSmeCpFromCrp(reply_date_gte)
+    CpLedger.createCsCpFromCrp(reply_date_gte)
+    print('是否获取批复内容？\n0.否\n1.是')
+    choice = input('>?')
+    if choice == '1' or choice == '':
+        CpLedger.fillReplyContentFromDcms()
     print('success')
 
 
 # ↓每日执行，除月初，月初无法爬取上月的累收数
-def c_scrapeLeiShou():
-    from deposit_and_credit.models_operation import DateOperation
+def d_scrapeLeiShou():
     from scraper.models import DailyLeiShou
-    imp_date = DateOperation()
-    last_scrape = imp_date.last_data_date_str(DailyLeiShou, 'add_date')
-    DailyLeiShou.getDailyLeishou(last_scrape)
+    DailyLeiShou.getDailyLeishou()
 
 
 # ↓每日执行
-def d_fillLu():
+def e_fillLu():
     from scraper.models import LuLedger
     LuLedger.fillCpSmeDetail()
     LuLedger.fillCsDetail()
     print('success')
 
 
-def e_updateEp():
+def f_updateEp():
     from deposit_and_credit.models import ExpirePrompt
     print('是否填充授信参考号？\n0.否\n1.是')
     need_fill_cp_num = input('>>>')

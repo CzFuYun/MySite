@@ -78,7 +78,7 @@ class Staff(models.Model):
         else:
             print('将信贷系统用户名', dcms_name, '添加至现有员工')
             staff_name = input('姓名>>>')
-            print('1.地区部\n2.小企业\n3.个贷')
+            print(dcms_name, '所属系统：\n1.地区部\n2.小企业\n3.个贷')
             dcms_type = {'1': '', '2': '_sme', '3': '_gr'}.get(input('>>>'), '')
             staff = cls.pickStaffByName(staff_name)
             staff.fillDcmsName(staff_name, dcms_type)

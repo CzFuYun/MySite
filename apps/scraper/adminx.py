@@ -24,24 +24,37 @@ class LuCreationModelForm(forms.ModelForm):
 
 
 class LuLedgerAdmin:
-    ordering = ('-lend_date', '-add_date')
-    list_display = ('lu_num', 'add_date', 'customer', 'lend_date')
-    list_filter = ('lend_date', 'department', 'lu_num', 'cp__cp_type')
+    ordering = ('-add_date', '-lend_date', )
+    list_display = ('lu_num', 'add_date', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content')
+    list_filter = ('lend_date', 'department', 'cp__cp_type')
     search_fields = ('customer__name', 'contract_code', 'lu_num')
-    list_bookmarks = [
-        {
-            'title': '地区',
-            'query': {'cp__cp_type__contains': 'CP'},
-            'cols': ('pk', ),
-        }
-    ]
-
+    list_per_page = 20
 
     # add_form = LuCreationModelForm
+    def get_readonly_fields(self, *args, **kwargs):
+        if not self.request.user.is_superuser:
+            return (
+                'inspector', 'cp', 'department', 'staff', 'customer',
+                'dcms_business', 'lend_date', 'plan_expire', 'month_dif',
+                'currency_type', 'lend_amount', 'rate', 'pledge_ratio',
+                'float_ratio', 'net_amount', 'has_baozheng', 'has_diya',
+                'has_zhiya', 'contract_code', 'current_amount', 'loan_demand',
+                'rlk'
+                    )
+        else:
+            return []
+
+    def save_models(self):
+        request = self.request
+        instance = self.new_obj
+        instance.save()
+        instance.inspector = request.user.user_id
+        instance.save(update_fields=('inspector', ))
+
 
 class CpLedgerAdmin:
     list_display = ('cp_num', 'customer', 'reply_date', 'expire_date', 'is_special')
-    list_filter = ('reply_date', 'expire_date')
+    list_filter = ('reply_date', 'expire_date', 'is_approved', 'cp_type', 'is_special')
     search_fields = ('cp_num', 'customer__name')
 
 

@@ -18,9 +18,9 @@ if __name__ == '__main__':
     # print('0.否\n1.是')
     # choice = input('>>>')
     # if choice == '1' or choice == '':
-    #     CpLedger._bulkCreateCpFromCrp(last_scrape)
-    #     CpLedger._bulkCreateSmeCpFromCrp(last_scrape)
-    #     CpLedger._bulkCreateCsCpFromCrp(last_scrape)
+    #     CpLedger.createCpFromCrp(last_scrape)
+    #     CpLedger.createSmeCpFromCrp(last_scrape)
+    #     CpLedger.createCsCpFromCrp(last_scrape)
 
 
     # ↓月初执行

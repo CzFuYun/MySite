@@ -132,8 +132,8 @@ class DateOperation():
             result_year = start_year
             result_month = start_month + month
         result_day = start_date.day
-        if result_month == 2 and result_day > 28:
-            result_day = self.judgeMonthDays(result_year, 2)
+        if result_day > 28:
+            result_day = self.judgeMonthDays(result_year, result_month)
         return pydate.date(result_year, result_month, result_day)
 
     def neighbour_date_date_str(self, model_class, date_str, field='data_date'):

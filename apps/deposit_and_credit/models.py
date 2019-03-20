@@ -106,6 +106,10 @@ class ExpirePrompt(models.Model):
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_approver', verbose_name='专审')
 
+    class Meta:
+        verbose_name = '业务到期提示'
+        verbose_name_plural = verbose_name
+
     def __str__(self):
         return self.customer.name
 
@@ -243,6 +247,16 @@ class LoanDemand(models.Model):
             customer_name = 'None'
         return customer_name + str(self.plan_amount) + '万元'
 
+    def _vf_current_progress(self):
+        try:
+            return self.expire_prompt.current_progress
+        except:
+            try:
+                return self.project.current_progress
+            except:
+                return
+    _vf_current_progress.short_description = '当前进度'
+
     @classmethod
     def createFromProjectRepositoryForNextMonth(cls):
         # imp_date = DateOperation()
@@ -275,7 +289,6 @@ class LoanDemand(models.Model):
                         plan_amount=p.total_net - last_pe.total_used,
                         plan_date=plan_date
                     ).save()
-
 
     @classmethod
     def createFromLuLedgerForNextMonth(cls):
@@ -412,13 +425,16 @@ class LoanDemand(models.Model):
         add_date__gte = add_date__gte or imp_date.today_str
         add_date__lte = add_date__lte or imp_date.delta_date(1, imp_date.today_str)
         not_linked = cls.objects.filter(
-            add_time__gte=add_date__gte,
-            add_time__lte=add_date__lte,
-            expire_prompt__isnull=True
+            # add_time__gte=add_date__gte,
+            # add_time__lte=add_date__lte,
+            expire_prompt_id__isnull=True
+        ).values(
+            'pk',
+            'customer__name',
         )
         no_customer = []
         for nl in not_linked:
-            customer_name = nl.customer
+            customer_name = nl['customer__name']
             try:
                 customer_id = AccountedCompany.objects.get(name=customer_name).pk
                 ep = ExpirePrompt.objects.filter(
@@ -435,8 +451,7 @@ class LoanDemand(models.Model):
                         print('\t', i + 1, '.到期日：', ep[i].expire_date, '，主键：', ep[i].id)
                     ep_index = int(input('>>>'))
                     if ep_index:
-                        nl.expire_prompt = ep[int(ep_index) - 1]
-                        nl.save()
+                        cls.objects.filter(pk=nl['pk']).update(expire_prompt=ep[int(ep_index) - 1])
             except:
                 no_customer.append(customer_name)
         if no_customer:
@@ -444,12 +459,12 @@ class LoanDemand(models.Model):
             for i in no_customer:
                 print('\t', i)        # 可能信贷系统或此系统中未及时更新客户名
 
-    # @classmethod
-    # def linkToProjectRepository(cls, add_date=None):
-    #     imp_date = DateOperation()
-    #     next_month_last_date = imp_date.month_dif(1, imp_date.month_last_date())
-    #     # next_month_first_date = imp_date.month_dif(1, imp_date.month_first_date())
-    #     add_date = add_date or imp_date.today_str
+    @classmethod
+    def linkToProjectRepository(cls, add_date=None):
+        imp_date = DateOperation()
+        next_month_last_date = imp_date.month_dif(1, imp_date.month_last_date())
+        # next_month_first_date = imp_date.month_dif(1, imp_date.month_first_date())
+        add_date = add_date or imp_date.today_str
 
     @classmethod
     def createBaseRecordForNewMonth(cls):
