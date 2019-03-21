@@ -25,9 +25,9 @@ class LuCreationModelForm(forms.ModelForm):
 
 class LuLedgerAdmin:
     ordering = ('-add_date', '-lend_date', )
-    list_display = ('lu_num', 'add_date', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content')
+    list_display = ('lu_num', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content')
     list_filter = ('lend_date', 'department', 'cp__cp_type')
-    search_fields = ('customer__name', 'contract_code', 'lu_num')
+    search_fields = ('customer__name', 'contract_code', 'lu_num', 'contract_code')
     list_per_page = 20
 
     # add_form = LuCreationModelForm
@@ -48,8 +48,9 @@ class LuLedgerAdmin:
         request = self.request
         instance = self.new_obj
         instance.save()
-        instance.inspector = request.user.user_id
-        instance.save(update_fields=('inspector', ))
+        if not instance.inspector:
+            instance.inspector = request.user.user_id
+            instance.save(update_fields=('inspector', ))
 
 
 class CpLedgerAdmin:

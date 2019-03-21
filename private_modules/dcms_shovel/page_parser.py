@@ -99,7 +99,7 @@ class SinglePageListArea(List):
 
 
 class MultiPageListArea(List):
-    def __init__(self, bs_obj, area_name=None, data_start_at=None, max_page=None):      #, url_path, page_param_name, max_page, cur_page=1):
+    def __init__(self, bs_obj, area_name=None, data_start_at=None, max_page=None):
         '''
 
         :param url_path:

@@ -30,18 +30,20 @@ def b_scrapeCp():
     print('success')
 
 
-# ↓每日执行，除月初，月初无法爬取上月的累收数
-def d_scrapeLeiShou():
-    from scraper.models import DailyLeiShou
-    DailyLeiShou.getDailyLeishou()
-
-
 # ↓每日执行
-def e_fillLu():
+def d_fillLu():
     from scraper.models import LuLedger
     LuLedger.fillCpSmeDetail()
     LuLedger.fillCsDetail()
     print('success')
+
+
+# ↓每日执行，除月初，月初无法爬取上月的累收数
+def e_scrapeLeiShou():
+    from scraper.models import DailyLeiShou
+    DailyLeiShou.getDailyLeishou()
+
+
 
 
 def f_updateEp():

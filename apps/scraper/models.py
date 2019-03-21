@@ -337,7 +337,7 @@ class LuLedger(models.Model):
     _vf_reply_code.short_description = '批复编号'
 
     @classmethod
-    def _updateCurrentAmount(cls):
+    def _updateCurrentAmountByDailyLeiShou(cls):
         '''
         上一步：爬取最近累收数据
         :return:
@@ -418,7 +418,6 @@ class LuLedger(models.Model):
                     page_data = crp.parseQueryResultToDictList(page)
                     for row_data in page_data:
                         lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
-                        # lu_flow_base_info = lu_flow_base_info_page.label_value_areas()
                         page_areas = lu_flow_base_info_page.areas
                         lu_flow_base_info = page_areas['申请明细'].parse()
                         lu_flow_info_fee = page_areas['业务费'].parse()
@@ -527,6 +526,16 @@ class LuLedger(models.Model):
     def as_dcms_work_flow(self, dcms=None):
         return LuWorkFlow(lu_num=self.lu_num, rlk=self.rlk, dcms=dcms)
 
+    @classmethod
+    def bulkUpdateAmountByQiDai(cls):
+        '''
+        爬取企贷表，批量更新地区、小微企业的用信余额
+        :return:
+        '''
+        crp = CrpHttpRequest()
+        crp.login()
+        pass
+
 
 class DailyLeiShou(models.Model):
     '''
@@ -562,26 +571,32 @@ class DailyLeiShou(models.Model):
             page_data = crp.parseQueryResultToDictList(page)
             for i in range(len(page_data)):
                 row_data = page_data[i]
-                exchange_rate = row_data['汇率']
-                customer = AccountedCompany.pickCustomer(row_data['客户名称'], row_data['客户编号'])
+                customer_name = row_data['客户名称']
+                customer_code = row_data['客户编号']
+                exchange_rate = crp.strToNum(row_data['汇率'], 100) / 100
+                retract_amount = exchange_rate * crp.strToNum(row_data['收回金额(元)'].strip()) / 10000
+                customer = AccountedCompany.pickCustomer(row_data['客户名称'], customer_code)
                 dcms_business = DcmsBusiness.pickObjectByCaption(row_data['业务种类'].strip())
                 contract_code = row_data['合同号'].strip()
                 retract_date = row_data['收回日期'].strip()
-                if exchange_rate:
-                    exchange_rate = float(exchange_rate)
-                else:
-                    exchange_rate = 100.00
-                retract_amount = exchange_rate * crp.strToNum(row_data['收回金额(元)'].strip()) / 100
-                print(retract_date, '收回', row_data['客户名称'], contract_code, row_data['业务种类'], '折合人民币', retract_amount / 10000)
+                print(retract_date, '收回', customer_name, contract_code, row_data['业务种类'], '折合人民币', retract_amount)
                 if '贷' in row_data['业务种类']:
                     total_retract_loan += retract_amount
-                    loan_demand = LoanDemand.objects.filter(contract=contract_code).values(
-                        'pk',
-                        'expire_amount',
-                        'this_month_leishou',
-                    )
-                    if not loan_demand.exists():
-                        print('该笔回收不在计划（LD）内，将在贷款需求表中添加相关记录')
+                    if not contract_code.startswith('CZZX'):
+                        loan_demand = LoanDemand.objects.filter(contract=contract_code).values(
+                            'pk',
+                            'expire_amount',
+                            'this_month_leishou',
+                        )
+                        if not loan_demand.exists():
+                            ld_data_dict = {}
+                            ld_data_dict['customer'] = customer
+                            ld_data_dict['contract'] = contract_code
+                            ld_data_dict['expire_amount'] = LuLedger.objects.get(contract_code=contract_code).current_amount
+                            ld_data_dict['this_month_leishou'] = retract_amount
+                            ld_data_dict['business'] = dcms_business
+                            LoanDemand.objects.create(**ld_data_dict)
+                            print('该笔回收不在计划（LD）内，已在贷款需求表中添加相关记录')
                 data_for_bulk_create.append(
                     cls(
                         contract_code=contract_code,
@@ -591,10 +606,10 @@ class DailyLeiShou(models.Model):
                         customer=customer
                     )
                 )
-        print(retract_date__gte, '（含）至', imp_date.today_str, '（不含），收回贷款折合人民币', total_retract_loan / 10000, '万元')
+        print(retract_date__gte, '（含）至', imp_date.today_str, '（不含），收回贷款折合人民币', total_retract_loan, '万元')
         if data_for_bulk_create:
             cls.objects.bulk_create(data_for_bulk_create)
-            LuLedger._updateCurrentAmount()
+            LuLedger._updateCurrentAmountByDailyLeiShou()
         else:
             print('无需更新放款台账余额')
             print('无需更新贷款需求')

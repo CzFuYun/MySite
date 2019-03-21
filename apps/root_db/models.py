@@ -247,6 +247,7 @@ class AccountedCompany(models.Model):
     has_credit = models.BooleanField(default=False, verbose_name='是否有贷户')
     sum_settle = models.IntegerField(default=0, verbose_name='累计结算量')
     inter_settle = models.IntegerField(default=0, verbose_name='国际结算量')
+    last_update = models.DateField(auto_now=True)
 
     def __str__(self):
         try:
@@ -306,45 +307,37 @@ class AccountedCompany(models.Model):
         从信贷系统中获取客户编号、信贷文件编号、rlk等信息并保存，并
         :return:
         '''
+        rgx_rlk = DcmsWebPage.rgx_rlk
         if customer_name:
             need_fill = cls.objects.filter(name=customer_name)
         else:
-            # ↓先将客户库中有核心客户号的客户添加进来，由于每日生成项目快照时会自动导核心客户号，故不用再次导
+            # ↓应先将客户库（CR）中有核心客户号的客户添加进来，但由于每日生成项目快照时会自动导核心客户号，故不用再次导
             from app_customer_repository.models import CustomerRepository
-            # from deposit_and_credit.models import Contributor
-            # imp_date = DateOperation()
-            # last_data = imp_date.neighbour_date_date_str(Contributor, imp_date.today_str)
-            # has_credit = Contributor.objects.filter(
-            #     Q(data_date=last_data) &
-            #     (
-            #         Q(net_total__gt=0)
-            #     )
-            # )
-            # credit_customer = [hc.customer_id for hc in has_credit]
-            # no_code = cls.objects.filter(
-            #     Q(customer_id__in=credit_customer) &
-            #     (
-            #         Q(dcms_customer_code__isnull=True) |
-            #         Q(cf_num__isnull=True) |
-            #         Q(rlk_cf__isnull=True) |
-            #         Q(rlk_customer__isnull=True)
-            #     )
-            # )
+            imp_date = DateOperation()
             need_fill = AccountedCompany.objects.filter(
-                Q(dcms_customer_code__isnull=True) |
-                Q(cf_num__isnull=True) |
-                Q(rlk_cf__isnull=True)
+                Q(last_update__lte=imp_date.delta_date(-1)) &
+                (
+                    Q(dcms_customer_code__isnull=True) |
+                    Q(cf_num__isnull=True) |
+                    Q(rlk_cf__isnull=True)
+                )
+            ).values(
+                'pk',
+                'name',
+                'cf_num',
+                'rlk_cf',
             )
         if need_fill.exists():
-            rgx_rlk = re.compile(r'[A-Z0-9]{32}')
             not_found = []
             from scraper.dcms_request import DcmsHttpRequest
             if not dcms:
                 dcms = DcmsHttpRequest()
                 dcms.login()
             total_count = need_fill.count()
-            for i in range(total_count):
-                customer_name = need_fill[i].name
+            i = 0
+            for nf in need_fill:
+                i += 1
+                customer_name = nf['name']
                 if len(customer_name) < 5:
                     continue
                 update_info = {}
@@ -356,11 +349,11 @@ class AccountedCompany(models.Model):
                     shallow_info, deep_info = search_result
                     update_info['dcms_customer_code'] = shallow_info['客户编号']
                     update_info['rlk_customer'] = rgx_rlk.findall(str(deep_info['序号']))[0]
-                    if need_fill[i].cf_num is None or need_fill[i].rlk_cf is None:
+                    if nf['cf_num'] is None or nf['rlk_cf'] is None:
                         cf_num, cf_rlk = dcms.search_cf(update_info['dcms_customer_code'])
                         update_info['cf_num'] = cf_num
                         update_info['rlk_cf'] = cf_rlk
-                    cls.objects.filter(pk=need_fill[i].customer_id).update(**update_info)
+                    cls.objects.filter(pk=nf['pk']).update(**update_info)
                     print('已更新', i, '/', total_count, customer_name, update_info)
 
     @classmethod
