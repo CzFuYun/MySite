@@ -244,7 +244,7 @@ class LoanDemand(models.Model):
         elif self.project:
             customer_name = self.project.project_name
         else:
-            customer_name = 'None'
+            customer_name = self.customer.name
         return customer_name + str(self.plan_amount) + '万元'
 
     def _vf_current_progress(self):
@@ -487,8 +487,9 @@ class LoanDemand(models.Model):
             'pk',
             'retract_amount',
             'contract_code',
-            'customer',
-            'dcms_business'
+            'customer_id',
+            'customer__name',
+            'dcms_business_id',
         )
         for nl in newly_leishou:
             loan_demand = LoanDemand.objects.filter(contract=nl['contract_code']).values(
@@ -498,73 +499,67 @@ class LoanDemand(models.Model):
             )
             ld_data_dict = {}
             if not loan_demand.exists():
-                ld_data_dict['customer'] = nl['customer']
+                ld_data_dict['customer_id'] = nl['customer_id']
                 ld_data_dict['contract'] = nl['contract_code']
                 ld_data_dict['expire_amount'] = nl['retract_amount']
                 ld_data_dict['this_month_leishou'] = nl['retract_amount']
-                ld_data_dict['business'] = nl['dcms_business']
+                ld_data_dict['business_id'] = nl['dcms_business_id']
+                try:
+                    old_lu = LuLedger.objects.get(contract_code=nl['contract_code'])
+                    ld_data_dict['expire_date'] = old_lu.plan_expire
+                    ld_data_dict['staff_id'] = old_lu.staff_id or None
+                except:
+                    pass
                 LoanDemand.objects.create(**ld_data_dict)
-                print(nl['customer'], nl['contract_code'], '合同项下收回', nl['retract_amount'], '不在计划（LD）内，已在贷款需求表中添加相关记录')
+                print(nl['customer__name'], nl['contract_code'], '合同项下收回', nl['retract_amount'], '不在计划（LD）内，已在贷款需求表中添加相关记录')
             else:
                 ld_data_dict['this_month_leishou'] = loan_demand.first()['this_month_leishou'] + nl['retract_amount']
                 ld_data_dict['expire_amount'] = max(ld_data_dict['this_month_leishou'], loan_demand.first()['expire_amount'])
                 loan_demand.update(**ld_data_dict)
+                print(nl['customer__name'], nl['contract_code'], '合同项下收回', nl['retract_amount'], '已在LD中更新其累收数')
         newly_lu = LuLedger.objects.filter(
-            update_date=imp_date.today_str,
+            # update_date=imp_date.today_str,
             dcms_business__caption__contains='贷',
             lu_num__startswith='LU'
         ).values(
-
+            'pk',
+            'customer_id',
+            'customer__name',
+            'lend_amount',
+            'staff_id',
         )
-        # todo:↓
         for nl in newly_lu:
-            pass
-
-        # if lu_num.startswith('LU'):
-        #     # todo:↓关联至贷款需求记录并累加其当月累放金额
-        #     if '贷' in row_data['业务种类']:
-        #         loan_demand = LoanDemand.objects.filter(customer=customer)
-        #         if loan_demand.exists():
-        #             # loan_demand = loan_demand.filter(plan_amount__gte=F('already_achieved') + data_dict['lend_amount'])     # 拟放大于等于（本月累放+本次投放）
-        #             loan_demand.annotate()
-        #             if loan_demand.exists():
-        #                 pass
-        #             else:
-        #                 pass
-        #         else:
-        #             new_ld = LoanDemand.objects.create(
-        #                 customer=customer,
-        #                 already_achieved=data_dict['lend_amount'],
-        #                 plan_amount=data_dict['lend_amount'],
-        #                 staff=staff
-        #             )
-        #             print('已创建贷款需求', str(new_ld))
-        #     # todo:↓扣除项目储备的剩余敞口
-        #     pass
-
-    @classmethod
-    def _updateThisMonthLeishou(cls):
-        '''
-        上一步：爬取最近累收数据
-        :return:
-        '''
-        print('累收数据爬取完毕，准备更新当月贷款需求中的累收字段……')
-        imp_date = DateOperation()
-        new_retract = DailyLeiShou.objects.filter(
-            add_date=imp_date.today_str,
-            dcms_business__caption__contains='贷',
-        ).exclude(
-            contract_code__startswith='CZZX'
-        )
-        if new_retract.exists():
-            new_retract_value = new_retract.values(
-                'contract_code',
-                'customer__name'
-            ).annotate(
-                Sum('retract_amount')
-            )
-            for nr in new_retract_value:
-                pass
+            # ↓关联至贷款需求记录并累加其当月累放金额
+            loan_demand = cls.objects.filter(customer_id=nl['customer_id'])
+            if loan_demand.exists():
+                # ↓将此次投放金额依次去“填”每笔贷款需求中的未投放部分
+                left_lend = nl['lend_amount'] / 10000
+                for ld in loan_demand:
+                    left_demand = ld.plan_amount - ld.already_achieved
+                    if left_lend <= left_demand:        # 若填不满
+                        ld.already_achieved = ld.plan_amount + ld.already_achieved
+                        ld.save(update_fields=['already_achieved'])
+                        break
+                    else:
+                        ld.already_achieved = ld.plan_amount
+                        left_lend -= left_demand
+                if left_lend > 0:       # 若填掉所有贷款需求的坑后还有盈余
+                    to_increase_demand =  cls.objects.filter(customer_id=nl['customer_id']).order_by('expire_amount')[0]
+                    plan_amount = to_increase_demand.plan_amount
+                    to_increase_demand.plan_amount = plan_amount + left_lend
+                    to_increase_demand.already_achieved = plan_amount + left_lend
+                    to_increase_demand.save(update_fields=['plan_amount', 'already_achieved'])
+                    print('计划内客户', nl['customer__name'], '投放', nl['lend_amount'] / 10000, '万元，但其本月累放已超过计划，已同步更新其计划、累放金额')
+                else:
+                    print('计划内客户', nl['customer__name'], '投放', nl['lend_amount'] / 10000, '万元，已更新其累放金额')
+            else:
+                new_ld = LoanDemand.objects.create(
+                    customer_id=nl['customer_id'],
+                    already_achieved=nl['lend_amount'] / 10000,
+                    plan_amount=nl['lend_amount'] / 10000,
+                    staff_id=nl['staff_id'],
+                )
+                print('计划外客户', nl['customer__name'], '投放', nl['lend_amount'] / 10000, '万元，已创建贷款需求并同步更新其累放金额')
 
 
 class LoanDemandForThisMonth(LoanDemand):

@@ -430,7 +430,8 @@ class LuLedger(models.Model):
                             data_dict['has_diya'] = True
                         if '质押' in row_data['担保方式']:
                             data_dict['has_zhiya'] = True
-                        if cls.objects.get(lu_num=lu_num).contract_code is None:
+                        lu = cls.objects.get(lu_num=lu_num)
+                        if lu.contract_code is None:
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
                             staff = Staff.pickStaffByName(row_data['管户客户经理'])
@@ -453,28 +454,11 @@ class LuLedger(models.Model):
                             data_dict['float_ratio'] = crp.strToNum(row_data['利率浮动比例']) if '固定' not in row_data['利率调整频率'] and '贷' in row_data['业务种类'] else None
                             data_dict['net_amount'] = (100 - crp.strToNum(row_data['保证金比例'])) * crp.strToNum(row_data['放款金额(元)']) / 100
                             data_dict['current_amount'] = data_dict['lend_amount']
-                            # if lu_num.startswith('LU'):
-                            #     # todo:↓关联至贷款需求记录并累加其当月累放金额
-                            #     if '贷' in row_data['业务种类']:
-                            #         loan_demand = LoanDemand.objects.filter(customer=customer)
-                            #         if loan_demand.exists():
-                            #             # loan_demand = loan_demand.filter(plan_amount__gte=F('already_achieved') + data_dict['lend_amount'])     # 拟放大于等于（本月累放+本次投放）
-                            #             loan_demand.annotate()
-                            #             if loan_demand.exists():
-                            #                 pass
-                            #             else:
-                            #                 pass
-                            #         else:
-                            #             new_ld = LoanDemand.objects.create(
-                            #                 customer=customer,
-                            #                 already_achieved=data_dict['lend_amount'],
-                            #                 plan_amount=data_dict['lend_amount'],
-                            #                 staff=staff
-                            #             )
-                            #             print('已创建贷款需求', str(new_ld))
-                            #     # todo:↓扣除项目储备的剩余敞口
-                            #     pass
+                        else:
+                            data_dict['lend_amount'] = lu.lend_amount + crp.strToNum(row_data['放款金额(元)'])
                         cls.objects.filter(lu_num=row_data['放款参考编号']).update(**data_dict)
+                        # todo:↓扣除项目储备的剩余敞口
+        # return uncompleted
 
     @classmethod
     def fillCsDetail(cls):
@@ -528,7 +512,8 @@ class LuLedger(models.Model):
                             data_dict['has_diya'] = True
                         if '质押' in row_data['担保方式']:
                             data_dict['has_zhiya'] = True
-                        if cls.objects.get(lu_num=lu_num).contract_code is None:
+                        lu = cls.objects.get(lu_num=lu_num)
+                        if lu.contract_code is None:
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
                             data_dict['rlk'] = dcms.search_lu(lu_num)
@@ -549,6 +534,8 @@ class LuLedger(models.Model):
                             data_dict['float_ratio'] = crp.strToNum(row_data['利率浮动比例']) if '固定利率' not in row_data['利息调整频率'] else None
                             data_dict['net_amount'] = (100 - data_dict['pledge_ratio']) * data_dict['lend_amount'] / 100
                             data_dict['current_amount'] = data_dict['lend_amount']
+                        else:
+                            data_dict['lend_amount'] = crp.strToNum(row_data['发放金额']) + lu.lend_amount
                         cls.objects.filter(lu_num=lu_num).update(**data_dict)
 
     def as_dcms_work_flow(self, dcms=None):
