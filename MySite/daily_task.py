@@ -1,4 +1,5 @@
 # from MySite import daily_task
+from MySite.utilities import makeChoice
 
 # ↓每日执行
 def a_takePrPhoto():
@@ -12,10 +13,7 @@ def b_scrapeCp():
     imp_date = DateOperation()
     from scraper.models import CpLedger
     last_scrape = imp_date.last_data_date_str(CpLedger, 'add_date')
-    print('是否爬取批复日大于等于', last_scrape, '的地区、小微、个贷授信信息？')
-    print('0.否\n1.是')
-    choice = input('>>>')
-    if choice == '1' or choice == '':
+    if makeChoice(('是否爬取批复日大于等于', last_scrape, '的地区、小微、个贷授信信息？')):
         reply_date_gte = last_scrape
     else:
         print('批复日大于等于：')
@@ -23,11 +21,15 @@ def b_scrapeCp():
     CpLedger.createCpFromCrp(reply_date_gte)
     CpLedger.createSmeCpFromCrp(reply_date_gte)
     CpLedger.createCsCpFromCrp(reply_date_gte)
-    print('是否获取批复内容？\n0.否\n1.是')
-    choice = input('>?')
-    if choice == '1' or choice == '':
+    if makeChoice('是否获取批复内容？'):
         CpLedger.fillReplyContentFromDcms()
     print('success')
+
+
+# ↓一定要先爬累收，再爬放款台账。每日执行，除月初，月初无法爬取上月的累收数
+def c_scrapeLeiShou():
+    from scraper.models import DailyLeiShou
+    DailyLeiShou.getDailyLeishou()
 
 
 # ↓每日执行
@@ -38,18 +40,13 @@ def d_fillLu():
     print('success')
 
 
-# ↓每日执行，除月初，月初无法爬取上月的累收数
-def e_scrapeLeiShou():
-    from scraper.models import DailyLeiShou
-    DailyLeiShou.getDailyLeishou()
+
 
 
 
 
 def f_updateEp():
     from deposit_and_credit.models import ExpirePrompt
-    print('是否填充授信参考号？\n0.否\n1.是')
-    need_fill_cp_num = input('>>>')
-    if need_fill_cp_num == '1' or need_fill_cp_num == '':
+    if makeChoice('是否填充授信参考号？'):
         ExpirePrompt.fillCpNum()
     ExpirePrompt.updateProgress()

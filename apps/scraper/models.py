@@ -1,13 +1,14 @@
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import Q, Sum
+from django.db.models import F, Q, Sum
 
 from .crp import CrpHttpRequest
 from .dcms_request import DcmsHttpRequest
 from deposit_and_credit.models_operation import DateOperation
 from root_db.models import AccountedCompany, Staff
 from scraper.dcms_work_flow import LuWorkFlow, CpWorkFlow
+
 
 
 class DcmsBusiness(models.Model):
@@ -37,6 +38,7 @@ class CpLedger(models.Model):
         ('CP', '地区'),
         ('SME', '小微'),
         ('CS', '个人'),
+        ('V', '虚拟'),
     )
     add_date = models.DateField(auto_now_add=True)
     cp_num = models.CharField(max_length=32, blank=True, null=True, unique=True, verbose_name='参考编号')
@@ -57,7 +59,7 @@ class CpLedger(models.Model):
     # diya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='抵押担保')
     # zhiya = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='质押担保')
     # is_auto_added = models.BooleanField(default=False, verbose_name='是否自动生成')
-    is_virtual = models.BooleanField(default=False, verbose_name='虚拟')      # 针对未建档，甚至客户都不存在的业务
+    # is_virtual = models.BooleanField(default=False, verbose_name='虚拟')      # 针对未建档，甚至客户都不存在的业务
     remark = models.TextField(blank=True, null=True, verbose_name='备注')
 
     class Meta:
@@ -129,7 +131,6 @@ class CpLedger(models.Model):
         crp = CrpHttpRequest()
         crp.login()
         dcms = DcmsHttpRequest()
-        # dcms.login('czzxsk', '111111', 'SMEDCMS')
         dcms.login(dcms_type=dcms.DcmsType.sme.value)
         imp_date = DateOperation()
         last_add = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'add_date') or imp_date.delta_date(-1)
@@ -383,6 +384,7 @@ class LuLedger(models.Model):
     @classmethod
     def fillCpSmeDetail(cls):
         from root_db.models import Department, Staff
+        from deposit_and_credit.models import LoanDemand
         from MySite.utilities import field_choices_to_dict
         imp_date = DateOperation()
         currency_type_choices = field_choices_to_dict(cls.currency_type_choices)
@@ -403,6 +405,10 @@ class LuLedger(models.Model):
             dcms.login()
             for uc in uncompleted:
                 lu_num = uc['lu_num']
+                lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
+                page_areas = lu_flow_base_info_page.areas
+                lu_flow_base_info = page_areas['申请明细'].parse()
+                lu_flow_info_fee = page_areas['业务费'].parse()
                 qidai = crp.getQiDaiLu(
                     *[
                         '授信参考编号', '经办行', '管户客户经理', '客户编号', '业务种类',
@@ -417,10 +423,6 @@ class LuLedger(models.Model):
                 for page in qidai:
                     page_data = crp.parseQueryResultToDictList(page)
                     for row_data in page_data:
-                        lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
-                        page_areas = lu_flow_base_info_page.areas
-                        lu_flow_base_info = page_areas['申请明细'].parse()
-                        lu_flow_info_fee = page_areas['业务费'].parse()
                         data_dict = {}
                         if '保证' in row_data['担保方式']:
                             data_dict['has_baozheng'] = True
@@ -431,13 +433,15 @@ class LuLedger(models.Model):
                         if cls.objects.get(lu_num=lu_num).contract_code is None:
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
+                            staff = Staff.pickStaffByName(row_data['管户客户经理'])
+                            customer = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
                             data_dict['rlk'] = dcms.search_lu(lu_num)
                             cp_num = row_data['授信参考编号'] if row_data['授信参考编号'].strip() else lu_flow_base_info['对应的授信申请'][0].inner_text
                             data_dict['cp'] = CpLedger.objects.get(cp_num=cp_num)
                             data_dict['contract_code'] = row_data['合同号']
                             data_dict['department'] = Department.pickObjByCaption(row_data['经办行'].split('-')[1])
-                            data_dict['staff'] = Staff.pickStaffByName(row_data['管户客户经理'])
-                            data_dict['customer'] = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
+                            data_dict['staff'] = staff
+                            data_dict['customer'] = customer
                             data_dict['dcms_business'] = DcmsBusiness.pickObjectByCaption(row_data['业务种类'])
                             data_dict['lend_date'] = row_data['发放日期']
                             data_dict['plan_expire'] = row_data['业务到期日']
@@ -449,6 +453,27 @@ class LuLedger(models.Model):
                             data_dict['float_ratio'] = crp.strToNum(row_data['利率浮动比例']) if '固定' not in row_data['利率调整频率'] and '贷' in row_data['业务种类'] else None
                             data_dict['net_amount'] = (100 - crp.strToNum(row_data['保证金比例'])) * crp.strToNum(row_data['放款金额(元)']) / 100
                             data_dict['current_amount'] = data_dict['lend_amount']
+                            # if lu_num.startswith('LU'):
+                            #     # todo:↓关联至贷款需求记录并累加其当月累放金额
+                            #     if '贷' in row_data['业务种类']:
+                            #         loan_demand = LoanDemand.objects.filter(customer=customer)
+                            #         if loan_demand.exists():
+                            #             # loan_demand = loan_demand.filter(plan_amount__gte=F('already_achieved') + data_dict['lend_amount'])     # 拟放大于等于（本月累放+本次投放）
+                            #             loan_demand.annotate()
+                            #             if loan_demand.exists():
+                            #                 pass
+                            #             else:
+                            #                 pass
+                            #         else:
+                            #             new_ld = LoanDemand.objects.create(
+                            #                 customer=customer,
+                            #                 already_achieved=data_dict['lend_amount'],
+                            #                 plan_amount=data_dict['lend_amount'],
+                            #                 staff=staff
+                            #             )
+                            #             print('已创建贷款需求', str(new_ld))
+                            #     # todo:↓扣除项目储备的剩余敞口
+                            #     pass
                         cls.objects.filter(lu_num=row_data['放款参考编号']).update(**data_dict)
 
     @classmethod
@@ -476,8 +501,11 @@ class LuLedger(models.Model):
                 lu_num = uc['lu_num']
                 lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
                 page_areas = lu_flow_base_info_page.areas
-                edu_detail = page_areas['额度使用明细'].parse()
                 apply_detail = page_areas['申请明细'].parse()
+                customer_name = apply_detail['申请人名称'][0].inner_text
+                if len(customer_name) > 4:
+                    continue
+                edu_detail = page_areas['额度使用明细'].parse()
                 contract_code = edu_detail['合同编号'][0].inner_text
                 gedai = crp.getGeDaiLu(
                     *[
@@ -582,21 +610,26 @@ class DailyLeiShou(models.Model):
                 print(retract_date, '收回', customer_name, contract_code, row_data['业务种类'], '折合人民币', retract_amount)
                 if '贷' in row_data['业务种类']:
                     total_retract_loan += retract_amount
-                    if not contract_code.startswith('CZZX'):
-                        loan_demand = LoanDemand.objects.filter(contract=contract_code).values(
-                            'pk',
-                            'expire_amount',
-                            'this_month_leishou',
-                        )
-                        if not loan_demand.exists():
-                            ld_data_dict = {}
-                            ld_data_dict['customer'] = customer
-                            ld_data_dict['contract'] = contract_code
-                            ld_data_dict['expire_amount'] = LuLedger.objects.get(contract_code=contract_code).current_amount
-                            ld_data_dict['this_month_leishou'] = retract_amount
-                            ld_data_dict['business'] = dcms_business
-                            LoanDemand.objects.create(**ld_data_dict)
-                            print('该笔回收不在计划（LD）内，已在贷款需求表中添加相关记录')
+                #     if not contract_code.startswith('CZZX'):
+                #         loan_demand = LoanDemand.objects.filter(contract=contract_code).values(
+                #             'pk',
+                #             'expire_amount',
+                #             'this_month_leishou',
+                #         )
+                #         ld_data_dict = {}
+                #         if not loan_demand.exists():
+                #             ld_data_dict['customer'] = customer
+                #             ld_data_dict['contract'] = contract_code
+                #             # ld_data_dict['expire_amount'] = LuLedger.objects.get(contract_code=contract_code).current_amount / 10000
+                #             ld_data_dict['expire_amount'] = retract_amount
+                #             ld_data_dict['this_month_leishou'] = retract_amount
+                #             ld_data_dict['business'] = dcms_business
+                #             LoanDemand.objects.create(**ld_data_dict)
+                #             print('该笔回收不在计划（LD）内，已在贷款需求表中添加相关记录')
+                #         else:
+                #             ld_data_dict['this_month_leishou'] = loan_demand.first()['this_month_leishou'] + retract_amount
+                #             ld_data_dict['expire_amount'] = max(ld_data_dict['this_month_leishou'], loan_demand.first()['expire_amount'])
+                #             loan_demand.update(**ld_data_dict)
                 data_for_bulk_create.append(
                     cls(
                         contract_code=contract_code,

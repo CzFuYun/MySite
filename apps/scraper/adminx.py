@@ -25,7 +25,7 @@ class LuCreationModelForm(forms.ModelForm):
 
 class LuLedgerAdmin:
     ordering = ('-add_date', '-lend_date', )
-    list_display = ('lu_num', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content')
+    list_display = ('add_date', 'lu_num', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content')
     list_filter = ('lend_date', 'department', 'cp__cp_type')
     search_fields = ('customer__name', 'contract_code', 'lu_num', 'contract_code')
     list_per_page = 20

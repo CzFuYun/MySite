@@ -1,6 +1,6 @@
 import os, json, datetime, decimal, re, xlsxwriter
 from io import BytesIO
-from collections import UserList
+from collections import UserList, Iterable
 
 from django.utils.encoding import escape_uri_path
 from django.shortcuts import HttpResponse, reverse
@@ -322,3 +322,25 @@ def reverseDictKeyValue(dic):
     for k, v in dic.items():
         ret[v] = k
     return ret
+
+
+def input_box(prompt):
+    print(prompt)
+    return input('')
+
+
+def makeChoice(prompt, *choices):
+    if isinstance(prompt, Iterable) and not type(prompt) is str:
+        for p in prompt:
+            print(p, end=' ')
+        print('')
+    else:
+        print(prompt)
+    if choices:
+        count = len(choices)
+        for c in range(count):
+            print('\t', c, '.', choices[c], sep='')
+    else:
+        print('\t0.否\n\t1.是')
+    choice = input()
+    return int(choice)

@@ -51,18 +51,15 @@ class Staff(models.Model):
         if staff.exists():
             index = 0
             if staff.count() > 1:
-                print('姓名包含', name, '的员工不止一名，请选择：')
-                for i in range(staff.count()):
-                    print(i, '.', str(staff[i]))
-                index = input('>>>')
-            return staff[int(index)]
+                index = utilities.makeChoice(
+                    ['姓名包含', name, '的员工不止一名，请选择：'],
+                    *[str(staff[i]) for i in range(staff.count())]
+                )
+            return staff[index]
         else:
-            print('是否新建员工', name)
-            print('0.否\n1.是')
-            choice = input('>>>')
-            if choice == '1' or choice == '':
-                staff_id = input('工号>>>')
-                subdepartment_id = input('部门代码（二级）>>>')
+            if utilities.makeChoice('是否新建员工？'):
+                staff_id = input('\t工号：')
+                subdepartment_id = input('\t部门代码（二级）：')
                 cls(name=name, staff_id=staff_id, sub_department_id=subdepartment_id).save()
                 return cls.objects.get(staff_id=staff_id)
             else:
@@ -76,22 +73,24 @@ class Staff(models.Model):
         if staff.exists():
             return staff[0]
         else:
-            print('将信贷系统用户名', dcms_name, '添加至现有员工')
-            staff_name = input('姓名>>>')
-            print(dcms_name, '所属系统：\n1.地区部\n2.小企业\n3.个贷')
-            dcms_type = {'1': '', '2': '_sme', '3': '_gr'}.get(input('>>>'), '')
-            staff = cls.pickStaffByName(staff_name)
-            staff.fillDcmsName(staff_name, dcms_type)
+            return cls.fillDcmsName(dcms_name)
 
-    def fillDcmsName(self, dcms_name, dcms_type=''):
+    @classmethod
+    def fillDcmsName(cls, dcms_name):
         '''
-
         :param dcms_name:
-        :param dcms_type:空或'_sme'或'_gr',小写
         :return:
         '''
-        exec('self.dcms_name' + dcms_type + '="' + dcms_name + '"')
-        self.save()
+        print('将信贷系统用户名', dcms_name, '添加至现有员工')
+        index = utilities.makeChoice(
+            (dcms_name, '所属系统：'),
+            *['地区', '小企业', '个贷']
+        )
+        dcms_type = {1: '', 2: '_sme', 3: '_gr'}.get(index, '')
+        staff_name = input('\t员工姓名：')
+        staff = cls.pickStaffByName(staff_name)
+        Staff.objects.filter(pk=staff.pk).update(**{'dcms_name' + dcms_type: dcms_name})
+        return staff
 
     @classmethod
     def bulkUpdate(cls, workbook_name):

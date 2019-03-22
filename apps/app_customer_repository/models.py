@@ -140,6 +140,7 @@ class ProjectRepository(models.Model):
         (20, '监管原因'),
         (30, '客户原因'),
     )
+    add_date = models.DateField(auto_now_add=True, blank=True, null=True)
     customer = models.ForeignKey('CustomerRepository', on_delete=models.CASCADE, verbose_name='客户')
     project_name = models.CharField(max_length=64, verbose_name='项目名称')
     staff = models.ForeignKey('root_db.Staff', to_field='staff_id', on_delete=models.CASCADE, verbose_name='客户经理')
@@ -177,7 +178,7 @@ class ProjectRepository(models.Model):
         ordering = ['customer__department__display_order', 'customer', 'staff']
 
     def __str__(self):
-        return self.project_name
+        return self.project_name + str(self.add_date)
 
     def judge_is_focus(self):
         self.is_focus = True if self.total_net > 8000 or self.business.is_focus else False
