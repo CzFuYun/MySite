@@ -272,7 +272,7 @@ class AccountedCompany(models.Model):
             customer_info = {
                 'customer_id': kernel_no,
                 'dcms_customer_code': shallow_info['客户编号'],
-                'name': shallow_info['客户名称'],
+                'name': utilities.cleanCompanyName(shallow_info['客户名称']),
                 'rlk_customer': re.findall(r'[A-Z0-9]{32}', str(deep_info['序号']))[0],
                 'rlk_cf': cf_rlk,
                 'cf_num': cf_num,
@@ -362,33 +362,47 @@ class AccountedCompany(models.Model):
         :param name_or_code:
         :return: objAC
         '''
+        customer_name = utilities.cleanCompanyName(customer_name)
         customer = cls.objects.filter(Q(dcms_customer_code=customer_code) | Q(name=customer_name))
         if customer.exists():
             index = 0
             if customer.count() > 1:
-                print('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请核实')
-                for i in range(customer.count()):
-                    print(i, customer[i].pk)
-                index = input('>>>')
+                index = utilities.makeChoice(
+                    ('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请选择：'),
+                    *[customer[i].pk for i in range(customer.count())]
+                )
+                #
+                # print('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请核实')
+                # for i in range(customer.count()):
+                #     print(i, customer[i].pk)
+                # index = input('>>>')
             customer = customer[int(index)]
             now_customer_code = customer.dcms_customer_code
             if now_customer_code is None or re.search(r'[\u4e00-\u9fa5]', now_customer_code) or now_customer_code != customer_code:
-                print(customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？')
-                print('0.否\n1.是')
-                choice = input('>>>')
-                if choice == '1' or choice == '':
+                choice = utilities.makeChoice((customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？'))
+                # print(customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？')
+                # print('0.否\n1.是')
+                # choice = input('>>>')
+                # if choice == '1' or choice == '':
+                if choice:
                     customer.dcms_customer_code = customer_code
-                    customer.save()
+                    customer.save(update_fields=('dcms_customer_code', ))
             return customer
         else:
-            print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户')
-            print('\t0.手工输入核心客户号在AC中再次搜索\n\t1.通过爬取dcms信息新建')
-            choice = input('>>>')
-            if choice == '1' or choice == '':
+            choice = utilities.makeChoice(
+                ('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户'),
+                *('手工输入核心客户号在AC中再次搜索', '通过爬取dcms信息新建')
+            )
+            #
+            # print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户')
+            # print('\t0.手工输入核心客户号在AC中再次搜索\n\t1.通过爬取dcms信息新建')
+            # choice = input('>>>')
+            # if choice == '1' or choice == '':
+            if choice:
                 return cls.createCustomerByDcms(customer_code, dcms)
             else:
                 print('请输入该客户的16位核心客户号：')
-                kernel_num = input('>>>')
+                kernel_num = input()
                 exist_customer = cls.objects.filter(customer_id=kernel_num)
                 if not exist_customer.exists():
                     cls(customer_id=kernel_num, name=customer_name).save()

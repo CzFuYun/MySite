@@ -46,7 +46,7 @@ class DcmsHttpRequest(BaseHttpRequest):
             'search_customer': self.UrlPath('mcif/customer_search.view', self.base_params.copy()),
         }
         self.get_urls = {
-            'keep_connection': 'http://110.17.1.21:9082/dcms_index.view',
+            'keep_connection': (self.dcms_type + '_' if self.dcms_type == 'sme' else '') + 'dcms_index.view',
         }
 
     def login(self, userId='czfzc', password='hxb123', applicationCode='DCMSCP', dcms_type='DCMSCP', keep_long=False):
@@ -58,6 +58,7 @@ class DcmsHttpRequest(BaseHttpRequest):
         :return:
         '''
         self.applicationCode = applicationCode
+        # self.login_dcms = dcms_type
         self.setDcmsType(dcms_type)
         self.userId = userId
         self.password = password
@@ -71,8 +72,8 @@ class DcmsHttpRequest(BaseHttpRequest):
     def keepConnection(self):
         r = self.get(self.get_urls['keep_connection'])
         if 'frame' not in r.text:
-            self.login()
-        threading.Timer(60, self.keepConnection).start()
+            self.login(self.userId, self.password, self.applicationCode)
+        threading.Timer(180, self.keepConnection).start()
 
     def search_cf(self, name_or_cf_code):
         if name_or_cf_code.startswith('CF'):

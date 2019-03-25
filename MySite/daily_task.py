@@ -40,9 +40,11 @@ def d_fillLu():
     print('success')
 
 
-
-
-
+# ↓每日执行
+def e_updateByLeishouAndLu():
+    from deposit_and_credit.models import LoanDemand
+    LoanDemand.updateByLeishouAndLu()
+    print('success')
 
 
 def f_updateEp():

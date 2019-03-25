@@ -9,7 +9,7 @@ from xadmin import views
 from xadmin.plugins.actions import BaseActionView
 
 from MySite.settings import MEDIA_URL
-from MySite.utilities import XadminExtraAction
+from MySite.utilities import XadminExtraAction, makeChoice
 from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress
 from root_db.models import AccountedCompany
 from MySite import utilities
@@ -86,13 +86,14 @@ class PreDocToNewProject(BaseActionView):
                 new_customer_fields['name'] = customer_name
                 cf_num = dcms.search_customer(pre_doc.customer_name).cf_num or dcms.search_customer(customer_name).cf_num
                 if cf_num:
-                    cf_num = cf_num if int(input(customer_name + '信贷文件号：【' + cf_num + '】,是否正确？\n0.不正确\n1.正确')) else input('请输入正确的信贷文件编号>>>')
+                    choice = makeChoice((customer_name, '信贷文件号：【', cf_num, '】,是否正确？'))
+                    cf_num = cf_num if choice else input('请输入正确的信贷文件编号>?')
                 else:
                     cf_num = ''
                 if AccountedCompany.objects.filter(name=customer_name).exists():
                     new_customer_fields['customer_id'] = AccountedCompany.objects.get(name=customer_name).customer_id
                 new_customer_fields['credit_file'] = cf_num
-                new_customer_fields['is_strategy'] = bool(int(input(customer_name + '是否战略客户?\n0.否\n1.是')))
+                new_customer_fields['is_strategy'] = bool(makeChoice((customer_name, '是否战略客户？')))
                 simple_name = input('请确定【' + customer_name + '】的简称>>>')
                 if CustomerRepository.objects.filter(simple_name__icontains=simple_name).exists():
                     print('请注意【' + customer_name + '】简称重复：' + simple_name)
@@ -129,10 +130,6 @@ class PretrialDocumentAdmin:
     # list_export_fields = ('', '',)
     relfield_style = 'fk-ajax'
     actions = [PreDocToNewProject, ]
-
-    # def queryset(self):
-    #     qs = super().queryset()
-    #     return qs.filter(result__gt=10).order_by('-meeting__caption', 'order')
 
     def show_file(self, instance):
         return showFile(instance)

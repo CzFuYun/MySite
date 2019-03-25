@@ -544,11 +544,22 @@ class LoanDemand(models.Model):
                         ld.already_achieved = ld.plan_amount
                         left_lend -= left_demand
                 if left_lend > 0:       # 若填掉所有贷款需求的坑后还有盈余
-                    to_increase_demand =  cls.objects.filter(customer_id=nl['customer_id']).order_by('expire_amount')[0]
-                    plan_amount = to_increase_demand.plan_amount
-                    to_increase_demand.plan_amount = plan_amount + left_lend
-                    to_increase_demand.already_achieved = plan_amount + left_lend
-                    to_increase_demand.save(update_fields=['plan_amount', 'already_achieved'])
+                    to_increase_demand =  cls.objects.filter(
+                        customer_id=nl['customer_id'], expire_amount=0
+                    )
+                    if to_increase_demand.exists():
+                        to_increase_demand = to_increase_demand.order_by('expire_amount').first()
+                        plan_amount = to_increase_demand.plan_amount
+                        to_increase_demand.plan_amount = plan_amount + left_lend
+                        to_increase_demand.already_achieved = plan_amount + left_lend
+                        to_increase_demand.save(update_fields=['plan_amount', 'already_achieved'])
+                    else:
+                        cls.objects.create(
+                            customer_id=nl['customer_id'],
+                            already_achieved=left_lend,
+                            plan_amount=left_lend,
+                            staff_id=nl['staff_id'],
+                        )
                     print('计划内客户', nl['customer__name'], '投放', nl['lend_amount'] / 10000, '万元，但其本月累放已超过计划，已同步更新其计划、累放金额')
                 else:
                     print('计划内客户', nl['customer__name'], '投放', nl['lend_amount'] / 10000, '万元，已更新其累放金额')

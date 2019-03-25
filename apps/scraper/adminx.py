@@ -5,8 +5,14 @@ import xadmin, re
 from django import forms
 from xadmin.views.edit import ModelFormAdminView
 
+from MySite.utilities import cleanCompanyName
 from .models import LuLedger, CpLedger
+from root_db.models import AccountedCompany
+from scraper.dcms_request import DcmsHttpRequest
 
+
+DCMS = DcmsHttpRequest()
+DCMS.login(keep_long=True)
 
 class LuCreationModelForm(forms.ModelForm):
     lu_num = forms.CharField(max_length=32, label='放款参考编号')
@@ -25,7 +31,7 @@ class LuCreationModelForm(forms.ModelForm):
 
 class LuLedgerAdmin:
     ordering = ('-add_date', '-lend_date', )
-    list_display = ('add_date', 'lu_num', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content')
+    list_display = ('lu_num', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content', 'add_date')
     list_filter = ('lend_date', 'department', 'cp__cp_type')
     search_fields = ('customer__name', 'contract_code', 'lu_num', 'contract_code')
     list_per_page = 20
@@ -48,6 +54,14 @@ class LuLedgerAdmin:
         request = self.request
         instance = self.new_obj
         instance.save()
+        lu = instance.as_dcms_work_flow(DCMS)
+        try:
+            customer_name = cleanCompanyName(lu.apply_info().areas['申请明细'].parse()['申请人名称'][0].inner_text)
+            customer = AccountedCompany.objects.get(name=customer_name)
+            instance.customer = customer
+            instance.save(update_fields=('customer', ))
+        except:
+            pass
         if not instance.inspector:
             instance.inspector = request.user.user_id
             instance.save(update_fields=('inspector', ))

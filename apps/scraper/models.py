@@ -386,6 +386,7 @@ class LuLedger(models.Model):
         from root_db.models import Department, Staff
         from deposit_and_credit.models import LoanDemand
         from MySite.utilities import field_choices_to_dict
+        dept_sr = {'分行营业部': '营业部'}
         imp_date = DateOperation()
         currency_type_choices = field_choices_to_dict(cls.currency_type_choices)
         uncompleted = cls.objects.filter(
@@ -436,11 +437,12 @@ class LuLedger(models.Model):
                             customer_code = row_data['客户编号']
                             staff = Staff.pickStaffByName(row_data['管户客户经理'])
                             customer = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
+                            department = dept_sr.get(row_data['经办行'].split('-')[1]) or row_data['经办行'].split('-')[1]
                             data_dict['rlk'] = dcms.search_lu(lu_num)
                             cp_num = row_data['授信参考编号'] if row_data['授信参考编号'].strip() else lu_flow_base_info['对应的授信申请'][0].inner_text
                             data_dict['cp'] = CpLedger.objects.get(cp_num=cp_num)
                             data_dict['contract_code'] = row_data['合同号']
-                            data_dict['department'] = Department.pickObjByCaption(row_data['经办行'].split('-')[1])
+                            data_dict['department'] = Department.pickObjByCaption(department)
                             data_dict['staff'] = staff
                             data_dict['customer'] = customer
                             data_dict['dcms_business'] = DcmsBusiness.pickObjectByCaption(row_data['业务种类'])
@@ -464,6 +466,7 @@ class LuLedger(models.Model):
     def fillCsDetail(cls):
         from root_db.models import Department, Staff
         from MySite.utilities import field_choices_to_dict
+        dept_sr = {'分行营业部': '营业部'}
         imp_date = DateOperation()
         currency_type_choices = field_choices_to_dict(cls.currency_type_choices)
         uncompleted = cls.objects.filter(
@@ -516,11 +519,12 @@ class LuLedger(models.Model):
                         if lu.contract_code is None:
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
+                            department = dept_sr.get(row_data['经办行'].split('-')[1]) or row_data['经办行'].split('-')[1]
                             data_dict['rlk'] = dcms.search_lu(lu_num)
                             cp_num = row_data['授信参考编号'] if row_data['授信参考编号'].strip() else apply_detail['对应的授信申请'][0].inner_text
                             data_dict['cp'] = CpLedger.objects.get(cp_num=cp_num)
                             data_dict['contract_code'] = contract_code
-                            data_dict['department'] = Department.pickObjByCaption(row_data['经办行'].split('-')[1])
+                            data_dict['department'] = Department.pickObjByCaption(department)
                             data_dict['staff'] = Staff.pickStaffByName(row_data['管户客户经理'])
                             data_dict['customer'] = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
                             data_dict['dcms_business'] = DcmsBusiness.pickObjectByCaption(row_data['业务名称'])

@@ -316,8 +316,8 @@ class PretrialDocument(models.Model):
     industry = models.ForeignKey('root_db.Industry', on_delete=models.PROTECT, verbose_name='行业')
     stockholder = models.IntegerField(choices=CustomerRepository.stockholder_choices, verbose_name='控股方')
     gov_debt_type = models.IntegerField(choices=gov_debt_type_choices, default=0, verbose_name='政府债务申报类型')
-    is_defuse = models.NullBooleanField(blank=True, null=True, verbose_name='涉及化解')
-    is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
+    is_defuse = models.BooleanField(default=False, verbose_name='涉及化解')
+    is_green = models.BooleanField(default=False, verbose_name='绿色金融')
     type_of_3311 = models.ForeignKey('root_db.TypeOf3311', on_delete=models.PROTECT, verbose_name='3311类型')
     document_file = models.FileField(upload_to='pre_doc/%Y/%m', blank=True, null=True, verbose_name='预审表')
 
