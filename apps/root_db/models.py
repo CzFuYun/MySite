@@ -207,11 +207,35 @@ class Department(models.Model):
             for d in dept:
                 dic[d['code']] = d['caption']
             return dic
+
+    @classmethod
+    def pickObjectByDcmsOrgCode(cls, dcms_org_code):
+        departmant = cls.objects.filter(
+            Q(subdepartment__dcms_org_code_cp=dcms_org_code) |
+            Q(subdepartment__dcms_org_code_sme=dcms_org_code) |
+            Q(subdepartment__dcms_org_code_cs=dcms_org_code)
+        )
+        if departmant.exists():
+            index = 0
+            if departmant.count() > 1:
+                index = utilities.makeChoice(
+                    ('信贷系统机构号为', dcms_org_code, '的机构数大于1，请选择'),
+                    *[d.caption for d in departmant]
+                )
+            return departmant[index]
+        else:
+            print('未找到信贷系统机构号为', dcms_org_code, '的经营部门')
+            code = input('Subdepartment_code:')
+            return SubDepartment.objects.get(sd_code=code)
+
 ########################################################################################################################
 class SubDepartment(models.Model):
     sd_code = models.CharField(primary_key=True, max_length=8, verbose_name='部门编号')
     caption = models.CharField(max_length=32, unique=True, verbose_name='部门名称')
     superior = models.ForeignKey('Department', to_field='code', on_delete=models.CASCADE, verbose_name='所属部门')
+    dcms_org_code_cp = models.CharField(max_length=16, blank=True, null=True, verbose_name='地区机构编号')
+    dcms_org_code_sme = models.CharField(max_length=16, blank=True, null=True, verbose_name='小微机构编号')
+    dcms_org_code_cs = models.CharField(max_length=16, blank=True, null=True, verbose_name='个人机构编号')
 
     def __str__(self):
         return self.caption

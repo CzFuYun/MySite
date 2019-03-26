@@ -7,7 +7,7 @@ from django.db.models import Q, Sum
 
 from MySite.utilities import reverseDictKeyValue
 from root_db.models import AccountedCompany
-from .models_operation import DateOperation
+from deposit_and_credit.models_operation import DateOperation
 from scraper.models import LuLedger, DcmsBusiness, DailyLeiShou
 from app_customer_repository.models import ProjectRepository, ProjectExecution
 from scraper.crp import CrpHttpRequest
@@ -105,6 +105,7 @@ class ExpirePrompt(models.Model):
     remark_update_date = models.DateField(blank=True, null=True)
     pre_approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_pre_approver', verbose_name='初审')
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='xvshouxin_approver', verbose_name='专审')
+    add_date = models.DateField(auto_now_add=True)
 
     class Meta:
         verbose_name = '业务到期提示'
@@ -200,10 +201,30 @@ class ExpirePrompt(models.Model):
         print('\t\t其中新获批：', approved)
         print('无更新:', non_updated)
 
+    @classmethod
+    def createByLedger(cls):
+        '''
+        通过放款台账、授信台账增加记录
+        :return:
+        '''
+        from scraper.models import LuLedger, CpLedger
+        imp_date = DateOperation()
+        last_add = imp_date.last_data_date_str(cls, 'add_date')
+        expire_date__lte = imp_date.month_dif(3, last_add)
+        LuLedger.objects.filter(
+            current_amount__gt=0,
+            lu_num__startswith='LU',
+            plan_expire__lte=expire_date__lte,
+            cp__expire_date__lte=expire_date__lte,
+        ).values(
+            'customer_id'
+        ).distinct()
+
     @staticmethod
     def getCpNum(dcms, name, cf):
         customer = dcms.search_customer(name, cf)
         customer.go_to_cf_label('授信申请')
+
 
 
 class LoanDemand(models.Model):
@@ -518,7 +539,7 @@ class LoanDemand(models.Model):
                 loan_demand.update(**ld_data_dict)
                 print(nl['customer__name'], nl['contract_code'], '合同项下收回', nl['retract_amount'], '已在LD中更新其累收数')
         newly_lu = LuLedger.objects.filter(
-            # update_date=imp_date.today_str,
+            update_date=imp_date.today_str,
             dcms_business__caption__contains='贷',
             lu_num__startswith='LU'
         ).values(

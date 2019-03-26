@@ -4,37 +4,46 @@ import xadmin, re
 
 from django import forms
 from xadmin.views.edit import ModelFormAdminView
+from xadmin.plugins.actions import BaseActionView
 
-from MySite.utilities import cleanCompanyName
-from .models import LuLedger, CpLedger
-from root_db.models import AccountedCompany
+from MySite.utilities import cleanCompanyName, downloadWorkbook
+from scraper.models import LuLedger, CpLedger
 from scraper.dcms_request import DcmsHttpRequest
+from root_db.models import AccountedCompany
 
 
 DCMS = DcmsHttpRequest()
 DCMS.login(keep_long=True)
 
-class LuCreationModelForm(forms.ModelForm):
-    lu_num = forms.CharField(max_length=32, label='放款参考编号')
-    is_green = forms.BooleanField()
+# class LuCreationModelForm(forms.ModelForm):
+#     lu_num = forms.CharField(max_length=32, label='放款参考编号')
+#     is_green = forms.BooleanField()
+#
+#     class Meta:
+#         model = LuLedger
+#         fields = ('lu_num', 'is_green')
+#
+#     def clean_lu_num(self):
+#         rgx_lu_num = re.compile(r'[A-Z]{2,5}/[A-Z]{2}\d{2}/\d{4}/\d{2}/\d{8}')
+#         if rgx_lu_num.match(self.lu_num.strip()):
+#             return rgx_lu_num.findall(self.lu_num.strip())[0]
+#         raise ValueError('非法格式的参考编号')
 
-    class Meta:
-        model = LuLedger
-        fields = ('lu_num', 'is_green')
+class DownLoadLuLedger(BaseActionView):
+    action_name = '导出'
+    description = '导出'
+    model_perm = 'view'
 
-    def clean_lu_num(self):
-        rgx_lu_num = re.compile(r'[A-Z]{2,5}/[A-Z]{2}\d{2}/\d{4}/\d{2}/\d{8}')
-        if rgx_lu_num.match(self.lu_num.strip()):
-            return rgx_lu_num.findall(self.lu_num.strip())[0]
-        raise ValueError('非法格式的参考编号')
-
+    def do_action(self, queryset):
+        pass
 
 class LuLedgerAdmin:
     ordering = ('-add_date', '-lend_date', )
-    list_display = ('lu_num', 'customer', 'lend_date', '_vf_reply_code', '_vf_reply_content', 'add_date')
+    list_display = ('lu_num', 'customer', 'dcms_business', 'lend_date', 'add_date')
     list_filter = ('lend_date', 'department', 'cp__cp_type')
     search_fields = ('customer__name', 'contract_code', 'lu_num', 'contract_code')
     list_per_page = 20
+    actions = (DownLoadLuLedger, )
 
     # add_form = LuCreationModelForm
     def get_readonly_fields(self, *args, **kwargs):
@@ -50,16 +59,38 @@ class LuLedgerAdmin:
         else:
             return []
 
+    # def save_models(self):
+    #     request = self.request
+    #     instance = self.new_obj
+    #     instance.save()
+    #     lu = instance.as_dcms_work_flow(DCMS)
+    #     try:
+    #         apply_info_areas = lu.apply_info().areas
+    #         apply_detail = apply_info_areas['申请明细'].parse()
+    #         customer_name = cleanCompanyName(apply_detail['申请人名称'][0].inner_text)
+    #         customer = AccountedCompany.objects.get(name=customer_name)
+    #         instance.customer = customer
+    #
+    #
+    #
+    #         instance.save(update_fields=('customer', ))
+    #     except:
+    #         pass
+    #     if not instance.inspector:
+    #         instance.inspector = request.user.user_id
+    #         instance.save(update_fields=('inspector', ))
+
     def save_models(self):
         request = self.request
         instance = self.new_obj
         instance.save()
-        lu = instance.as_dcms_work_flow(DCMS)
+        lu = instance.lu_num
         try:
-            customer_name = cleanCompanyName(lu.apply_info().areas['申请明细'].parse()['申请人名称'][0].inner_text)
-            customer = AccountedCompany.objects.get(name=customer_name)
-            instance.customer = customer
-            instance.save(update_fields=('customer', ))
+            lu_detail = LuLedger.getSingleLuDetailFromDcms(lu, DCMS)
+            LuLedger.objects.filter(pk=instance.pk).update(**lu_detail)
+
+
+            # instance.save(update_fields=('customer', ))
         except:
             pass
         if not instance.inspector:

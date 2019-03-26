@@ -195,9 +195,9 @@ def createContributorAndUpdateSeries(file_name):
     expire_data_qs = m.ExpirePrompt.objects.filter(
         expire_date__gte=str(data_date - timedelta(days=180))
     ).values_list('customer_id', 'expire_date')
-    customer_expire_dict = {}
-    for expire_data in expire_data_qs:
-        customer_expire_dict[expire_data[0]] = expire_data[1]
+    customer_expire_dict = {expire_data[0]: expire_data[1] for expire_data in expire_data_qs}
+    # for expire_data in expire_data_qs:
+    #     customer_expire_dict[expire_data[0]] = expire_data[1]
     all_sr_dict = {}
     all_sr_dict['series_id'] = getSimpleSerializationRule(models.Series, 'code', 'caption')
     all_sr_dict['department_id'] = getSimpleSerializationRule(models.Department, 'code', 'caption')
