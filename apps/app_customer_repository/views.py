@@ -366,21 +366,27 @@ def downloadProjectList(start_date, end_date):
     imp_date = models_operation.DateOperation()
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
     projects = project_qs.filter(projectexecution__photo_date=exe_date)
-    project_details = projects.values(*('customer__customer_id', *col_part1.keys())).order_by(
+    project_details = projects.values(
+        *('customer__customer_id', *col_part1.keys())
+    ).order_by(
         'staff__sub_department__superior__display_order',
         'staff',
         'business__display_order',
     )
-    customer_list = []
-    for customer in projects.values_list('customer__customer_id').distinct():
-        customer_list.append(customer[0])
+    # customer_list = []
+    # for customer in projects.values_list('customer__customer_id').distinct():
+    #     customer_list.append(customer[0])
+    customer_list = [customer[0] for customer in projects.values_list('customer__customer_id').distinct()]
     deposit_details = models.CustomerRepository.objects.prefetch_related(
         'customer__dividedcompanyaccount_set', 'customer__contributor_set'
     ).filter(
         customer__contributor__data_date=imp_date.neighbour_date_date_str(dac_m.Contributor, exe_date),
         customer__in=customer_list,
         customer__dividedcompanyaccount__data_date=imp_date.neighbour_date_date_str(rd_m.DividedCompanyAccount, exe_date),
-    ).annotate(Sum('customer__dividedcompanyaccount__divided_amount'), Sum('customer__dividedcompanyaccount__divided_yd_avg')).values(
+    ).annotate(
+        Sum('customer__dividedcompanyaccount__divided_amount'),
+        Sum('customer__dividedcompanyaccount__divided_yd_avg')
+    ).values(
         *('customer_id', *col_part2.keys())
     )
     combine_details = utilities.combineQueryValues((project_details, deposit_details), ('customer__customer_id', 'customer_id'))

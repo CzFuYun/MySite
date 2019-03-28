@@ -22,7 +22,7 @@ class DcmsBusiness(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.code + '-' + self.caption
+        return self.caption
 
     @classmethod
     def pickObjectByCaption(cls, caption):
@@ -54,6 +54,7 @@ class CpLedger(models.Model):
     expire_date = models.DateField(blank=True, null=True, verbose_name='授信到期日')
     is_special = models.BooleanField(default=False, verbose_name='特别授信')
     is_approved = models.BooleanField(default=False, verbose_name='已批准')
+    previous = models.ForeignKey('self', blank=True, null=True, on_delete=models.PROTECT, verbose_name='前授信')
     cp_type = models.CharField(max_length=8, choices=cp_type_choice, blank=True, null=True, verbose_name='类型')
     # apply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='申报金额')
     # reply_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2, verbose_name='批复金额')
@@ -304,7 +305,7 @@ class LuLedger(models.Model):
     plan_expire = models.DateField(blank=True, null=True, verbose_name='计划到期日')
     month_dif = models.IntegerField(default=0, verbose_name='期限(月)')
     currency_type = models.CharField(max_length=8, default='CNY', choices=currency_type_choices, verbose_name='业务币种')
-    lend_amount = models.FloatField(default=0, verbose_name='贷款金额（元）')
+    lend_amount = models.FloatField(default=0, verbose_name='发放金额（元）')
     rate = models.FloatField(default=0, verbose_name='利率或费率%')
     pledge_ratio = models.FloatField(default=0, verbose_name='保证金或质押担保比例%')
     float_ratio = models.FloatField(blank=True, null=True, verbose_name='浮动比例%')
@@ -315,6 +316,7 @@ class LuLedger(models.Model):
     contract_code = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='信贷合同编号')
     current_amount = models.FloatField(default=0, verbose_name='当前地区余额（含特别授信）')
     loan_demand = models.ManyToManyField(to='deposit_and_credit.LoanDemand', blank=True, verbose_name='贷款需求')
+    is_inspected = models.BooleanField(default=False, verbose_name='已发放')
     rlk = models.CharField(max_length=32, blank=True, null=True)
 
     class Meta:
@@ -338,6 +340,13 @@ class LuLedger(models.Model):
         except ValueError:
             return 'Null'
     _vf_reply_code.short_description = '批复编号'
+
+    def _vf_inspector_name(self):
+        try:
+            return self.inspector.name
+        except ValueError:
+            return 'Null'
+    _vf_inspector_name.short_description = '审查人员'
 
     @classmethod
     def _updateCurrentAmountByDailyLeiShou(cls):
@@ -467,6 +476,7 @@ class LuLedger(models.Model):
                             data_dict['float_ratio'] = crp.strToNum(row_data['利率浮动比例']) if '固定' not in row_data['利率调整频率'] and '贷' in row_data['业务种类'] else None
                             data_dict['net_amount'] = (100 - crp.strToNum(row_data['保证金比例'])) * crp.strToNum(row_data['放款金额(元)']) / 100
                             data_dict['current_amount'] = data_dict['lend_amount']
+                            data_dict['is_inspected'] = True
                         else:
                             data_dict['lend_amount'] = lu.lend_amount + crp.strToNum(row_data['放款金额(元)'])
                         cls.objects.filter(lu_num=row_data['放款参考编号']).update(**data_dict)
@@ -549,6 +559,7 @@ class LuLedger(models.Model):
                             data_dict['float_ratio'] = crp.strToNum(row_data['利率浮动比例']) if '固定利率' not in row_data['利息调整频率'] else None
                             data_dict['net_amount'] = (100 - data_dict['pledge_ratio']) * data_dict['lend_amount'] / 100
                             data_dict['current_amount'] = data_dict['lend_amount']
+                            data_dict['is_inspected'] = True
                         else:
                             data_dict['lend_amount'] = crp.strToNum(row_data['发放金额']) + lu.lend_amount
                         cls.objects.filter(lu_num=lu_num).update(**data_dict)
@@ -560,33 +571,36 @@ class LuLedger(models.Model):
         ret = {}
         if lu_num.startswith('LU'):
             dcms.setDcmsType(dcms.DcmsType.cp.value)
-            apply_info_areas = work_flow.apply_info().areas
-            apply_detail = apply_info_areas['申请明细'].parse()
-            customer_rlk = RegExp.rlk.search(str(apply_detail['申请人名称'][0])).groups()[0]
-            try:
-                ret['customer'] = AccountedCompany.objects.get(rlk_customer=customer_rlk)
-            except:
-                customer_name = apply_detail['申请人名称'][0].inner_text
-                ret['customer'] = AccountedCompany.objects.get(name=customer_name)
-            dept_code = apply_detail['入帐经办行'][0].inner_text.split(' - ')[0]
-            ret['department'] = Department.pickObjectByDcmsOrgCode(dept_code)
-            cp_num = apply_detail['对应的授信申请'][0].inner_text
-            try:
-                ret['cp'] = CpLedger.objects.get(cp_num=cp_num)
-            except:
-                pass
-            edu_detail = apply_info_areas['额度使用明细'].parse()
-            dcms_business_caption = edu_detail['业务'][0].inner_text.split(' - ')[1]
-            ret['dcms_business'] = DcmsBusiness.pickObjectByCaption(dcms_business_caption)
-            ret['currency_type'] = currency_type_dict.get(edu_detail['币种'][0].inner_text.split(' - ')[1], 'OTHER')
-            ret['contract_code'] = edu_detail['合同编号'][0].inner_text
-            ret['lend_amount'] = CrpHttpRequest.strToNum(edu_detail['本次发放占用授信金额'][0].inner_text)
-            ret['net_amount'] = CrpHttpRequest.strToNum(edu_detail['本次发放占用净额'][0].inner_text)
-            ret['pledge_ratio'] = CrpHttpRequest.strToNum(edu_detail['特别授信类担保品比例%(授信层)'][0].inner_text)
         elif lu_num.startswith('SMELU'):
             dcms.setDcmsType(dcms.DcmsType.sme.value)
         elif lu_num.startswith('CSLU'):
             dcms.setDcmsType(dcms.DcmsType.cs.value)
+        apply_info_areas = work_flow.apply_info().areas
+        apply_detail = apply_info_areas['申请明细'].parse()
+        customer_rlk = RegExp.rlk.search(str(apply_detail['申请人名称'][0])).groups()[0]
+        try:
+            ret['customer'] = AccountedCompany.objects.get(rlk_customer=customer_rlk)
+        except:
+            customer_name = apply_detail['申请人名称'][0].inner_text
+            ret['customer'] = AccountedCompany.objects.get(name=customer_name)
+        dept_code = apply_detail['入帐经办行'][0].inner_text.split(' - ')[0]
+        ret['department'] = Department.pickObjectByDcmsOrgCode(dept_code)
+        cp_num = apply_detail['对应的授信申请'][0].inner_text
+        try:
+            ret['cp'] = CpLedger.objects.get(cp_num=cp_num)
+        except:
+            pass
+        edu_detail = apply_info_areas['额度使用明细'].parse()
+        dcms_business_caption = edu_detail['业务'][0].inner_text.split(' - ')[1]
+        ret['dcms_business'] = DcmsBusiness.pickObjectByCaption(dcms_business_caption)
+        ret['currency_type'] = currency_type_dict.get(edu_detail['币种'][0].inner_text.split(' - ')[1], 'OTHER')
+        # ret['contract_code'] = edu_detail['合同编号'][0].inner_text
+        ret['lend_amount'] = CrpHttpRequest.strToNum(edu_detail['本次发放占用授信金额'][0].inner_text)
+        try:
+            ret['pledge_ratio'] = CrpHttpRequest.strToNum(edu_detail['特别授信类担保品比例%(授信层)'][0].inner_text)
+        except:
+            ret['pledge_ratio'] = CrpHttpRequest.strToNum(edu_detail['保证金比例%'][0].inner_text)
+        ret['net_amount'] = ret['lend_amount'] * (100 - ret['pledge_ratio']) / 100
         return ret
 
     def as_dcms_work_flow(self, dcms=None):
@@ -613,6 +627,8 @@ class DailyLeiShou(models.Model):
     retract_amount = models.FloatField(default=0, verbose_name='收回金额（人民币，元）')
     retract_date = models.DateField(blank=True, null=True, verbose_name='收回日期')
     dcms_business = models.ForeignKey('DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
+    lu = models.ForeignKey('LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款')
+    cp = models.ForeignKey('CpLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='授信')
 
     class Meta:
         verbose_name = '回收'
@@ -644,6 +660,8 @@ class DailyLeiShou(models.Model):
                 customer = AccountedCompany.pickCustomer(row_data['客户名称'], customer_code)
                 dcms_business = DcmsBusiness.pickObjectByCaption(row_data['业务种类'].strip())
                 contract_code = row_data['合同号'].strip()
+                lu = LuLedger.objects.get(contract_code=contract_code)
+                cp = lu.cp
                 retract_date = row_data['收回日期'].strip()
                 print(retract_date, '收回', customer_name, contract_code, row_data['业务种类'], '折合人民币', retract_amount)
                 if '贷' in row_data['业务种类']:
@@ -654,7 +672,9 @@ class DailyLeiShou(models.Model):
                         retract_date=retract_date,
                         retract_amount=retract_amount,
                         dcms_business=dcms_business,
-                        customer=customer
+                        customer=customer,
+                        lu=lu,
+                        cp=cp,
                     )
                 )
         print(retract_date__gte, '（含）至', imp_date.today_str, '（不含），收回贷款折合人民币', total_retract_loan, '万元')

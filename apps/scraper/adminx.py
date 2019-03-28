@@ -39,9 +39,10 @@ class DownLoadLuLedger(BaseActionView):
 
 class LuLedgerAdmin:
     ordering = ('-add_date', '-lend_date', )
-    list_display = ('lu_num', 'customer', 'dcms_business', 'lend_date', 'add_date')
+    list_display = ('lu_num', 'customer', 'dcms_business', 'lend_amount', 'lend_date', '_vf_inspector_name', 'is_inspected', 'add_date')
     list_filter = ('lend_date', 'department', 'cp__cp_type')
     search_fields = ('customer__name', 'contract_code', 'lu_num', 'contract_code')
+    list_editable = ('is_inspected', )
     list_per_page = 20
     actions = (DownLoadLuLedger, )
 
@@ -49,10 +50,10 @@ class LuLedgerAdmin:
     def get_readonly_fields(self, *args, **kwargs):
         if not self.request.user.is_superuser:
             return (
-                'inspector', 'cp', 'department', 'staff', 'customer',
-                'dcms_business', 'lend_date', 'plan_expire', 'month_dif',
-                'currency_type', 'lend_amount', 'rate', 'pledge_ratio',
-                'float_ratio', 'net_amount', 'has_baozheng', 'has_diya',
+                'staff',
+                'plan_expire', 'month_dif',
+                'rate',
+                'float_ratio','has_baozheng', 'has_diya',
                 'has_zhiya', 'contract_code', 'current_amount', 'loan_demand',
                 'rlk'
                     )
@@ -83,19 +84,18 @@ class LuLedgerAdmin:
     def save_models(self):
         request = self.request
         instance = self.new_obj
+        need_scrape = not bool(instance.add_date)
         instance.save()
-        lu = instance.lu_num
-        try:
-            lu_detail = LuLedger.getSingleLuDetailFromDcms(lu, DCMS)
-            LuLedger.objects.filter(pk=instance.pk).update(**lu_detail)
-
-
-            # instance.save(update_fields=('customer', ))
-        except:
-            pass
-        if not instance.inspector:
-            instance.inspector = request.user.user_id
-            instance.save(update_fields=('inspector', ))
+        lu_detail = {}
+        if need_scrape:
+            lu = instance.lu_num
+            try:
+                lu_detail = LuLedger.getSingleLuDetailFromDcms(lu, DCMS)
+            except:
+                pass
+        if instance.inspector is None:
+            lu_detail['inspector'] = request.user.user_id
+        LuLedger.objects.filter(pk=instance.pk).update(**lu_detail)
 
 
 class CpLedgerAdmin:
