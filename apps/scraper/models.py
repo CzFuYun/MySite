@@ -660,8 +660,17 @@ class DailyLeiShou(models.Model):
                 customer = AccountedCompany.pickCustomer(row_data['客户名称'], customer_code)
                 dcms_business = DcmsBusiness.pickObjectByCaption(row_data['业务种类'].strip())
                 contract_code = row_data['合同号'].strip()
-                lu = LuLedger.objects.get(contract_code=contract_code)
-                cp = lu.cp
+                lu = None
+                cp = None
+                try:
+                    lu = LuLedger.objects.get(contract_code=contract_code)
+                except:
+                    pass
+                else:
+                    try:
+                        cp = lu.cp
+                    except:
+                        pass
                 retract_date = row_data['收回日期'].strip()
                 print(retract_date, '收回', customer_name, contract_code, row_data['业务种类'], '折合人民币', retract_amount)
                 if '贷' in row_data['业务种类']:
