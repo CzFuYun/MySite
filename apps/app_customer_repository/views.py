@@ -420,7 +420,7 @@ def downloadNewNetHistory(request):
         project_progress[pe['project_id']].append(pe['current_progress__status_num'])
     project_id = []
     for p, g in project_progress.items():
-        if g[0] < 200:
+        # if g[0] < 200:
             project_id.append(p)
     new_net_history = models.ProjectExecution.objects.filter(
         project__in=project_id,

@@ -8,7 +8,7 @@ from root_db.models import DividedCompanyAccount
 
 class ContributorAdmin:
     list_filter = ['data_date', 'customer__series', 'department']
-    search_fields = ['customer']
+    search_fields = ['customer__name']
     list_display = [
         'approve_line', 'customer', 'department', 'getIndustry',
         'loan_rate', 'loan', 'net_BAB', 'net_TF', 'net_GL', 'net_total', 'invest_banking',
