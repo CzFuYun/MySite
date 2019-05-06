@@ -12,8 +12,6 @@ from scraper.dcms_request import DcmsHttpRequest
 from root_db.models import AccountedCompany
 
 
-DCMS = DcmsHttpRequest()
-DCMS.login(keep_long=True)
 
 # class LuCreationModelForm(forms.ModelForm):
 #     lu_num = forms.CharField(max_length=32, label='放款参考编号')
@@ -88,9 +86,11 @@ class LuLedgerAdmin:
         instance.save()
         lu_detail = {}
         if need_scrape:
+            dcms = DcmsHttpRequest()
+            dcms.login()
             lu = instance.lu_num
             try:
-                lu_detail = LuLedger.getSingleLuDetailFromDcms(lu, DCMS)
+                lu_detail = LuLedger.getSingleLuDetailFromDcms(lu, dcms)
             except:
                 pass
         if instance.inspector is None:

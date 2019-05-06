@@ -141,7 +141,7 @@ def downloadContributionData(request):
     if dept != 'JGBS':
         q_dept = Q(department=dept)
     else:
-        q_dept = Q(department__code__isnull=False)
+        q_dept = Q(id__isnull=False)#Q(department__code__isnull=False)
     data_list = dac_models.Contributor.objects.filter(
         data_date=data_date,
         customer__dividedcompanyaccount__data_date=data_date

@@ -8,11 +8,6 @@ from scraper.dcms_request import DcmsHttpRequest
 from private_modules.dcms_shovel.page_parser import DcmsWebPage
 
 
-industry_factor_rule = {
-    'C': 1.5,
-}
-
-
 class CustomerRepository(models.Model):
     stockholder_choices = (
         (0, 'unknown'),
@@ -184,29 +179,38 @@ class ProjectRepository(models.Model):
         self.is_focus = True if self.total_net > 8000 or self.business.is_focus else False
 
     def calculate_acc_num(self):
-        base = 1        # 基数
-        factor = 1      # 系数
         b_id = self.business.id
         if b_id in range(10, 15):  # 一般授信的讲究比较多
+            industry_factor_rule = {
+                'C': 2,
+            }
+            minqi_factor = 2
+            green_project_factor = 2
+            _3311_factor = 2
+            base_acc = 1  # 基数
+            base_factor = 1  # 系数
             industry = self.customer.industry_id
             factor_industry = industry_factor_rule.get(industry, 1)     # 行业带来的系数，目前仅有制造业有额外加成系数1.5
-            factor_3311 = 2 if self.customer.type_of_3311.id >= 10 else 1       # 3311客户加成系数2
-            factor = factor_industry * factor_3311      # max(factor_industry, factor_3311)
+            factor_3311 = _3311_factor if self.customer.type_of_3311.id >= 10 else base_factor      # 3311客户加成系数2
+            factor_green = green_project_factor if self.is_green else base_factor
+            factor_minqi = minqi_factor if self.customer.stockholder == 20 else base_factor
+            factor = max(factor_industry, factor_3311, factor_green, factor_minqi)      # factor_industry * factor_3311
             imp_d = models_operation.DateOperation()
             if self.existing_net:
-                base = 0.5
+                base_acc = 0.5
             else:
                 try:
                     history_sum_net = self.customer.customer.contributor_set.filter(
                         data_date__gte=imp_d.last_year_today,
                         data_date__lte=imp_d.today
                     ).values_list('net_total').aggregate(Sum('net_total'))['net_total__sum']
-                    base = 0.5 if int(history_sum_net) else 1       # 一年内用过信或直接声明有存量敞口的，基数为0.5户
+                    base_acc = 0.5 if int(history_sum_net) else base_acc       # 一年内用过信或直接声明有存量敞口的，基数为0.5户
                 except:
                     pass
+            self.account_num = base_acc * factor
         else:
-            factor = self.business.acc_factor
-        self.account_num = base * factor
+            self.account_num = self.business.acc_factor
+        # self.account_num = base_acc * factor
 
     def create(self, **kwargs):
         if kwargs:
@@ -674,12 +678,12 @@ class TargetTask(models.Model):
         (10, '计划户数'),
         (20, '计划金额'),
     )
-    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.CASCADE)
-    business = models.ForeignKey('Business', blank=True, null=True, on_delete=models.CASCADE)
-    target_amount = models.FloatField(blank=True, null=True)
-    target_type = models.IntegerField(choices=target_type_choices, blank=True, null=True)
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)
+    department = models.ForeignKey('root_db.Department', blank=True, null=True, on_delete=models.CASCADE, verbose_name='经营部门')
+    business = models.ForeignKey('Business', blank=True, null=True, on_delete=models.CASCADE, verbose_name='业务种类')
+    target_amount = models.FloatField(blank=True, null=True, verbose_name='目标数')
+    target_type = models.IntegerField(choices=target_type_choices, blank=True, null=True, verbose_name='目标类型')
+    start_date = models.DateField(blank=True, null=True, verbose_name='时间区间——开始')
+    end_date = models.DateField(blank=True, null=True, verbose_name='时间区间——结束')
 
     @classmethod
     def calculate_target(cls, sd='', ed='', business_obj=None, returnType='dict'):

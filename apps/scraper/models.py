@@ -454,15 +454,17 @@ class LuLedger(models.Model):
                         if lu.contract_code is None:
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
+                            department_name = dept_sr.get(row_data['经办行'].split('-')[1]) or row_data['经办行'].split('-')[1]
+                            department = Department.pickObjByCaption(department_name)
+                            print('补充放款信息', customer_name, lu_num, department)
                             staff = Staff.pickStaffByName(row_data['管户客户经理'])
                             customer = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
-                            department = dept_sr.get(row_data['经办行'].split('-')[1]) or row_data['经办行'].split('-')[1]
                             data_dict['rlk'] = dcms.search_lu(lu_num)
                             cp_num = row_data['授信参考编号']
                             cp_num = cp_num if cp_num.startswith('CP') or cp_num.startswith('SME') else lu_flow_base_info['对应的授信申请'][0].inner_text
                             data_dict['cp'] = CpLedger.objects.get(cp_num=cp_num)
                             data_dict['contract_code'] = row_data['合同号']
-                            data_dict['department'] = Department.pickObjByCaption(department)
+                            data_dict['department'] = department
                             data_dict['staff'] = staff
                             data_dict['customer'] = customer
                             data_dict['dcms_business'] = DcmsBusiness.pickObjectByCaption(row_data['业务种类'])
@@ -540,12 +542,14 @@ class LuLedger(models.Model):
                         if lu.contract_code is None:
                             customer_name = row_data['客户名称']
                             customer_code = row_data['客户编号']
-                            department = dept_sr.get(row_data['经办行'].split('-')[1]) or row_data['经办行'].split('-')[1]
+                            department_name = dept_sr.get(row_data['经办行'].split('-')[1]) or row_data['经办行'].split('-')[1]
+                            department = Department.pickObjByCaption(department_name)
+                            print('补充放款信息', customer_name, lu_num, department)
                             data_dict['rlk'] = dcms.search_lu(lu_num)
                             cp_num = row_data['授信参考编号'] if row_data['授信参考编号'].strip() else apply_detail['对应的授信申请'][0].inner_text
                             data_dict['cp'] = CpLedger.objects.get(cp_num=cp_num)
                             data_dict['contract_code'] = contract_code
-                            data_dict['department'] = Department.pickObjByCaption(department)
+                            data_dict['department'] = department
                             data_dict['staff'] = Staff.pickStaffByName(row_data['管户客户经理'])
                             data_dict['customer'] = AccountedCompany.pickCustomer(customer_name, customer_code, dcms)
                             data_dict['dcms_business'] = DcmsBusiness.pickObjectByCaption(row_data['业务名称'])
@@ -582,7 +586,10 @@ class LuLedger(models.Model):
             ret['customer'] = AccountedCompany.objects.get(rlk_customer=customer_rlk)
         except:
             customer_name = apply_detail['申请人名称'][0].inner_text
-            ret['customer'] = AccountedCompany.objects.get(name=customer_name)
+            try:
+                ret['customer'] = AccountedCompany.objects.get(name=customer_name)
+            except:
+                pass
         dept_code = apply_detail['入帐经办行'][0].inner_text.split(' - ')[0]
         ret['department'] = Department.pickObjectByDcmsOrgCode(dept_code)
         cp_num = apply_detail['对应的授信申请'][0].inner_text

@@ -10,7 +10,7 @@ from xadmin.plugins.actions import BaseActionView
 
 from MySite.settings import MEDIA_URL
 from MySite.utilities import XadminExtraAction, makeChoice
-from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress
+from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress, TargetTask
 from root_db.models import AccountedCompany
 from MySite import utilities
 from private_modules.dcms_shovel import connection
@@ -56,6 +56,7 @@ class ProjectAdmin:
 class ProjectExecutionAdmin:
     list_display = ('project', 'current_progress', 'remark', 'photo_date')
     search_fields = ('project__customer__name', )
+    list_filter = ('project__business__caption', )
 
 
 class PreDocToNewProject(BaseActionView):
@@ -63,8 +64,12 @@ class PreDocToNewProject(BaseActionView):
     description = '转化所选的 为储备项目'
     model_perm = 'delete'
     def do_action(self, queryset):
-        dcms = connection.DcmsConnection('http://110.17.1.21:9082')
-        dcms.login('czfzc', 'hxb123')
+        can_connect_to_dcms = True
+        try:
+            dcms = connection.DcmsConnection('http://110.17.1.21:9082')
+            dcms.login('czfzc', 'hxb123')
+        except:
+            can_connect_to_dcms = False
         imp_date = models_operation.DateOperation()
         for pre_doc in queryset:
             if ProjectRepository.objects.filter(pretrial_doc=pre_doc).exists():
@@ -84,9 +89,13 @@ class PreDocToNewProject(BaseActionView):
                 for key in new_customer_fields:
                     new_customer_fields[key]  = getattr(pre_doc, key)
                 new_customer_fields['name'] = customer_name
-                cf_num = dcms.search_customer(pre_doc.customer_name).cf_num or dcms.search_customer(customer_name).cf_num
+                if can_connect_to_dcms:
+                    cf_num = dcms.search_customer(pre_doc.customer_name).cf_num or dcms.search_customer(customer_name).cf_num
+                else:
+                    print(customer_name, '信贷文件号？')
+                    cf_num = input('>?')
                 if cf_num:
-                    choice = makeChoice((customer_name, '信贷文件号：【', cf_num, '】,是否正确？'))
+                    choice = makeChoice(('请确认', customer_name, '信贷文件号：【', cf_num, '】,是否正确？'))
                     cf_num = cf_num if choice else input('请输入正确的信贷文件编号>?')
                 else:
                     cf_num = ''
@@ -136,6 +145,11 @@ class PretrialDocumentAdmin:
     show_file.short_description = '预审表'
 
 
+class TargetTaskAdmin:
+    list_display = ('department', 'business', 'target_amount', 'target_type', 'start_date', 'end_date')
+    list_filter = ('start_date', 'end_date')
+
+
 class PretrialDocumentWaitForMeetingAdmin(XadminExtraAction):
     list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file']
     list_per_page = 20
@@ -176,3 +190,4 @@ xadmin.site.register(ProjectExecution, ProjectExecutionAdmin)
 xadmin.site.register(PretrialDocument, PretrialDocumentAdmin)
 xadmin.site.register(PretrialDocumentWaitForMeeting, PretrialDocumentWaitForMeetingAdmin)
 xadmin.site.register(PretrialMeeting, PretrialMeetingAdmin)
+xadmin.site.register(TargetTask, TargetTaskAdmin)

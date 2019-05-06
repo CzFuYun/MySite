@@ -63,7 +63,8 @@ class DcmsHttpRequest(BaseHttpRequest):
         self.userId = userId
         self.password = password
         r = self.post(self.UrlPath('dcmscp/login.view', {'step': 'defined', 'post': '登录'}), userId=self.userId, password=self.password, applicationCode=self.applicationCode)
-        assert 'HXB_DCMS_WINDOW_' in r.text, '登录失败，用户名或密码不正确'
+        if not 'HXB_DCMS_WINDOW_' in r.text:
+            return False
         self.setDcmsType(dcms_type)
         if keep_long:
             self.keepConnection()

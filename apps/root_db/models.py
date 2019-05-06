@@ -395,19 +395,10 @@ class AccountedCompany(models.Model):
                     ('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请选择：'),
                     *[customer[i].pk for i in range(customer.count())]
                 )
-                #
-                # print('名称为', customer_name, '或客户号为', customer_code, '的客户在AC中不止一个，请核实')
-                # for i in range(customer.count()):
-                #     print(i, customer[i].pk)
-                # index = input('>>>')
             customer = customer[int(index)]
             now_customer_code = customer.dcms_customer_code
             if now_customer_code is None or re.search(r'[\u4e00-\u9fa5]', now_customer_code) or now_customer_code != customer_code:
                 choice = utilities.makeChoice((customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？'))
-                # print(customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？')
-                # print('0.否\n1.是')
-                # choice = input('>>>')
-                # if choice == '1' or choice == '':
                 if choice:
                     customer.dcms_customer_code = customer_code
                     customer.save(update_fields=('dcms_customer_code', ))
@@ -415,17 +406,12 @@ class AccountedCompany(models.Model):
         else:
             choice = utilities.makeChoice(
                 ('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户'),
-                *('手工输入核心客户号在AC中再次搜索', '通过爬取dcms信息新建')
+                *('手工输入核心客户号在AC中再次搜索', '通过爬取dcms信息新建', '手动创建')
             )
-            #
-            # print('未在AC中找到', '名称为', customer_name, '或客户号为', customer_code, '的客户')
-            # print('\t0.手工输入核心客户号在AC中再次搜索\n\t1.通过爬取dcms信息新建')
-            # choice = input('>>>')
-            # if choice == '1' or choice == '':
-            if choice:
+            if choice == 1:
                 return cls.createCustomerByDcms(customer_code, dcms)
-            else:
-                print('请输入该客户的16位核心客户号：')
+            elif choice == 0:
+                print('16位核心客户号：')
                 kernel_num = input()
                 exist_customer = cls.objects.filter(customer_id=kernel_num)
                 if not exist_customer.exists():
@@ -434,6 +420,10 @@ class AccountedCompany(models.Model):
                 else:
                     print('再次搜索AC，查找到', exist_customer[0].name, '已进行直接关联')
                 return cls.objects.get(customer_id=kernel_num)
+            elif choice == 2:
+                print('16位核心客户号：')
+                kernel_num = input()
+                return cls.objects.create(customer_id=kernel_num, dcms_customer_code=customer_code)
 
     @classmethod
     def uncorrect_dcms_code(cls):

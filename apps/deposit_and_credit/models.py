@@ -114,6 +114,10 @@ class ExpirePrompt(models.Model):
     def __str__(self):
         return self.customer.name
 
+    def _vf_status_num(self):
+        return self.current_progress.status_num
+    _vf_status_num.short_description = '状态码'
+
     def toDict(self):
         fields = []
         d = {}
