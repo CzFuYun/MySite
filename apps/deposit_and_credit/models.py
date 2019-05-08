@@ -112,7 +112,7 @@ class ExpirePrompt(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return self.customer.name
+        return self.customer.name + str(self.expire_date)
 
     def _vf_status_num(self):
         return self.current_progress.status_num
@@ -236,22 +236,22 @@ class LoanDemand(models.Model):
     customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
     # customer = models.CharField(max_length=128, blank=True, null=True, verbose_name='客户')
     staff = models.ForeignKey(to='root_db.Staff', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户经理')
+    business = models.ForeignKey(to='scraper.DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     expire_prompt = models.ForeignKey(to='ExpirePrompt', blank=True, null=True, on_delete=models.PROTECT, verbose_name='到期提示')
     project = models.ForeignKey(to='app_customer_repository.ProjectRepository', blank=True, null=True, on_delete=models.PROTECT, verbose_name='项目储备')
     # lu_ledger = models.ForeignKey(to='scraper.LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款台账记录')
-    contract = models.CharField(max_length=32, blank=True, null=True, verbose_name='放款合同号')
-    expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
+    contract = models.CharField(max_length=32, blank=True, null=True, verbose_name='放款合同号（到期）')
     expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
+    expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
+    plan_amount = models.IntegerField(default=0, verbose_name='拟放金额')
     this_month_leishou = models.IntegerField(default=0, verbose_name='当月累收')
-    business = models.ForeignKey(to='scraper.DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
+    already_achieved = models.IntegerField(default=0, verbose_name='当月累放')
     # now_rate = models.FloatField(default=0, verbose_name='当前利率')
     # now_deposit_ydavg = models.IntegerField(default=0, verbose_name='当前存款日均')
-    plan_amount = models.IntegerField(default=0, verbose_name='拟放金额')
     plan_rate = models.FloatField(blank=True, null=True, verbose_name='拟放利率')
     plan_deposit_ratio = models.IntegerField(blank=True, null=True, verbose_name='预计存款回报')
     plan_date = models.DateField(blank=True, null=True, verbose_name='预计投放日期')
     expect = models.IntegerField(default=100, verbose_name='把握(%)')
-    already_achieved = models.IntegerField(default=0, verbose_name='当月累放')
     remark = models.TextField(blank=True, null=True, verbose_name='备注（规模相关）')
     # can_increase_deposit = models.BooleanField(default=False, verbose_name='存款增长来源')
     last_update = models.DateField(auto_now=True, blank=True, null=True, verbose_name='最后更新')
@@ -600,7 +600,7 @@ class LoanDemand(models.Model):
 
 class LoanDemandForThisMonth(LoanDemand):
     class Meta:
-        verbose_name = '本月地区贷款规模安排'
+        verbose_name = '本月贷款规模安排'
         verbose_name_plural = verbose_name
         proxy = True
 

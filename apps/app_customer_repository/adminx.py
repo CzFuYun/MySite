@@ -37,6 +37,7 @@ class ProjectAdmin:
     search_fields = ['customer__name']
     list_filter = ['is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num']
     list_per_page = 15
+    relfield_style = 'fk-ajax'
 
     def show_remark(self, instance):
         return self.last_exe.remark.content

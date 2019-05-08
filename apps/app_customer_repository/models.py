@@ -173,7 +173,7 @@ class ProjectRepository(models.Model):
         ordering = ['customer__department__display_order', 'customer', 'staff']
 
     def __str__(self):
-        return self.project_name + str(self.add_date)
+        return str(self.pk) + '.' + self.customer.name + self.business.caption + '-' + str(self.current_progress)
 
     def judge_is_focus(self):
         self.is_focus = True if self.total_net > 8000 or self.business.is_focus else False
@@ -361,6 +361,7 @@ class ProjectExecution(models.Model):
     class Meta:
         verbose_name = '项目管理'
         verbose_name_plural = verbose_name
+        ordering = ('-photo_date', )
 
     def __str__(self):
         return self.project.project_name
