@@ -20,7 +20,7 @@ class SearchBy(Enum):
 
 
 class DcmsHttpRequest(BaseHttpRequest):
-    origin_url = 'http://110.17.1.21:9082/'
+    origin_url = 'http://110.17.1.21:9081/'
     base_params = {
         'do': 'Search',
         'searchBranchCode': 'HQ',

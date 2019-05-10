@@ -223,7 +223,7 @@ class DcmsConnection(WebConnection):
 
 if __name__ == '__main__':
     print('start')
-    dcms1 = DcmsConnection('http://110.17.1.21:9082')
+    dcms1 = DcmsConnection('http://110.17.1.21:9081')
     dcms1.login('czfzc', 'hxb123')
     customer = dcms1.search_customer('江苏武进经济发展集团公司')
     cf_num = customer.cf_num

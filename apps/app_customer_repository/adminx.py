@@ -10,7 +10,7 @@ from xadmin.plugins.actions import BaseActionView
 
 from MySite.settings import MEDIA_URL
 from MySite.utilities import XadminExtraAction, makeChoice
-from .models import CustomerRepository, ProjectRepository, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress, TargetTask
+from .models import CustomerRepository, ProjectRepository, UnCompleteProject, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress, TargetTask
 from root_db.models import AccountedCompany
 from MySite import utilities
 from private_modules.dcms_shovel import connection
@@ -29,6 +29,14 @@ class CustomerAdmin:
     list_filter = ('department__caption', 'type_of_3311__caption', 'industry__caption', 'stockholder')
 
 
+class ProjectToLoanDemand(BaseActionView):
+    action_name = '添加至贷款需求'
+    description = '添加所选的 至贷款需求'
+    model_perm = 'delete'
+    def do_action(self, queryset):
+        pass
+
+
 class ProjectAdmin:
     list_display = ['pk', 'customer', 'staff', 'business', 'total_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'current_progress'
         # , 'get_total_used', 'is_specially_focus', 'show_remark', 'tmp_close_date', 'close_reason'
@@ -38,6 +46,7 @@ class ProjectAdmin:
     list_filter = ['is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num']
     list_per_page = 15
     relfield_style = 'fk-ajax'
+    actions = (ProjectToLoanDemand, )
 
     def show_remark(self, instance):
         return self.last_exe.remark.content
@@ -54,6 +63,12 @@ class ProjectAdmin:
     get_progress.short_description = '目前进度'
 
 
+class UnCompleteProjectAdmin:
+    list_display = ()
+    def queryset(self):
+        qs = super().queryset()
+        return qs
+
 class ProjectExecutionAdmin:
     list_display = ('project', 'current_progress', 'remark', 'photo_date')
     search_fields = ('project__customer__name', )
@@ -67,7 +82,7 @@ class PreDocToNewProject(BaseActionView):
     def do_action(self, queryset):
         can_connect_to_dcms = True
         try:
-            dcms = connection.DcmsConnection('http://110.17.1.21:9082')
+            dcms = connection.DcmsConnection('http://110.17.1.21:9081')
             dcms.login('czfzc', 'hxb123')
         except:
             can_connect_to_dcms = False
@@ -187,6 +202,7 @@ class PretrialMeetingAdmin:
 
 xadmin.site.register(CustomerRepository, CustomerAdmin)
 xadmin.site.register(ProjectRepository, ProjectAdmin)
+# xadmin.site.register(UnCompleteProject, UnCompleteProjectAdmin)
 xadmin.site.register(ProjectExecution, ProjectExecutionAdmin)
 xadmin.site.register(PretrialDocument, PretrialDocumentAdmin)
 xadmin.site.register(PretrialDocumentWaitForMeeting, PretrialDocumentWaitForMeetingAdmin)

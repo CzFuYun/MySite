@@ -136,7 +136,7 @@ class ExpirePrompt(models.Model):
 
     @classmethod
     def fillCpNum(cls):
-        dcms = connection.DcmsConnection('http://110.17.1.21:9082')
+        dcms = connection.DcmsConnection('http://110.17.1.21:9081')
         dcms.login('czfzc', 'hxb123')
         customer_list = cls.objects.filter(
             Q(finish_date__isnull=True) &
@@ -171,7 +171,7 @@ class ExpirePrompt(models.Model):
         updated = []
         non_updated = []
         approved = []
-        dcms = connection.DcmsConnection('http://110.17.1.21:9082')
+        dcms = connection.DcmsConnection('http://110.17.1.21:9081')
         dcms.login('czfzc', 'hxb123')
         customer_list = cls.objects.filter(
             Q(finish_date__isnull=True) &
@@ -282,38 +282,6 @@ class LoanDemand(models.Model):
                 return
     _vf_current_progress.short_description = '当前进度'
 
-    # @classmethod
-    # def createFromProjectRepositoryForNextMonth(cls):
-    #     # imp_date = DateOperation()
-    #     # ↓目前已建档且未落地的授信项目
-    #     project = ProjectRepository.objects.filter(
-    #         current_progress__status_num__gte=30,
-    #         current_progress__status_num__lt=200,
-    #         business__superior_id=10,
-    #         tmp_close_date__isnull=True,
-    #         customer__customer_id__isnull=False
-    #     )
-    #     for p in project:
-    #         project_name = p.project_name
-    #         if cls.objects.filter(project=p).exists():
-    #             print(project_name, '已存在于贷款需求表中')
-    #         else:
-    #             print(project_name, '当前进度', p.current_progress, '是否可能投放？')
-    #             print('0.否\n1.是')
-    #             choice = input('>>>')
-    #             if int(choice):
-    #                 last_pe = ProjectExecution.lastExePhoto().get(project=p)
-    #                 plan_date = p.plan_luodi
-    #                 if not plan_date:
-    #                     print(project_name, '预计落地时间？')
-    #                     plan_date = input('>>>')
-    #                 cls(
-    #                     customer_id=p.customer.customer_id,
-    #                     staff=p.staff,
-    #                     project=p,
-    #                     plan_amount=p.total_net - last_pe.total_used,
-    #                     plan_date=plan_date
-    #                 ).save()
     #
     # @classmethod
     # def createFromLuLedgerForNextMonth(cls):
@@ -357,85 +325,6 @@ class LoanDemand(models.Model):
     #             staff_id=lu['staff_id'],
     #             contract=lu['contract_code']
     #         ).save()
-
-    # @classmethod
-    # def updateByLeiShou(cls, retract_date__gte=None):
-    #     '''
-    #     爬取累收表并更新贷款需求：
-    #     1、贷款需求中有对应信贷合同号的，直接对相应贷款需求记录的当月累收金额字段进行累加
-    #     2、贷款需求中，合同号为空，但是客户名和品种能匹配的，同上处理
-    #     3、其他情况，在贷款需求中新建，并做好备注
-    #     :param retract_date__gte: 收回日期大于等于
-    #     :return:
-    #     '''
-    #     imp_date = DateOperation()
-    #     if retract_date__gte is None:
-    #         last_update = imp_date.neighbour_date_date_str(cls, imp_date.today_str, 'last_update') or str(imp_date.delta_date(-1))
-    #         print('贷款需求表上次更新日期', last_update, '是否以此作为累收表的起始日期进行抓取(__gte)？')
-    #         print('0.否\n1.是')
-    #         confirm = input('>>>')
-    #         if confirm == '0':
-    #             retract_date__gte = input('累收表起始日期(__gte)>>>')
-    #         else:
-    #             retract_date__gte = last_update
-    #     crp = CrpHttpRequest()
-    #     crp.login()
-    #     crp.setDataDate()
-    #     query_fields = OrderedDict(**{0: '合同号', 1: '客户名称', 2: '业务种类', 3: '收回日期', 4: '收回金额(元)'})
-    #     query_condition = {'收回日期': crp.DateCondition.earlierThan(retract_date__gte)}#">" + retract_date__gte}
-    #     leishou_aggregation = defaultdict(float)
-    #     for page in crp.getLeiShou(*query_fields.values(), **query_condition):
-    #         query_result = page.HTML_soup.find_all('td')[1:]
-    #         col_num = len(query_fields)
-    #         row_num = int(len(query_result) / col_num)
-    #         for td_index in range(0, row_num, col_num):
-    #             row_data = query_result[td_index: td_index + col_num]
-    #             col_index = 0
-    #             info = OrderedDict()
-    #             for field in query_fields.values():
-    #                 # exec(field + '="' + re.sub(r'[,\s\t\n\r]', '', row_data[col_index].text) + '"', scope)
-    #                 info[field] = re.sub(r'[,\s\t\n\r]', '', row_data[col_index].text)
-    #                 col_index += 1
-    #             leishou_aggregation[(info['合同号'], info['客户名称'], info['业务种类'], info['收回日期'])] += float(info['收回金额(元)']) / 10000
-    #     index_reflect = reverseDictKeyValue(query_fields)
-    #     default_business = DcmsBusiness.objects.get(pk='1011')      # 短期流贷
-    #     for info, amount in leishou_aggregation.items():
-    #         business_name = info[index_reflect['业务种类']]
-    #         if business_name.__contains__('贷') or business_name.__contains__('保理'):
-    #             contract_code = info[index_reflect['合同号']].split('_')[0]
-    #             customer_name = info[index_reflect['客户名称']]
-    #             amount = int(amount)
-    #             existed_ld = cls.objects.filter(add_time__gte=imp_date.month_first_date(), contract=contract_code)
-    #             if existed_ld.exists():
-    #                 index = 0
-    #                 if existed_ld.count() > 1:
-    #                     print(customer_name, contract_code, '在本月贷款需求中存在多笔记录，请选择：')
-    #                     for i in range(existed_ld.count()):
-    #                         print('\t', i, '.到期日', existed_ld[i].expire_date, '拟投放日', existed_ld[i].plan_date)
-    #                     index = int(input('>>>'))
-    #                 this_month_leishou = existed_ld[index].this_month_leishou
-    #                 cls.objects.filter(pk=existed_ld[index].pk).update(this_month_leishou= amount + this_month_leishou)
-    #                 # existed_ld[index].this_month_leishou = amount + this_month_leishou
-    #                 # existed_ld[index].save()
-    #                 print(customer_name, contract_code, '合同项下', info[index_reflect['收回日期']], '收回', amount, '已更新至贷款需求→当月累收')
-    #             else:       # 若不存在贷款需求，则询问处理方式
-    #                 print(customer_name, contract_code, '合同项下', info[index_reflect['收回日期']], '收回', amount, '不存在对应的贷款需求记录，是否新建')
-    #                 print('0.否\n1.是（建议选是，以便轧差）')
-    #                 need_add= input('>>>')
-    #                 if int(need_add):
-    #                     try:
-    #                         dcms_business = DcmsBusiness.objects.get(caption=business_name)
-    #                     except:
-    #                         print(customer_name, '未找到用信品种', business_name, '默认使用短期流贷。')
-    #                         dcms_business = default_business
-    #                     cls(
-    #                         customer=customer_name,
-    #                         business=dcms_business,
-    #                         contract=contract_code,
-    #                         this_month_leishou=amount
-    #                     ).save()
-    #         else:
-    #             continue
 
     @classmethod
     def linkToEpRecord(cls, add_date__gte=None, add_date__lte=None):

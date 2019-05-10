@@ -18,8 +18,9 @@ class AccountedCompanyAdmin:
 
 
 class SubDepartmentAdmin:
+    list_display = ('caption', 'superior')
     relfield_style = 'fk-ajax'
-
+    list_per_page = 100
 
 class DividedCompanyAccountAdmin:
     list_display = ['customer', 'data_date']

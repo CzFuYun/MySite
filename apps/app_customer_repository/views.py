@@ -506,7 +506,7 @@ def setProjectReplied(request):
         form = html_forms.ProjectModelForm_set_replied(request.POST, instance=project_obj)
         if form.is_valid():
             form.save()
-            pe = models.ProjectExecution.objects.filter(project_id=project_id).last()
+            pe = models.ProjectExecution.objects.filter(project_id=project_id).order_by('photo_date').last()
             suit_progress = models.Progress.objects.filter(status_num=100, suit_for_business=project_obj.business_id).first()
             pe.update({'current_progress': suit_progress})
             text = ''

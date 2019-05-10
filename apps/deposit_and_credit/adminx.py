@@ -63,7 +63,6 @@ class LoanDemandAdmin:
     list_display = ('add_time', '_vf_customer', 'get_expire_prompt_info', 'expire_amount', 'this_month_leishou', 'already_achieved')
     list_filter = ('plan_date', )
     search_fields = ('customer__name',)
-    list_editable = ('finish_date', 'already_achieved')
 
     def _vf_customer(self, instance):
         if instance.customer:
@@ -78,41 +77,56 @@ class LoanDemandAdmin:
 
 
 class LoanDemandForThisMonthAdmin:
-    list_display = ('_vf_customer', '_vf_dept', '_vf_staff', '_vf_industry', 'plan_amount', '_vf_progress', '_vf_stage', 'this_month_leishou', 'already_achieved', '_vf_remark')
+    list_display = ('_vf_customer', '_vf_dept', '_vf_staff', '_vf_industry', 'expire_amount', 'plan_amount', '_vf_progress', '_vf_status_num', '_vf_stage', 'this_month_leishou', 'already_achieved', 'remark', '_vf_remark')
     ordering = ('staff__sub_department__superior__display_order', 'staff', '-plan_amount')
+    list_editable = ('remark', )
     list_per_page = 100
 
     def _vf_customer(self, instance):
+        self.pr = instance.project
+        self.ep = instance.expire_prompt
+        self.staff = instance.staff
+        if self.pr:
+            self.staff = self.pr.staff
+        elif self.ep:
+            self.staff = self.ep.staff_id
         if instance.customer:
-            return instance.customer.name
-        else:
-            return instance.project.customer.name
+            self.customer = instance.customer
+        elif self.pr:
+            self.customer = self.pr.customer
+        elif self.ep:
+            self.customer = self.ep.customer
+        return self.customer.name
     _vf_customer.short_description = '客户名称'
 
     def _vf_dept(self, instance):
-        return instance.staff.sub_department.superior
+        return self.staff.sub_department.superior
     _vf_dept.short_description = '经营部门'
 
     def _vf_staff(self, instance):
-        return instance.staff.name
+        return self.staff.name
     _vf_staff.short_description = '客户经理'
 
     def _vf_industry(self, instance):
-        return instance.customer.industry
+        return self.customer.industry
     _vf_industry.short_description = '行业门类'
 
     def _vf_progress(self, instance):
         current_progress = None
-        if instance.project:
-            current_progress = instance.project.current_progress
-        elif instance.expire_prompt:
-            current_progress = instance.expire_prompt.current_progress
+        if self.pr:
+            current_progress = self.pr.current_progress
+        elif self.ep:
+            current_progress = self.ep.current_progress
         self.current_progress = current_progress
         if instance.plan_amount:
             return '未建档' if current_progress is None else current_progress
         else:
             return '收回'
     _vf_progress.short_description = '当前进度'
+
+    def _vf_status_num(self, instance):
+        return self.current_progress.status_num if self.current_progress else 0
+    _vf_status_num.short_description = '进度代码'
 
     def _vf_stage(self, instance):
         if self.current_progress is None:
@@ -121,19 +135,23 @@ class LoanDemandForThisMonthAdmin:
             status_num = self.current_progress.status_num
             if status_num <= 30:
                 return '支行'
-            elif status_num < 100:
+            elif status_num < 85:
                 return '分行'
-            else:
+            elif status_num == 85:
+                return '总行'
+            elif status_num >= 100:
                 return '已批'
+            else:
+                return str(self.current_progress)
     _vf_stage.short_description = '阶段'
 
     def _vf_remark(self, instance):
         remark = None
-        if instance.project:
-            remark = instance.project.projectexecution_set.first().remark
+        if self.pr:
+            remark = self.pr.projectexecution_set.first().remark
             remark = remark.content
-        elif instance.expire_prompt:
-            remark = instance.expire_prompt.remark
+        elif self.ep:
+            remark = self.ep.remark
             if remark:
                 remark = re.split(r'<\d{4}-\d{2}-\d{2}>', remark)
                 try:
@@ -153,6 +171,12 @@ class LoanDemandForThisMonthAdmin:
                 Q(add_time__range=(start_date, end_date))
             )
         )
+
+    def save_models(self):
+        request = self.request
+        new_obj = self.new_obj
+        new_obj.save()
+        pass
 
 
 xadmin.site.register(Contributor, ContributorAdmin)

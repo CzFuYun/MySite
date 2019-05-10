@@ -264,6 +264,12 @@ class ProjectRepository(models.Model):
         return project_qs, exe_date
 
 
+class UnCompleteProject(ProjectRepository):
+    class Meta:
+        verbose_name = '未落地项目'
+        verbose_name_plural = verbose_name
+        proxy = True
+
 class PretrialMeeting(models.Model):
     meeting_date = models.DateField(blank=True, null=True, verbose_name='会议日期')
     notify_date = models.DateField(blank=True, null=True, verbose_name='通报日期')

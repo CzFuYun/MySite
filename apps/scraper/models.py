@@ -631,7 +631,7 @@ class DailyLeiShou(models.Model):
     add_date = models.DateField(auto_now_add=True)
     customer = models.ForeignKey('root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
     contract_code = models.CharField(max_length=32, blank=True, null=True, verbose_name='信贷合同编号')
-    retract_amount = models.FloatField(default=0, verbose_name='收回金额（人民币，元）')
+    retract_amount = models.FloatField(default=0, verbose_name='收回金额（人民币，万元）')
     retract_date = models.DateField(blank=True, null=True, verbose_name='收回日期')
     dcms_business = models.ForeignKey('DcmsBusiness', blank=True, null=True, on_delete=models.PROTECT, verbose_name='业务种类')
     lu = models.ForeignKey('LuLedger', blank=True, null=True, on_delete=models.PROTECT, verbose_name='放款')
@@ -640,6 +640,7 @@ class DailyLeiShou(models.Model):
     class Meta:
         verbose_name = '回收'
         verbose_name_plural = verbose_name
+        ordering = ('-retract_date',)
 
     @classmethod
     def getDailyLeishou(cls, retract_date__gte=None):
