@@ -329,7 +329,23 @@ def input_box(prompt):
     return input('')
 
 
-def makeChoice(prompt, *choices):
+def makeChoice(prompt, *choices, font_color=None):
+    '''
+
+    :param prompt:
+    :param choices:
+    :param font_color: 字体颜色，r, g, y, b
+    :return:
+    '''
+    color_sr = {
+        'r': '31',
+        'g': '32',
+        'y': '33',
+        'b': '34',
+    }
+    font_color_s = '\033[1;' + color_sr.get(font_color) + 'm' if font_color else ''
+    font_color_e = '\033[0m' if font_color else ''
+    print(font_color_s)
     if isinstance(prompt, Iterable) and not type(prompt) is str:
         for p in prompt:
             print(p, end=' ')
@@ -342,5 +358,6 @@ def makeChoice(prompt, *choices):
             print('\t', c, '.', choices[c], sep='')
     else:
         print('\t0.否\n\t1.是')
+    print(font_color_e)
     choice = input()
     return int(choice)

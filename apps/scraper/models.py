@@ -624,6 +624,13 @@ class LuLedger(models.Model):
         pass
 
 
+class LuLedgerForExport(LuLedger):
+    class Meta:
+        verbose_name = '放款台账导出'
+        verbose_name_plural = verbose_name
+        proxy = True
+
+
 class DailyLeiShou(models.Model):
     '''
     数据来源：企贷自定义明细-当月累收

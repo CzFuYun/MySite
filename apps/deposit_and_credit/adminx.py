@@ -61,7 +61,7 @@ class ExpirePromptAdmin:
 
 class LoanDemandAdmin:
     list_display = ('add_time', '_vf_customer', 'get_expire_prompt_info', 'expire_amount', 'this_month_leishou', 'already_achieved')
-    list_filter = ('plan_date', )
+    list_filter = ('plan_date', 'add_time')
     search_fields = ('customer__name',)
 
     def _vf_customer(self, instance):
@@ -130,7 +130,7 @@ class LoanDemandForThisMonthAdmin:
 
     def _vf_stage(self, instance):
         if self.current_progress is None:
-            return ''
+            return '其他'
         else:
             status_num = self.current_progress.status_num
             if status_num <= 30:

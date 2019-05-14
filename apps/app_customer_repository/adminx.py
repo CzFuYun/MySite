@@ -10,7 +10,7 @@ from xadmin.plugins.actions import BaseActionView
 
 from MySite.settings import MEDIA_URL
 from MySite.utilities import XadminExtraAction, makeChoice
-from .models import CustomerRepository, ProjectRepository, UnCompleteProject, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress, TargetTask
+from .models import CustomerRepository, ProjectRepository, StoringProjectForExport, PretrialDocument, PretrialDocumentWaitForMeeting, PretrialMeeting, ProjectExecution, Progress, TargetTask
 from root_db.models import AccountedCompany
 from MySite import utilities
 from private_modules.dcms_shovel import connection
@@ -63,7 +63,7 @@ class ProjectAdmin:
     get_progress.short_description = '目前进度'
 
 
-class UnCompleteProjectAdmin:
+class StoringProjectForExportAdmin:
     list_display = ()
     def queryset(self):
         qs = super().queryset()
@@ -202,7 +202,7 @@ class PretrialMeetingAdmin:
 
 xadmin.site.register(CustomerRepository, CustomerAdmin)
 xadmin.site.register(ProjectRepository, ProjectAdmin)
-# xadmin.site.register(UnCompleteProject, UnCompleteProjectAdmin)
+xadmin.site.register(StoringProjectForExport, StoringProjectForExportAdmin)
 xadmin.site.register(ProjectExecution, ProjectExecutionAdmin)
 xadmin.site.register(PretrialDocument, PretrialDocumentAdmin)
 xadmin.site.register(PretrialDocumentWaitForMeeting, PretrialDocumentWaitForMeetingAdmin)

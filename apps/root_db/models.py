@@ -252,7 +252,7 @@ class AccountedCompany(models.Model):
     )
     add_date = models.DateField(auto_now_add=True, blank=True, null=True)
     customer_id = models.CharField(primary_key=True, max_length=32, verbose_name='客户号')
-    dcms_customer_code = models.CharField(max_length=8, blank=True, null=True, verbose_name='信贷系统客户编号')
+    dcms_customer_code = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷系统客户编号')
     cf_num = models.CharField(max_length=16, blank=True, null=True, verbose_name='信贷文件编号')
     rlk_cf = models.CharField(max_length=32, blank=True, null=True)
     rlk_customer = models.CharField(max_length=32, blank=True, null=True)
@@ -276,10 +276,10 @@ class AccountedCompany(models.Model):
         try:
             return self.name
         except:
-            return 'none'
+            return 'None'
 
     class Meta:
-        verbose_name_plural = '已开户对公客户'
+        verbose_name_plural = '已开户'
 
     @classmethod
     def createCustomerByDcms(cls, name_or_dcms_customer_code, dcms=None):
@@ -398,10 +398,16 @@ class AccountedCompany(models.Model):
             customer = customer[int(index)]
             now_customer_code = customer.dcms_customer_code
             if now_customer_code is None or re.search(r'[\u4e00-\u9fa5]', now_customer_code) or now_customer_code != customer_code:
-                choice = utilities.makeChoice((customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？'))
-                if choice:
+                choice = utilities.makeChoice(
+                    (customer_name, '在AC中的原客户号为', now_customer_code, '是否更新为', customer_code, '？'),
+                    *('是，更新客户号', '否，并以【' + customer_code + '】创建新客户'),
+                    font_color='r'
+                )
+                if choice == 0:
                     customer.dcms_customer_code = customer_code
                     customer.save(update_fields=('dcms_customer_code', ))
+                elif choice == 1:
+                    return cls.createCustomerByDcms(customer_code, dcms)
             return customer
         else:
             choice = utilities.makeChoice(

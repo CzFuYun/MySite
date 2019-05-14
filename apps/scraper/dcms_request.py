@@ -157,7 +157,8 @@ class DcmsHttpRequest(BaseHttpRequest):
             self.post_urls['search_lu'],
             searchValue=lu_num,
             searchCriteria=SearchBy.con_num.value,
-            stopLimit='N'
+            stopLimit='N',
+            isOnlineLoan='N',
         )
         rlk = RegExp.rlk.findall(r.text)[0]
         return rlk

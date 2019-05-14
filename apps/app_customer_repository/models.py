@@ -114,6 +114,9 @@ class CustomerRepository(models.Model):
                 newly_created_customer = AccountedCompany.createCustomerByDcms(customer_name, dcms)
                 cls.objects.filter(name=customer_name).update(customer=newly_created_customer)
 
+    def _vf_industry(self):
+        pass
+
 
 class ProjectRepository(models.Model):
     close_reason_choices = (
@@ -264,9 +267,9 @@ class ProjectRepository(models.Model):
         return project_qs, exe_date
 
 
-class UnCompleteProject(ProjectRepository):
+class StoringProjectForExport(ProjectRepository):
     class Meta:
-        verbose_name = '未落地项目'
+        verbose_name = '储备项目下载'
         verbose_name_plural = verbose_name
         proxy = True
 

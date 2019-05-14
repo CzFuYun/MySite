@@ -650,9 +650,10 @@ class CrpHttpRequest(BaseHttpRequest):
         login_params = 'isLogin=EnterFromLogin&task=login&step=login&tran=login'
         self.user_name = user_name
         if user_name == 'czwlh':
-            self.connection.get(self.origin_url + 'Login.do?_%24' + login_params + '&logintype=pwd&usrname=czwlh&password=1')
+            self.connection.get(self.origin_url + 'Login.do?_%24' + login_params + '&logintype=pwd&usrname=czwlh&password=00-aa-AA')
         elif user_name == 'czjw':
-            self.connection.get(self.origin_url + 'InnerLogin.do?_$' + login_params + '&name=czjw')
+            self.connection.get(self.origin_url + 'Login.do?_%24' + login_params + '&logintype=pwd&usrname=czjw&password=00-aa-AA')
+            # self.connection.get(self.origin_url + 'InnerLogin.do?_$' + login_params + '&name=czjw')
 
     def setDataDate(self, date_str=None):
         if date_str is None:

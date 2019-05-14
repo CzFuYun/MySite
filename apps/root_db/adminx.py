@@ -13,6 +13,7 @@ class StaffAdmin:
 
 class AccountedCompanyAdmin:
     relfield_style = 'fk-ajax'
+    list_display = ('customer_id', 'dcms_customer_code', 'name')
     list_filter = ('customer_type__caption', 'type_of_3311__caption', 'dcms_customer_code', 'add_date')
     search_fields = ('pk', 'name', 'series__caption', 'dcms_customer_code')
 
