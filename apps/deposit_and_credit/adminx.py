@@ -60,7 +60,8 @@ class ExpirePromptAdmin:
 
 
 class LoanDemandAdmin:
-    list_display = ('add_time', '_vf_customer', 'get_expire_prompt_info', 'expire_amount', 'this_month_leishou', 'already_achieved')
+    list_display = ('_vf_customer', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'this_month_must', 'add_time')
+    list_editable = ('expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'this_month_must')
     list_filter = ('plan_date', 'add_time')
     search_fields = ('customer__name',)
 
@@ -71,9 +72,9 @@ class LoanDemandAdmin:
             return instance.project.customer.name
     _vf_customer.short_description = '客户名称'
 
-    def get_expire_prompt_info(self, instance):
+    def _vf_expire(self, instance):
         return instance.expire_prompt_id
-    get_expire_prompt_info.short_description = '到期提示'
+    _vf_expire.short_description = '到期提示'
 
 
 class LoanDemandForThisMonthAdmin:
@@ -129,6 +130,8 @@ class LoanDemandForThisMonthAdmin:
     _vf_status_num.short_description = '进度代码'
 
     def _vf_stage(self, instance):
+        if instance.plan_amount == 0:
+            return '收回'
         if self.current_progress is None:
             return '其他'
         else:

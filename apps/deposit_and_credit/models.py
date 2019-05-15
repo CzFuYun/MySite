@@ -255,6 +255,7 @@ class LoanDemand(models.Model):
     remark = models.TextField(blank=True, null=True, verbose_name='备注（规模相关）')
     # can_increase_deposit = models.BooleanField(default=False, verbose_name='存款增长来源')
     last_update = models.DateField(auto_now=True, blank=True, null=True, verbose_name='最后更新')
+    this_month_must = models.NullBooleanField(blank=True, null=True, verbose_name='本月必保')
     # add_date = models.DateField(auto_now_add=True, blank=True , null=True, verbose_name='添加日期')
     finish_date = models.DateField(blank=True, null=True, verbose_name='办结日')
 

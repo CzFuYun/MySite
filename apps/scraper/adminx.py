@@ -109,8 +109,8 @@ class CpLedgerAdmin:
 
 
 class DailyLeiShouAdmin:
-    list_display = ('add_date', 'customer', 'contract_code', 'retract_amount', 'retract_date', 'dcms_business')
-    list_filter = ('retract_date',)
+    list_display = ( 'customer', 'contract_code', 'retract_amount', 'retract_date', 'dcms_business', 'add_date')
+    list_filter = ('customer__name', 'retract_date')
     search_fields = ('contract_code', 'customer')
 
 xadmin.site.register(LuLedger, LuLedgerAdmin)

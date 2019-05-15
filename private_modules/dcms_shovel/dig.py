@@ -70,7 +70,7 @@ def get_cp_num(dcms, customer_name):
             continue
         rlk = rgx_rlk.findall(str(cp['序号']))[0]
         dcms.browser.execute_script(
-            'window.open("http://110.17.1.21:9082/dcms/corporate/application/application_info.view?do=Summary&resultLinkKey={0}")'.format(rlk))
+            'window.open("http://110.17.1.21:9081/dcms/corporate/application/application_info.view?do=Summary&resultLinkKey={0}")'.format(rlk))
         dcms.browser.switch_to_window(dcms.browser.window_handles[-1])
         dcms.browser.switch_to.frame(dcms.browser.find_elements_by_css_selector('frameset>frame')[1])
         dcms.browser.find_element_by_id('tab_dcms_cp_0009').click()

@@ -17,7 +17,8 @@ from scraper.models import CpLedger
 def test(request):
     # http://127.0.0.1:8000/dc/test
     # dac_models.LoanDemand.linkToEpRecord()
-    dac_models.LoanDemand.updateByLeishouAndLu()
+    # dac_models.LoanDemand.updateByLeishouAndLu()
+    dac_models.ExpirePrompt.fillCpNum()
     pass
 
 def updateProgress(request):
