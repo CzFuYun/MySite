@@ -60,8 +60,8 @@ class ExpirePromptAdmin:
 
 
 class LoanDemandAdmin:
-    list_display = ('_vf_customer', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'this_month_must', 'add_time')
-    list_editable = ('expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'this_month_must')
+    list_display = ('_vf_customer', 'staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'this_month_must', 'add_time')
+    list_editable = ('staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'this_month_must')
     list_filter = ('plan_date', 'add_time')
     search_fields = ('customer__name',)
 
@@ -132,6 +132,8 @@ class LoanDemandForThisMonthAdmin:
     def _vf_stage(self, instance):
         if instance.plan_amount == 0:
             return '收回'
+        elif instance.already_achieved:
+            return '已投'
         if self.current_progress is None:
             return '其他'
         else:

@@ -262,7 +262,7 @@ class LoanDemand(models.Model):
     class Meta:
         verbose_name = '贷款需求'
         verbose_name_plural = verbose_name
-        ordering = ('staff__sub_department__superior__display_order', '-add_time')
+        ordering = ('-add_time', 'staff', 'staff__sub_department__superior__display_order')
 
     def __str__(self):
         if self.expire_prompt:
