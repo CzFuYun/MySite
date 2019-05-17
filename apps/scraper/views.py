@@ -9,6 +9,6 @@ from .models import LuLedger, CpLedger, DailyLeiShou
 def test(request):
     # http://127.0.0.1:8000/scrape/test
     # DailyLeiShou.getDailyLeishou()
-    # LuLedger.fillCpSmeDetail()
-    LuLedger.fillCsDetail()
+    LuLedger.fillCpSmeDetail()
+    # LuLedger.fillCsDetail()
     return HttpResponse('完成')

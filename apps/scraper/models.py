@@ -287,7 +287,7 @@ class LuLedger(models.Model):
     add_date = models.DateTimeField(auto_now_add=True, verbose_name='创建于')
     update_date = models.DateField(auto_now=True, verbose_name='更新日')
     # loan_demand = models.ForeignKey(to='deposit_and_credit.LoanDemand', blank=True, null=True, on_delete=models.PROTECT, verbose_name='规模安排')
-    lu_num = models.CharField(max_length=32, primary_key=True, verbose_name='放款参考编号')
+    lu_num = models.CharField(max_length=32, unique=True, verbose_name='放款参考编号')
     is_green = models.NullBooleanField(blank=True, null=True, verbose_name='绿色金融')
     pay_method = models.IntegerField(choices=pay_method_choices, default=1, verbose_name='支付方式')
     is_xvbao = models.NullBooleanField(blank=True, null=True, verbose_name='续保标志')
@@ -407,14 +407,18 @@ class LuLedger(models.Model):
                 'lu_num'
             ).distinct()
         else:
-            pass
             uncompleted = cls.objects.filter(
-                Q(add_date__lt=imp_date.today_str) &
-                Q(contract_code__isnull=True) &
                 (
-                    Q(lu_num__startswith='LU') |
-                    Q(lu_num__startswith='SMELU')
-                )
+                        Q(is_inspected=False) |
+                    (
+                        Q(add_date__lt=imp_date.today_str) &
+                        Q(contract_code__isnull=True)
+                    )
+                )&
+                    (
+                        Q(lu_num__startswith='LU') |
+                        Q(lu_num__startswith='SMELU')
+                    )
             ).values(
                 'lu_num',
             ).distinct()
@@ -493,10 +497,23 @@ class LuLedger(models.Model):
         imp_date = DateOperation()
         currency_type_choices = field_choices_to_dict(cls.currency_type_choices)
         uncompleted = cls.objects.filter(
-            Q(add_date__lt=imp_date.today_str) &
-            Q(contract_code__isnull=True) &(
-                Q(lu_num__startswith='CSLU') |
-                Q(lu_num__startswith='SMELU')
+            # Q(is_inspected=False) | (
+            #     Q(add_date__lt=imp_date.today_str) &
+            #     Q(contract_code__isnull=True) &(
+            #         Q(lu_num__startswith='CSLU') |
+            #         Q(lu_num__startswith='SMELU')
+            #     )
+            # )
+            (
+                    Q(is_inspected=False) |
+                    (
+                            Q(add_date__lt=imp_date.today_str) &
+                            Q(contract_code__isnull=True)
+                    )
+            ) &
+            (
+                    Q(lu_num__startswith='CSLU') |
+                    Q(lu_num__startswith='SMELU')
             )
         ).values(
             'lu_num',

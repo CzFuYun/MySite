@@ -82,7 +82,7 @@ class LuLedgerAdmin:
     def save_models(self):
         request = self.request
         instance = self.new_obj
-        need_scrape = not bool(instance.add_date)
+        need_scrape = not bool(instance.add_date) or LuLedger.objects.get(pk=instance.pk).lu_num != instance.lu_num
         instance.save()
         lu_detail = {}
         if need_scrape:

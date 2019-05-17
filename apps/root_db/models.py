@@ -171,10 +171,13 @@ class Department(models.Model):
         try:
             return cls.objects.get(caption=caption)
         except:
-            print('部门', caption, '不存在，请新建')
-            code = input('code>>>')
-            cls(code=code, caption=caption).save()
-            return cls.objects.get(caption=caption)
+            try:
+                return SubDepartment.objects.get(caption=caption).superior
+            except:
+                print('部门', caption, '不存在，请新建')
+                code = input('code>>>')
+                cls(code=code, caption=caption).save()
+                return cls.objects.get(caption=caption)
 
     @classmethod
     def getDepartments(cls, return_mode=utilities.return_as['choice']):
