@@ -5,7 +5,7 @@ from collections import defaultdict, namedtuple, OrderedDict
 from django.db import models
 from django.db.models import Q, Sum
 
-from MySite.utilities import reverseDictKeyValue
+from MySite.utilities import reverseDictKeyValue, makeChoice
 from root_db.models import AccountedCompany
 from deposit_and_credit.models_operation import DateOperation
 from scraper.models import LuLedger, DcmsBusiness, DailyLeiShou
@@ -148,22 +148,27 @@ class ExpirePrompt(models.Model):
         )
         from app_customer_repository.models import ProjectRepository
         for customer in customer_list:
-            cp_num = dig.get_cp_num(dcms, customer['customer__name'])
-            if cp_num:
-                cls.objects.filter(pk=customer['id']).update(cp_num=cp_num)
-                project = ProjectRepository.objects.filter(
-                    customer__name=customer['customer__name'],
-                    cp_con_num__isnull=True,
-                    business_id__in=(11, 12),
-                    tmp_close_date__isnull=False,
-                    close_date__isnull=False
-                )
-                if project.exists():
-                    project = project.order_by('-create_date')[0]
-                    print('是否同步更新项目库中【' + project.project_name + '】的授信参考编号？\n0.否\n1.是')
-                    need_fill_project_cp_num = input('>>>')
-                    if int(need_fill_project_cp_num):
-                        project.update(cp_con_num=cp_num)
+            try:
+                cp_num = dig.get_cp_num(dcms, customer['customer__name'])
+                if cp_num:
+                    cls.objects.filter(pk=customer['id']).update(cp_num=cp_num)
+                    project = ProjectRepository.objects.filter(
+                        customer__name=customer['customer__name'],
+                        cp_con_num__isnull=True,
+                        business_id__in=(11, 12),
+                        tmp_close_date__isnull=False,
+                        close_date__isnull=False
+                    )
+                    if project.exists():
+                        project = project.order_by('-create_date')[0]
+                        print('是否同步更新项目库中【' + project.project_name + '】的授信参考编号？\n0.否\n1.是')
+                        need_fill_project_cp_num = input('>>>')
+                        if int(need_fill_project_cp_num):
+                            project.update(cp_con_num=cp_num)
+                else:
+                    pass
+            except:
+                pass
 
     @classmethod
     def updateProgress(cls):
@@ -250,9 +255,9 @@ class LoanDemand(models.Model):
     # now_deposit_ydavg = models.IntegerField(default=0, verbose_name='当前存款日均')
     plan_rate = models.FloatField(blank=True, null=True, verbose_name='拟放利率')
     plan_deposit_ratio = models.IntegerField(blank=True, null=True, verbose_name='预计存款回报')
-    plan_date = models.DateField(blank=True, null=True, verbose_name='预计投放日期')
+    plan_date = models.DateField(blank=True, null=True, verbose_name='拟投/所属月份')
     expect = models.IntegerField(default=100, verbose_name='把握(%)')
-    remark = models.TextField(blank=True, null=True, verbose_name='备注（规模相关）')
+    remark = models.TextField(blank=True, null=True, verbose_name='备注*')
     # can_increase_deposit = models.BooleanField(default=False, verbose_name='存款增长来源')
     last_update = models.DateField(auto_now=True, blank=True, null=True, verbose_name='最后更新')
     this_month_must = models.NullBooleanField(blank=True, null=True, verbose_name='本月必保')
@@ -262,7 +267,8 @@ class LoanDemand(models.Model):
     class Meta:
         verbose_name = '贷款需求'
         verbose_name_plural = verbose_name
-        ordering = ('-add_time', 'staff', 'staff__sub_department__superior__display_order')
+        # ordering = ('-add_time', 'staff', 'staff__sub_department__superior__display_order')
+        ordering = ('plan_date', 'staff__sub_department__superior__display_order', 'staff')
 
     def __str__(self):
         if self.expire_prompt:
@@ -272,6 +278,95 @@ class LoanDemand(models.Model):
         else:
             customer_name = self.customer.name
         return customer_name + str(self.plan_amount) + '万元'
+
+
+
+
+
+    def _vf_customer(self):
+        self.staff = self.staff
+        if self.project:
+            self.staff = self.project.staff
+        elif self.expire_prompt:
+            self.staff = self.expire_prompt.staff_id
+        if self.customer:
+            self.customer2 = self.customer
+        elif self.project:
+            self.customer2 = self.project.customer
+        elif self.expire_prompt:
+            self.customer2 = self.expire_prompt.customer
+        return self.customer2.name
+    _vf_customer.short_description = '客户名称'
+
+    def _vf_dept(self):
+        return self.staff.sub_department.superior
+    _vf_dept.short_description = '经营部门'
+
+    def _vf_staff(self):
+        return self.staff.name
+    _vf_staff.short_description = '客户经理'
+
+    def _vf_industry(self):
+        return self.customer2.industry
+    _vf_industry.short_description = '行业门类'
+
+    def _vf_progress(self):
+        current_progress = None
+        if self.project:
+            current_progress = self.project.current_progress
+        elif self.expire_prompt:
+            current_progress = self.expire_prompt.current_progress
+        self.current_progress = current_progress
+        if self.plan_amount:
+            return '未建档' if current_progress is None else current_progress
+        else:
+            return '收回'
+    _vf_progress.short_description = '当前进度'
+
+    def _vf_status_num(self):
+        return self.current_progress.status_num if self.current_progress else 0
+    _vf_status_num.short_description = '进度代码'
+
+    def _vf_stage(self):
+        if self.plan_amount == 0:
+            return '收回'
+        elif self.already_achieved:
+            return '已投'
+        if self.current_progress is None:
+            return '其他'
+        else:
+            status_num = self.current_progress.status_num
+            if status_num <= 30:
+                return '支行'
+            elif status_num < 85:
+                return '分行'
+            elif status_num == 85:
+                return '总行'
+            elif status_num >= 100:
+                return '已批'
+            else:
+                return str(self.current_progress)
+    _vf_stage.short_description = '阶段'
+
+    def _vf_remark(self):
+        remark = None
+        if self.project:
+            remark = self.project.projectexecution_set.first().remark
+            remark = remark.content
+        elif self.expire_prompt:
+            remark = self.expire_prompt.remark
+            if remark:
+                remark = re.split(r'<\d{4}-\d{2}-\d{2}>', remark)
+                try:
+                    remark = remark[-2]
+                except:
+                    remark = remark[-1]
+        return remark or ''
+    _vf_remark.short_description = '备注_PrEp'
+
+
+
+
 
     def _vf_current_progress(self):
         try:
@@ -432,6 +527,8 @@ class LoanDemand(models.Model):
                 ld_data_dict['expire_amount'] = max(ld_data_dict['this_month_leishou'], loan_demand.first()['expire_amount'])
                 loan_demand.update(**ld_data_dict)
                 print(nl['customer__name'], nl['contract_code'], '合同项下收回', nl['retract_amount'], '已在LD中更新其累收数')
+        if makeChoice('是否根据放款台账更新累放？', font_color='g') == 0:
+            return
         newly_lu = LuLedger.objects.filter(
             update_date=imp_date.today_str,
             dcms_business__caption__contains='贷',

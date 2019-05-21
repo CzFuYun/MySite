@@ -7,6 +7,8 @@ from app_permission import views, settings
 
 
 def test(request):
+    # http://127.0.0.1:8000/test/
+
     pass
 
 

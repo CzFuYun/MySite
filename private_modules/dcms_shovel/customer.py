@@ -82,7 +82,10 @@ class Customer:
             self.dcms_connection.browser.find_element_by_partial_link_text(self.__cf_num).click()
         except:
             self.search_cf()
-            self.dcms_connection.browser.find_element_by_partial_link_text(self.__cf_num).click()
+            try:
+                self.dcms_connection.browser.find_element_by_partial_link_text(self.__cf_num).click()
+            except:
+                pass
         if go_to_label:
             self.go_to_cf_label(go_to_label)
 

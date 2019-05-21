@@ -315,7 +315,7 @@ class LuLedger(models.Model):
     has_zhiya = models.BooleanField(default=False, verbose_name='质押')
     contract_code = models.CharField(max_length=32, unique=True, blank=True, null=True, verbose_name='信贷合同编号')
     current_amount = models.FloatField(default=0, verbose_name='当前地区余额（含特别授信）')
-    loan_demand = models.ManyToManyField(to='deposit_and_credit.LoanDemand', blank=True, verbose_name='贷款需求')
+    # loan_demand = models.ManyToManyField(to='deposit_and_credit.LoanDemand', blank=True, verbose_name='贷款需求')
     is_inspected = models.BooleanField(default=False, verbose_name='已发放')
     rlk = models.CharField(max_length=32, blank=True, null=True)
 
@@ -429,7 +429,11 @@ class LuLedger(models.Model):
             dcms.login()
             for uc in uncompleted:
                 lu_num = uc['lu_num']
-                lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
+                try:
+                    lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
+                except:
+                    print(lu_num, "参考编号错误，请核实")
+                    continue
                 page_areas = lu_flow_base_info_page.areas
                 lu_flow_base_info = page_areas['申请明细'].parse()
                 lu_flow_info_fee = page_areas['业务费'].parse()
@@ -526,7 +530,11 @@ class LuLedger(models.Model):
             dcms.setDcmsType(dcms.DcmsType.cs.value)
             for uc in uncompleted:
                 lu_num = uc['lu_num']
-                lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
+                try:
+                    lu_flow_base_info_page = cls.objects.get(lu_num=lu_num).as_dcms_work_flow(dcms).apply_info()
+                except:
+                    print(lu_num, "参考编号错误，请核实")
+                    continue
                 page_areas = lu_flow_base_info_page.areas
                 apply_detail = page_areas['申请明细'].parse()
                 customer_name = apply_detail['申请人名称'][0].inner_text

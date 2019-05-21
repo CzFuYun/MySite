@@ -52,7 +52,7 @@ class LuLedgerAdmin:
                 'plan_expire', 'month_dif',
                 'rate',
                 'float_ratio','has_baozheng', 'has_diya',
-                'has_zhiya', 'contract_code', 'current_amount', 'loan_demand',
+                'has_zhiya', 'contract_code', 'current_amount', #'loan_demand',
                 'rlk'
                     )
         else:
