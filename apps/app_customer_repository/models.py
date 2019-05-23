@@ -169,6 +169,7 @@ class ProjectRepository(models.Model):
     approver = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, related_name='approver', verbose_name='专审')
     is_specially_focus = models.BooleanField(default=False, verbose_name='是否重点跟进项目')
     current_progress = models.ForeignKey('Progress', default=0, on_delete=models.CASCADE, verbose_name='当前进度')
+    need_ignore = models.BooleanField(default=False, verbose_name='是否忽略')      # 对于诸如平移、表外业务回表等名义上的新项目，在下载时应忽略
 
     class Meta:
         verbose_name = '项目库'
@@ -182,6 +183,8 @@ class ProjectRepository(models.Model):
         self.is_focus = True if self.total_net > 8000 or self.business.is_focus else False
 
     def calculate_acc_num(self):
+        if self.need_ignore:
+            return 0
         b_id = self.business.id
         if b_id in range(10, 15):  # 一般授信的讲究比较多
             industry_factor_rule = {
@@ -260,7 +263,7 @@ class ProjectRepository(models.Model):
         exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
         project_qs = cls.objects.filter(
             (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
-            & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date)
+            & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date) & Q(need_ignore=False)
             & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__lte=end_date) | (Q(reply_date__gte=start_date) & Q(reply_date__lte=end_date)))
             & (Q(close_date__isnull=True) | Q(close_date__lte=end_date))
         )

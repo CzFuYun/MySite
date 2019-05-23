@@ -62,24 +62,24 @@ class ExpirePromptAdmin:
 class LoanDemandAdmin:
     list_display = ('_vf_customer', 'staff', '_vf_progress', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'this_month_must', 'plan_date', 'remark', '_vf_remark')
     list_editable = ('staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'plan_date', 'this_month_must')
-    list_filter = ('plan_date', 'add_time', 'this_month_must')
+    list_filter = ('plan_date', 'add_time', 'this_month_must', 'already_achieved')
     search_fields = ('customer__name',)
     list_per_page = 100
 
-    def _vf_customer(self, instance):
-        if instance.customer:
-            return instance.customer.name
-        else:
-            return instance.project.customer.name
-    _vf_customer.short_description = '客户名称'
-
-    def _vf_expire(self, instance):
-        return instance.expire_prompt_id
-    _vf_expire.short_description = '到期提示'
+    # def _vf_customer(self, instance):
+    #     if instance.customer:
+    #         return instance.customer.name
+    #     else:
+    #         return instance.project.customer.name
+    # _vf_customer.short_description = '客户名称'
+    #
+    # def _vf_expire(self, instance):
+    #     return instance.expire_prompt_id
+    # _vf_expire.short_description = '到期提示'
 
 
 class LoanDemandForThisMonthAdmin:
-    list_display = ('_vf_customer', '_vf_dept', '_vf_staff', '_vf_industry', 'expire_amount', 'plan_amount', '_vf_progress', '_vf_status_num', '_vf_stage', 'this_month_leishou', 'already_achieved', 'remark', '_vf_remark')
+    list_display = ('_vf_customer', '_vf_dcms_customer_code', '_vf_dept', '_vf_staff', '_vf_industry', 'expire_amount', 'plan_amount', '_vf_progress', '_vf_status_num', '_vf_stage', 'this_month_leishou', 'already_achieved', 'remark', '_vf_remark')
     ordering = ('staff__sub_department__superior__display_order', 'staff', '-plan_amount')
     list_editable = ('remark', )
     list_per_page = 100

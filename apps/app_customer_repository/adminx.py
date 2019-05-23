@@ -127,7 +127,7 @@ class PreDocToNewProject(BaseActionView):
                 customer.save()
             else:
                 customer = customer_rep[0]
-            project_fields = {'staff_id': None, 'is_green': None, 'business_id': None, 'is_defuse': None}
+            project_fields = {'staff_id': None, 'is_green': None, 'business_id': None, 'is_defuse': None, 'need_ignore': False}
             for key in project_fields:
                 project_fields[key] = getattr(pre_doc, key)
             project_fields['customer'] = customer
@@ -140,6 +140,7 @@ class PreDocToNewProject(BaseActionView):
             for i in range(len(plan)):
                 project_fields[plan[i]] = imp_date.delta_date(delta_days * i)
             project_fields['project_name'] = input('请为【' + customer.simple_name + '】的【' + pre_doc.business.caption + '】项目命名>>>') or (customer.simple_name + pre_doc.business.caption)
+            project_fields['need_ignore'] = bool(makeChoice((project_fields['project_name'], '是否在下载时忽略？'), font_color='y'))
             new_project = ProjectRepository(**project_fields)
             new_project.create()
             progress = Progress.objects.filter(status_num=20, suit_for_business=new_project.business)

@@ -279,10 +279,6 @@ class LoanDemand(models.Model):
             customer_name = self.customer.name
         return customer_name + str(self.plan_amount) + '万元'
 
-
-
-
-
     def _vf_customer(self):
         self.staff = self.staff
         if self.project:
@@ -295,8 +291,33 @@ class LoanDemand(models.Model):
             self.customer2 = self.project.customer
         elif self.expire_prompt:
             self.customer2 = self.expire_prompt.customer
-        return self.customer2.name
+        self.customer_name = self.customer2.name
+        return self.customer_name
     _vf_customer.short_description = '客户名称'
+
+    def _vf_dcms_customer_code(self):
+        if self.customer_name == '常州市天宁创新投资发展有限公司':
+            print('')
+        try:
+            dcms_customer_code = self.customer2.dcms_customer_code
+
+            # else:
+            #     try:
+            #         customer = AccountedCompany.objects.get(name=self.customer_name)
+            #         return customer.dcms_customer_code
+            #     except:
+            #         return
+        except:
+            pass
+        else:
+            if dcms_customer_code:
+                return dcms_customer_code
+        try:
+            customer = AccountedCompany.objects.get(name=self.customer_name)
+            return customer.dcms_customer_code
+        except:
+            return
+    _vf_dcms_customer_code.short_description = '客户号'
 
     def _vf_dept(self):
         return self.staff.sub_department.superior

@@ -29,6 +29,7 @@ class ProjectModelForm(ModelForm):
             'plan_reply',
             'plan_luodi',
             'is_specially_focus',
+            'need_ignore'
         ]
         # widgets = {
         #     'customer': forms.TextInput(),
@@ -51,6 +52,7 @@ class ProjectModelForm(ModelForm):
         self.fields['plan_reply'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['is_specially_focus'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
+        self.fields['need_ignore'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         utilities.setRequiredFields(self)
 
 
