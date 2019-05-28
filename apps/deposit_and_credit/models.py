@@ -296,17 +296,8 @@ class LoanDemand(models.Model):
     _vf_customer.short_description = '客户名称'
 
     def _vf_dcms_customer_code(self):
-        if self.customer_name == '常州市天宁创新投资发展有限公司':
-            print('')
         try:
             dcms_customer_code = self.customer2.dcms_customer_code
-
-            # else:
-            #     try:
-            #         customer = AccountedCompany.objects.get(name=self.customer_name)
-            #         return customer.dcms_customer_code
-            #     except:
-            #         return
         except:
             pass
         else:
@@ -338,10 +329,7 @@ class LoanDemand(models.Model):
         elif self.expire_prompt:
             current_progress = self.expire_prompt.current_progress
         self.current_progress = current_progress
-        if self.plan_amount:
-            return '未建档' if current_progress is None else current_progress
-        else:
-            return '收回'
+        return '未建档' if current_progress is None else current_progress
     _vf_progress.short_description = '当前进度'
 
     def _vf_status_num(self):
@@ -535,6 +523,7 @@ class LoanDemand(models.Model):
                 ld_data_dict['expire_amount'] = nl['retract_amount']
                 ld_data_dict['this_month_leishou'] = nl['retract_amount']
                 ld_data_dict['business_id'] = nl['dcms_business_id']
+                ld_data_dict['plan_date'] = imp_date.today
                 try:
                     old_lu = LuLedger.objects.get(contract_code=nl['contract_code'])
                     ld_data_dict['expire_date'] = old_lu.plan_expire
@@ -608,7 +597,7 @@ class LoanDemand(models.Model):
 
 class LoanDemandForThisMonth(LoanDemand):
     class Meta:
-        verbose_name = '本月贷款规模安排'
+        verbose_name = '本月规模总帐'
         verbose_name_plural = verbose_name
         proxy = True
 
