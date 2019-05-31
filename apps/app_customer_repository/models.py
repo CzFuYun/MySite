@@ -504,7 +504,8 @@ class ProjectExecution(models.Model):
             else:
                 return
             # ↓补充新开户客户的核心客户号
-            CustomerRepository.linkNoKernelIdObjToAc()
+            if utilities.makeChoice('是否爬取客户号？', font_color='g'):
+                CustomerRepository.linkNoKernelIdObjToAc()
             # ↓将临关超过半年的项目正式关闭
             ProjectRepository.objects.filter(
                 tmp_close_date__isnull=False,
@@ -517,8 +518,9 @@ class ProjectExecution(models.Model):
                 tmp_close_date__isnull=True,
             )
             for ep in expire_credit_qs:
-                need_close = input('>>>项目【' + ep.project_name + '】，授信批复日【' + str(ep.reply_date) + '】，疑似到期，是否关闭？\n0.否\n1.是')
-                if need_close:
+                if utilities.makeChoice(
+                        ('项目【', ep.project_name, '】，授信批复日【', str(ep.reply_date), '】，疑似到期，是否关闭？'),
+                        font_color='y'):
                     ep.close(90, 0)
             # ↓流程中项目的客户号、总敞口
             project_customer = cls.objects.filter(
@@ -574,10 +576,14 @@ class ProjectExecution(models.Model):
                     if previous_exe:
                         last_used_net = previous_exe.total_used
                     if not pe.project.tmp_close_date and last_used_net != customer_used_net.get(customer_id, 0) and pe.current_progress_id < 120:
-                        print(pe.project, "，请选择：")
-                        print('\t0.上次快照中已投敞口：', last_used_net)
-                        print('\t1.最近贡献度数据已投敞口：', customer_used_net.get(customer_id, 0))
-                        choice = input('>>>')
+                        # print(pe.project, "，请选择：")
+                        # print('\t0.上次快照中已投敞口：', last_used_net)
+                        # print('\t1.最近贡献度数据已投敞口：', customer_used_net.get(customer_id, 0))
+                        choice = utilities.makeChoice(
+                            (pe.project, "，请选择："),
+                            *('0.上次快照中已投敞口：' + str(last_used_net), '最近贡献度数据已投敞口：' + str(customer_used_net.get(customer_id, 0))),
+                            font_color='y'
+                        )
                         tmp['total_used'] = customer_used_net.get(customer_id, 0) if int(choice) else last_used_net
                     else:
                         tmp['total_used'] = customer_used_net.get(customer_id, 0)
@@ -605,8 +611,6 @@ class ProjectExecution(models.Model):
         last_photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
         exe_qs = ProjectExecution.objects.filter(photo_date=last_photo_date)
         return exe_qs
-
-
 
 
 class Progress(models.Model):

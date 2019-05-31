@@ -53,32 +53,32 @@ class ContributorAdmin:
 class ExpirePromptAdmin:
     ordering = ['staff_id__sub_department__superior__display_order', 'staff_id']
     list_filter = ['expire_date', 'finish_date', 'current_progress']
-    list_display = ['pk', 'customer', 'staff_id', 'expire_date', 'current_progress', '_vf_status_num', 'remark', 'finish_date']
-    list_editable = ['finish_date']
+    list_display = ['pk', 'customer', 'staff_id', 'expire_date', 'current_progress', 'remark', 'finish_date']
+    list_editable = ['finish_date', 'staff_id', 'remark']
     search_fields = ('customer__name', )
     relfield_style = 'fk-ajax'
 
 
 class LoanDemandAdmin:
-    list_display = ('_vf_customer', 'staff', '_vf_progress', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'plan_date', 'finish_date', 'remark', '_vf_remark')
+    list_display = ('_vf_customer', 'staff', '_vf_progress', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'plan_date', 'finish_date', 'remark', '_vf_remark', 'add_time')
     list_editable = ('staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'plan_date', 'finish_date')
     list_filter = ('plan_date', 'add_time', 'already_achieved', 'finish_date')
     search_fields = ('customer__name',)
     list_per_page = 100
 
-    def queryset(self):
-        qs = super().queryset()
-        # start_date = imp_date.month_first_date()
-        # end_date = imp_date.month_last_date()
-        return qs.filter(
-            Q(finish_date__isnull=True)
-        )
+    # def queryset(self):
+    #     qs = super().queryset()
+    #     # start_date = imp_date.month_first_date()
+    #     # end_date = imp_date.month_last_date()
+    #     return qs.filter(
+    #         Q(finish_date__isnull=True)
+    #     )
 
 
 class LoanDemandForThisMonthAdmin:
     list_display = ('_vf_customer', '_vf_dcms_customer_code', '_vf_dept', '_vf_staff', '_vf_industry', 'expire_amount', 'plan_amount', '_vf_progress', '_vf_status_num', '_vf_stage', 'this_month_leishou', 'already_achieved', 'remark', '_vf_remark')
     ordering = ('staff__sub_department__superior__display_order', 'staff', '-plan_amount')
-    list_editable = ('remark', )
+    # list_editable = ('remark', )
     list_filter = ('finish_date', )
     list_per_page = 100
 

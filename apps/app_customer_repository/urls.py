@@ -30,4 +30,5 @@ urlpatterns = [
     url(r'pretrialmeeting\.view', views.viewPretrialMeeting, name='viewPretrialMeeting'),
     url(r'premeetinglist\.show', views.showPreMeetingList, name='showPreMeetingList'),
     url(r'newnethistory\.download', views.downloadNewNetHistory, name='downloadNewNetHistory'),
+    url(r'changeloandemandamount\.ajax', views.ajaxChangeLoanDemandAmount, name='changeLoanDemandAmount')
 ]

@@ -1,0 +1,32 @@
+{% extends 'real_blank.html' %}
+
+
+{% block extra_css %}
+    <link href="/static/assets/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+{% endblock %}
+
+
+
+
+{% block extra_js %}
+    <script src="/static/assets/plugins/sweetalert/sweetalert.min.js"></script>
+    <script>
+        $(function(){
+            swal({
+                title: '{{ title|default: "\n操作成功\n" }}',
+                text: '{{ text|default: "" }}',
+                type: '{{ swal_type|default: "question" }}',
+                showCancelButton: false,
+                confirmButtonText: '{{ confirmButtonText|default: "Yes" }}',
+                cancelButtonText: '{{ cancelButtonText|default: "No" }}',
+            },).then(function(isConfirm){
+                    if(isConfirm){
+                        $.post({
+                            url: {{ url }},
+
+                        })
+                    }
+                });
+        });
+    </script>
+{% endblock %}

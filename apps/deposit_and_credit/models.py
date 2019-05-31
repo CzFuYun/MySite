@@ -92,7 +92,7 @@ class ExpirePrompt(models.Model):
     customer = models.ForeignKey('root_db.AccountedCompany', on_delete=models.CASCADE, verbose_name='客户')
     staff_id = models.ForeignKey('root_db.Staff', blank=True, null=True, on_delete=models.CASCADE, verbose_name='客户经理')
     expire_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='到期日')
-    remark = models.CharField(max_length=512, default='', blank=True, null=True, verbose_name='备注')
+    remark = models.TextField(blank=True, null=True, verbose_name='备注')
     finish_date = models.DateField(auto_now_add=False, null=True, blank=True, verbose_name='办结日期')
     punishment = models.IntegerField(default=0, verbose_name='扣罚金额')
     created_at = models.DateField(auto_now_add=True)
@@ -117,6 +117,21 @@ class ExpirePrompt(models.Model):
     def _vf_status_num(self):
         return self.current_progress.status_num
     _vf_status_num.short_description = '状态码'
+
+    def _vf_dept(self):
+        try:
+            return self.staff_id.sub_department.superior
+        except:
+            return
+    _vf_dept.short_description = '经营部门'
+
+    def _vf_staff(self):
+        try:
+            return self.staff_id.name
+        except:
+            return
+    _vf_staff.short_description = '客户经理'
+
 
     def toDict(self):
         fields = []
@@ -268,7 +283,7 @@ class LoanDemand(models.Model):
         verbose_name = '贷款需求'
         verbose_name_plural = verbose_name
         # ordering = ('-add_time', 'staff', 'staff__sub_department__superior__display_order')
-        ordering = ('plan_date', 'staff__sub_department__superior__display_order', 'staff')
+        ordering = ('-add_time', 'staff__sub_department__superior__display_order', 'staff')
 
     def __str__(self):
         if self.expire_prompt:
@@ -281,10 +296,11 @@ class LoanDemand(models.Model):
 
     def _vf_customer(self):
         self.staff = self.staff
-        if self.project:
-            self.staff = self.project.staff
-        elif self.expire_prompt:
-            self.staff = self.expire_prompt.staff_id
+        if not self.staff:
+            if self.project:
+                self.staff = self.project.staff
+            elif self.expire_prompt:
+                self.staff = self.expire_prompt.staff_id
         if self.customer:
             self.customer2 = self.customer
         elif self.project:

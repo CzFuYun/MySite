@@ -513,9 +513,23 @@ def setProjectReplied(request):
             if form.cleaned_data['total_net'] <= project_obj.existing_net:      # 若未给予新增额度
                 project_obj.close(35, 0)
                 text = '但由于未新增敞口，项目已被自动屏蔽，不再展示'
+            linked_ld = dac_m.LoanDemand.objects.filter(
+                project_id=project_id,
+                finish_date__isnull=True,
+                already_achieved=0,
+                # plan_amount__gt=form.total_net
+            )
+            if linked_ld.exists():
+                linked_ld = linked_ld[0]
+                plan_amount = linked_ld.plan_amount
+                replied_increase_net = project_obj.total_net - project_obj.existing_net
+                if plan_amount > replied_increase_net:
+                    return render(request, 'yes_or_no.html', {'url': ''})
             return render(request, 'feedback.html', {'text': text})
     return render(request, 'blank_form.html', locals())
 
+def ajaxChangeLoanDemandAmount(request):
+    pass
 
 def ajaxCustomer(request):
     customer_name = request.GET.get('term')
