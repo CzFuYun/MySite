@@ -9,12 +9,13 @@ from MySite.utilities import reverseDictKeyValue, makeChoice
 from root_db.models import AccountedCompany
 from deposit_and_credit.models_operation import DateOperation
 from scraper.models import LuLedger, DcmsBusiness, DailyLeiShou
-from app_customer_repository.models import ProjectRepository, ProjectExecution
+from app_customer_repository.models import ProjectRepository, ProjectExecution, Progress
 from scraper.crp import CrpHttpRequest
 # from apps.app_customer_repository import models as crm
 from dcms_shovel import connection, dig
 
 
+REPLIED = Progress.objects.get(pk=105)
 
 # class DepartmentDeposit(models.Model):
 #     data_date = models.DateField(null=True, blank=True)
@@ -252,6 +253,12 @@ class ExpirePrompt(models.Model):
 
 
 class LoanDemand(models.Model):
+    increase_type_choice = (
+        (0, '-'),
+        (10, '新增'),
+        (15, '存量+新增'),
+        (20, '存量'),
+    )
     add_time = models.DateTimeField(auto_now_add=True, blank=True, null=True, verbose_name='添加时间')
     customer = models.ForeignKey(to='root_db.AccountedCompany', blank=True, null=True, on_delete=models.PROTECT, verbose_name='客户')
     # customer = models.CharField(max_length=128, blank=True, null=True, verbose_name='客户')
@@ -263,14 +270,17 @@ class LoanDemand(models.Model):
     contract = models.CharField(max_length=32, blank=True, null=True, verbose_name='放款合同号（到期）')
     expire_date = models.DateField(blank=True, null=True, verbose_name='到期日')
     expire_amount = models.IntegerField(default=0, verbose_name='存量到期金额')
-    plan_amount = models.IntegerField(default=0, verbose_name='拟放金额')
+    original_plan_amount = models.IntegerField(default=0, verbose_name='月初拟放')
+    plan_amount = models.IntegerField(default=0, verbose_name='当前拟放')
+    plan_date = models.DateField(blank=True, null=True, verbose_name='拟投/所属月份')
+    increase_type = models.IntegerField(default=0, choices=increase_type_choice, verbose_name='新增类型')
+    is_low_risk = models.BooleanField(default=False, verbose_name='低风险')
     this_month_leishou = models.IntegerField(default=0, verbose_name='当月累收')
     already_achieved = models.IntegerField(default=0, verbose_name='当月累放')
     # now_rate = models.FloatField(default=0, verbose_name='当前利率')
     # now_deposit_ydavg = models.IntegerField(default=0, verbose_name='当前存款日均')
     plan_rate = models.FloatField(blank=True, null=True, verbose_name='拟放利率')
     plan_deposit_ratio = models.IntegerField(blank=True, null=True, verbose_name='预计存款回报')
-    plan_date = models.DateField(blank=True, null=True, verbose_name='拟投/所属月份')
     expect = models.IntegerField(default=100, verbose_name='把握(%)')
     remark = models.TextField(blank=True, null=True, verbose_name='备注*')
     # can_increase_deposit = models.BooleanField(default=False, verbose_name='存款增长来源')
@@ -295,12 +305,7 @@ class LoanDemand(models.Model):
         return customer_name + str(self.plan_amount) + '万元'
 
     def _vf_customer(self):
-        self.staff = self.staff
-        if not self.staff:
-            if self.project:
-                self.staff = self.project.staff
-            elif self.expire_prompt:
-                self.staff = self.expire_prompt.staff_id
+        # self.staff = self.staff
         if self.customer:
             self.customer2 = self.customer
         elif self.project:
@@ -308,7 +313,10 @@ class LoanDemand(models.Model):
         elif self.expire_prompt:
             self.customer2 = self.expire_prompt.customer
         self.customer_name = self.customer2.name
-        return self.customer_name
+        if self.project or self.expire_prompt or self.original_plan_amount == 0:
+            return self.customer_name
+        else:
+            return self.customer_name + '*'
     _vf_customer.short_description = '客户名称'
 
     def _vf_dcms_customer_code(self):
@@ -326,13 +334,18 @@ class LoanDemand(models.Model):
             return
     _vf_dcms_customer_code.short_description = '客户号'
 
+    def _vf_staff(self):
+        if not self.staff:
+            if self.project:
+                self.staff = self.project.staff
+            elif self.expire_prompt:
+                self.staff = self.expire_prompt.staff_id
+        return self.staff.name
+    _vf_staff.short_description = '客户经理'
+
     def _vf_dept(self):
         return self.staff.sub_department.superior
     _vf_dept.short_description = '经营部门'
-
-    def _vf_staff(self):
-        return self.staff.name
-    _vf_staff.short_description = '客户经理'
 
     def _vf_industry(self):
         return self.customer2.industry
@@ -342,6 +355,8 @@ class LoanDemand(models.Model):
         current_progress = None
         if self.project:
             current_progress = self.project.current_progress
+            if current_progress and current_progress.status_num > 100:
+                current_progress = REPLIED
         elif self.expire_prompt:
             current_progress = self.expire_prompt.current_progress
         self.current_progress = current_progress
@@ -378,6 +393,8 @@ class LoanDemand(models.Model):
         if self.project:
             remark = self.project.projectexecution_set.first().remark
             remark = remark.content
+            remark = re.findall(r'【([\s\S]*)】', remark)
+            remark = remark[0] if remark else ''
         elif self.expire_prompt:
             remark = self.expire_prompt.remark
             if remark:
@@ -386,22 +403,24 @@ class LoanDemand(models.Model):
                     remark = remark[-2]
                 except:
                     remark = remark[-1]
+                remark = re.findall(r'【([\s\S]*)】', remark)
+                remark = remark[0] if remark else ''
         return remark or ''
     _vf_remark.short_description = '备注_PrEp'
 
-
-
-
-
-    def _vf_current_progress(self):
-        try:
-            return self.expire_prompt.current_progress
-        except:
-            try:
-                return self.project.current_progress
-            except:
-                return
-    _vf_current_progress.short_description = '当前进度'
+    #
+    #
+    #
+    #
+    # def _vf_current_progress(self):
+    #     try:
+    #         return self.expire_prompt.current_progress
+    #     except:
+    #         try:
+    #             return self.project.current_progress
+    #         except:
+    #             return
+    # _vf_current_progress.short_description = '当前进度'
 
     #
     # @classmethod

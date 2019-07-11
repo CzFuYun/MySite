@@ -364,7 +364,8 @@ def downloadProjectList(start_date, end_date):
     col_part1 = table_structure.downloadProjectList_col_part1
     col_part2 = table_structure.downloadProjectList_col_part2
     imp_date = models_operation.DateOperation()
-    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date)
+    need_ignore = utilities.makeChoice('是否下载被忽略的项目？', font_color='g')
+    project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date, need_ignore)
     projects = project_qs.filter(projectexecution__photo_date=exe_date)
     project_details = projects.values(
         *('customer__customer_id', *col_part1.keys())
@@ -406,7 +407,8 @@ def downloadNewNetHistory(request):
     ).select_related('project').filter(
         (
                 (Q(project__business__superior_id__lt=20) & ((Q(project__reply_date__isnull=True) | Q(project__reply_date__gte=start_date) | Q(project__create_date__gte=start_date)))) |
-                Q(project__business__superior_id__gte=20)
+                Q(project__business__superior_id__gte=20) |
+                Q(project__is_focus=True)
         )
         & Q(project__create_date__lte=end_date)# & Q(photo_date=exe_date)
         & (Q(project__tmp_close_date__isnull=True) | Q(project__tmp_close_date__gt=start_date))
@@ -469,6 +471,7 @@ def trackProjectExe(request):
             & Q(current_progress__status_num__lt=200)
         ).values(*table_structure.trackProjectExe_fields).order_by(
             'project__staff__sub_department__superior__display_order',
+            'project__customer__name',
             'project__staff',
             'project__business__display_order',
         )
@@ -553,6 +556,18 @@ def ajaxStaff(request):
     else:
         return
     return HttpResponse(json.dumps(staffs))
+
+
+def ajaxPretrialDoc(request):
+    customer_name = request.GET.get('term')
+    if customer_name is None:
+        # staffs = rd_m.Staff.getBusinessDeptStaff(return_mode=utilities.return_as['choice'])
+        pass
+    elif re.fullmatch(r'[\u4e00-\u9fa5]+', customer_name):
+        pre_doc = models.PretrialDocument.getPretrialDocumentByCustomerName(customer_name)
+    else:
+        return
+    return HttpResponse(json.dumps(pre_doc))
 
 
 def addCustomer(request):

@@ -60,11 +60,11 @@ class ExpirePromptAdmin:
 
 
 class LoanDemandAdmin:
-    list_display = ('_vf_customer', 'staff', '_vf_progress', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'plan_date', 'finish_date', 'remark', '_vf_remark', 'add_time')
-    list_editable = ('staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'plan_date', 'finish_date')
-    list_filter = ('plan_date', 'add_time', 'already_achieved', 'finish_date')
-    search_fields = ('customer__name',)
-    list_per_page = 100
+    list_display = ('_vf_customer', 'contract', 'staff', '_vf_progress', 'expire_amount', 'original_plan_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'plan_date', 'finish_date', 'this_month_must', 'is_low_risk', 'remark', '_vf_remark', 'add_time')
+    list_editable = ('staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'plan_date', 'finish_date', 'this_month_must', 'is_low_risk')
+    list_filter = ('plan_date', 'add_time', 'expire_amount', 'original_plan_amount', 'already_achieved', 'finish_date', 'increase_type')
+    search_fields = ('customer__name', 'project__customer__name', 'expire_prompt__customer__name')
+    list_per_page = 200
 
     # def queryset(self):
     #     qs = super().queryset()
@@ -80,7 +80,7 @@ class LoanDemandForThisMonthAdmin:
     ordering = ('staff__sub_department__superior__display_order', 'staff', '-plan_amount')
     # list_editable = ('remark', )
     list_filter = ('finish_date', )
-    list_per_page = 100
+    list_per_page = 200
 
     def queryset(self):
         qs = super().queryset()
@@ -94,8 +94,13 @@ class LoanDemandForThisMonthAdmin:
         #     )
         # )
         return qs.filter(
-            Q(plan_date__range=(start_date, end_date)) |
-            Q(add_time__range=(start_date, end_date))
+            (
+                Q(plan_date__range=(start_date, end_date)) |
+                Q(add_time__range=(start_date, end_date))
+            ) & (
+                Q(finish_date__isnull=True) |
+                Q(finish_date__range=(start_date, end_date))
+            )
         )
 
     # def save_models(self):

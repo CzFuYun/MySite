@@ -33,7 +33,7 @@ class Staff(models.Model):
         # unique_together = ['sub_department', 'name']
         verbose_name = '员工'
         verbose_name_plural = verbose_name
-        # ordering = 'sub_department'
+        ordering = ('sub_department__superior__display_order', )
 
     def __str__(self):
         return self.sub_department.caption + self.name       # '{department}—{name}'.format(name=self.name, department=self.sub_department.caption)
@@ -136,7 +136,12 @@ class Staff(models.Model):
         dept_q = Q(sub_department__superior__code=dept_code) if dept_code else ~Q(sub_department__superior__code__in=['NONE', 'JGBS'])
         name_q = Q(name__contains=name_contains) if name_contains else Q(name__isnull=False)
         staff_qs = Staff.objects.filter(dept_q & name_q).order_by(
-                'sub_department__superior__display_order').values('staff_id', 'sub_department__superior__caption', 'name')
+                'sub_department__superior__display_order'
+        ).values(
+            'staff_id',
+            'sub_department__superior__caption',
+            'name'
+        )
         if return_mode == utilities.return_as['choice']:
             ret = []
             for s in staff_qs:

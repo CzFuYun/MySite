@@ -15,6 +15,7 @@ class ProjectModelForm(ModelForm):
         fields = [
             'customer',
             'project_name',
+            'pretrial_doc',
             'staff',
             'business',
             'is_green',
@@ -29,7 +30,7 @@ class ProjectModelForm(ModelForm):
             'plan_reply',
             'plan_luodi',
             'is_specially_focus',
-            'need_ignore'
+            'need_ignore',
         ]
         # widgets = {
         #     'customer': forms.TextInput(),
@@ -41,6 +42,7 @@ class ProjectModelForm(ModelForm):
         super(ProjectModelForm, self).__init__(*args, **kwargs)
         self.fields['customer'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxCustomer'), 'src_type': 'dynamic'})
         self.fields['project_name'].widget = forms.TextInput()
+        self.fields['pretrial_doc'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxPretrialDoc'), 'src_type': 'dynamic'})
         self.fields['staff'].widget = forms.Select(choices=(), attrs={'select2': '', 'href': reverse('ajaxStaff'), 'src_type': 'static'})
         self.fields['is_green'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['is_defuse'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)

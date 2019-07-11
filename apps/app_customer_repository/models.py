@@ -257,13 +257,14 @@ class ProjectRepository(models.Model):
         return True
 
     @classmethod
-    def getProjectList(cls, start_date, end_date):
+    def getProjectList(cls, start_date, end_date, need_download_ignored=False):
+        q_need_ignore = Q(need_ignore=False) if not need_download_ignored else Q(pk__gte=0)
         imp_date = models_operation.DateOperation()
         last_photo_date = imp_date.last_data_date_str(ProjectExecution, 'photo_date')
         exe_date = last_photo_date if imp_date.date_dif(end_date, last_photo_date) > 0 else end_date
         project_qs = cls.objects.filter(
             (Q(reply_date__isnull=True) | Q(reply_date__gte=start_date) | Q(create_date__gte=start_date))
-            & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date) & Q(need_ignore=False)
+            & Q(create_date__lte=end_date) & Q(projectexecution__photo_date=exe_date) & q_need_ignore
             & (Q(tmp_close_date__isnull=True) | Q(tmp_close_date__lte=end_date) | (Q(reply_date__gte=start_date) & Q(reply_date__lte=end_date)))
             & (Q(close_date__isnull=True) | Q(close_date__lte=end_date))
         )
@@ -352,6 +353,15 @@ class PretrialDocument(models.Model):
     #     for i in qs:
     #         ret.append((i['id'], i['document_name'] + str(i['accept_date'])))
     #     return ret
+    @classmethod
+    def getPretrialDocumentByCustomerName(cls, name, return_mode=utilities.return_as['choice']):
+        qs = cls.objects.filter(customer_name__contains=name).values(
+            'id',
+            'customer_name',
+            'meeting__caption'
+        )
+        if return_mode == utilities.return_as['choice']:
+            return [(q['id'], q['meeting__caption'] + q['customer_name']) for q in qs]
 
 
 class PretrialDocumentWaitForMeeting(PretrialDocument):
@@ -526,6 +536,7 @@ class ProjectExecution(models.Model):
             project_customer = cls.objects.filter(
                 project__close_date__isnull=True,
                 # project__business_id=11,
+                project__current_progress__status_num__lt=200
             ).values(
                 'project__customer__customer_id',
                 'project__total_net',

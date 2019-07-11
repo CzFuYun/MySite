@@ -115,5 +115,6 @@ contribution_download = collections.OrderedDict(**{
     'customer__dividedcompanyaccount__divided_yd_avg__sum': '对公存款日均',
     'customer__series__caption': '系列',
     'customer__series__gov_plat_lev': '平台级别',
-    'defuse_expire': '化解到期日'
+    'defuse_expire': '化解到期日',
+    'customer__customer_id': '核心客户号'
 })

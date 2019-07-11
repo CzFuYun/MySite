@@ -70,7 +70,8 @@ class StoringProjectForExportAdmin:
         return qs
 
 class ProjectExecutionAdmin:
-    list_display = ('project', 'current_progress', 'remark', 'photo_date')
+    list_display = ('project', 'current_progress', 'total_used', 'new_net_used', 'remark', 'photo_date')
+    list_editable = ('total_used', 'new_net_used')
     search_fields = ('project__customer__name', )
     list_filter = ('project__business__caption', )
 
@@ -91,13 +92,19 @@ class PreDocToNewProject(BaseActionView):
             if ProjectRepository.objects.filter(pretrial_doc=pre_doc).exists():
                 print(str(pre_doc) + '已在项目储备库中，请核实')
                 continue
-            if pre_doc.agree_net - pre_doc.exist_net <= 0:
-                print(str(pre_doc) + '并未新增额度，请核实')
-                continue
-            result_dict = utilities.field_choices_to_dict(PretrialDocument.result_choices, False)
-            if not result_dict[str(pre_doc.result)].__contains__('通过'):
-                print(str(pre_doc) + '并未通过预审，请核实')
-                continue
+            if pre_doc.result == 10:
+                if utilities.makeChoice((str(pre_doc), '仍处于待预审状态，是否继续添加至项目库？'), font_color='y'):
+                    pass
+                else:
+                    continue
+            else:
+                if pre_doc.agree_net - pre_doc.exist_net <= 0:
+                    print(str(pre_doc) + '并未新增额度，请核实')
+                    continue
+                result_dict = utilities.field_choices_to_dict(PretrialDocument.result_choices, False)
+                if not result_dict[str(pre_doc.result)].__contains__('通过'):
+                    print(str(pre_doc) + '并未通过预审，请核实')
+                    continue
             customer_name = utilities.cleanCompanyName(pre_doc.customer_name)
             customer_rep = CustomerRepository.objects.filter(name=customer_name)
             if not customer_rep.exists():
@@ -127,12 +134,12 @@ class PreDocToNewProject(BaseActionView):
                 customer.save()
             else:
                 customer = customer_rep[0]
-            project_fields = {'staff_id': None, 'is_green': None, 'business_id': None, 'is_defuse': None, 'need_ignore': False}
+            project_fields = {'staff_id': None, 'is_green': None, 'business_id': None, 'is_defuse': None}
             for key in project_fields:
                 project_fields[key] = getattr(pre_doc, key)
             project_fields['customer'] = customer
             project_fields['pretrial_doc'] = pre_doc
-            project_fields['total_net'] = pre_doc.agree_net
+            project_fields['total_net'] = pre_doc.net_total if pre_doc.result == 10 else pre_doc.agree_net
             project_fields['existing_net'] = pre_doc.exist_net
             project_fields['plan_pretrial_date'] = imp_date.today
             plan = ('plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi')
