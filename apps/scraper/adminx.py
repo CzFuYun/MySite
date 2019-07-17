@@ -7,7 +7,7 @@ from xadmin.views.edit import ModelFormAdminView
 from xadmin.plugins.actions import BaseActionView
 
 from MySite.utilities import cleanCompanyName, downloadWorkbook
-from scraper.models import LuLedger, LuLedgerForExport, CpLedger, DailyLeiShou
+from scraper.models import LuLedger, LuLedgerForExport, CpLedger, DailyLeiShou, DataStorage
 from scraper.dcms_request import DcmsHttpRequest
 from root_db.models import AccountedCompany
 
@@ -113,7 +113,15 @@ class DailyLeiShouAdmin:
     list_filter = ('customer__name', 'retract_date')
     search_fields = ('contract_code', 'customer')
 
+
+class DataStorageAdmin:
+    list_display = ('label', 'statistic_caliber', 'data_date', 'data', 'remark')
+    list_filter = ('label', 'statistic_caliber', 'data_date')
+    list_editable = ('data', 'remark')
+
+
 xadmin.site.register(LuLedger, LuLedgerAdmin)
 xadmin.site.register(LuLedgerForExport, LuLedgerForExportAdmin)
 xadmin.site.register(CpLedger, CpLedgerAdmin)
 xadmin.site.register(DailyLeiShou, DailyLeiShouAdmin)
+xadmin.site.register(DataStorage, DataStorageAdmin)

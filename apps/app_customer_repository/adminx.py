@@ -73,7 +73,8 @@ class ProjectExecutionAdmin:
     list_display = ('project', 'current_progress', 'total_used', 'new_net_used', 'remark', 'photo_date')
     list_editable = ('total_used', 'new_net_used')
     search_fields = ('project__customer__name', )
-    list_filter = ('project__business__caption', )
+    list_filter = ('project__business__caption', 'project_id')
+    # list_search = ('id', )
 
 
 class PreDocToNewProject(BaseActionView):

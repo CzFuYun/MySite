@@ -536,7 +536,7 @@ class ProjectExecution(models.Model):
             project_customer = cls.objects.filter(
                 project__close_date__isnull=True,
                 # project__business_id=11,
-                project__current_progress__status_num__lt=200
+                # project__current_progress__status_num__lt=200
             ).values(
                 'project__customer__customer_id',
                 'project__total_net',

@@ -471,8 +471,8 @@ def trackProjectExe(request):
             & Q(current_progress__status_num__lt=200)
         ).values(*table_structure.trackProjectExe_fields).order_by(
             'project__staff__sub_department__superior__display_order',
+            'project__staff__name',
             'project__customer__name',
-            'project__staff',
             'project__business__display_order',
         )
         table_col = table_structure.trackProjectExe_table_col

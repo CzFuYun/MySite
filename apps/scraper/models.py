@@ -734,3 +734,36 @@ class DailyLeiShou(models.Model):
             print('无需更新放款台账余额')
             print('无需更新贷款需求')
 
+
+class DataStorage(models.Model):
+    caliber_choices = (
+        ('rh', '人行'),
+        ('yj', '银监'),
+        ('jc', '分行计财'),
+        ('hq', '总行'),
+    )
+    label_choices = (
+        ('qkjdk', '全口径贷款余额'),
+        ('zzydk', '制造业贷款余额'),
+        ('zzyhs', '制造业户数'),
+        ('mydk', '民营企业贷款余额'),
+        ('xwdk', '小微企业贷款余额'),
+        ('lsxdzb', '绿色信贷占比'),
+        ('gsdk', '公司类贷款余额'),
+        ('gsdk_no_fft', '公司类贷款去掉同业福费廷'),
+        ('dkhs', '贷款户数'),
+    )
+    data_date = models.DateField(null=True, verbose_name='数据日期')
+    label = models.CharField(choices=label_choices, max_length=16, null=True, verbose_name='标签')
+    statistic_caliber = models.CharField(max_length=8, choices=caliber_choices, null=True, verbose_name='统计口径')
+    data = models.CharField(max_length=32, null=True, verbose_name='数据')
+    remark = models.TextField(blank=True, null=True, verbose_name='备注')
+
+    class Meta:
+        verbose_name = '数据记录'
+        verbose_name_plural = verbose_name
+        ordering = ('label', 'statistic_caliber', 'data_date')
+        unique_together = ('data_date', 'label', 'statistic_caliber')
+
+    def __str__(self):
+        return  str(self.data_date) + self.label + self.statistic_caliber
