@@ -60,7 +60,7 @@ class ExpirePromptAdmin:
 
 
 class LoanDemandAdmin:
-    list_display = ('_vf_customer', 'contract', 'staff', '_vf_progress', 'expire_amount', 'original_plan_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'plan_date', 'finish_date', 'this_month_must', 'is_low_risk', 'remark', '_vf_remark', 'add_time')
+    list_display = ('_vf_customer', 'contract', 'staff', '_vf_progress', 'expire_amount', 'original_plan_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'plan_date', 'finish_date', 'this_month_must', 'is_low_risk', 'remark', '_vf_remark', 'add_time', 'last_update')
     list_editable = ('staff', 'expire_amount', 'plan_amount', 'this_month_leishou', 'already_achieved', 'remark', 'plan_date', 'finish_date', 'this_month_must', 'is_low_risk')
     list_filter = ('plan_date', 'add_time', 'expire_amount', 'original_plan_amount', 'already_achieved', 'finish_date', 'increase_type')
     search_fields = ('customer__name', 'project__customer__name', 'expire_prompt__customer__name')
@@ -76,7 +76,7 @@ class LoanDemandAdmin:
 
 
 class LoanDemandForThisMonthAdmin:
-    list_display = ('_vf_customer', '_vf_dcms_customer_code', '_vf_dept', '_vf_staff', '_vf_industry', 'expire_amount', 'plan_amount', '_vf_progress', '_vf_status_num', '_vf_stage', 'this_month_leishou', 'already_achieved', 'remark', '_vf_remark')
+    # list_display = ('_vf_customer', '_vf_dcms_customer_code', '_vf_dept', '_vf_staff', '_vf_industry', 'expire_amount', 'plan_amount', '_vf_progress', '_vf_status_num', '_vf_stage', 'this_month_leishou', 'already_achieved', 'remark', '_vf_remark')
     ordering = ('staff__sub_department__superior__display_order', 'staff', '-plan_amount')
     # list_editable = ('remark', )
     list_filter = ('finish_date', )

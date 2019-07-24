@@ -440,7 +440,8 @@ def downloadNewNetHistory(request):
         'photo_date',
     ).order_by(
         'project__staff__sub_department__superior__display_order',
-        'project__staff',
+        'project_id',
+        'project__staff__name',
         'project__business__display_order',
         'photo_date'
     )

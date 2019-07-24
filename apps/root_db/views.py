@@ -22,7 +22,13 @@ def test(request):
 class CustomerDeptView(View):
     def get(self, request):
         ret = []
-        companies = AccountedCompany.objects.filter(Q(sub_dept__isnull=False) | Q(staff__isnull=False)).values(
+        companies = AccountedCompany.objects.filter(
+            (
+                Q(sub_dept__isnull=False) |
+                Q(staff__isnull=False)
+            ) &
+            Q(dcms_customer_code__isnull=False)
+        ).values(
             'customer_id',
             'name',
             'staff__sub_department__caption',
@@ -30,6 +36,7 @@ class CustomerDeptView(View):
             'sub_dept__caption',
             'sub_dept__superior__caption',
             'belong_to',
+            'dcms_customer_code',
         ).order_by('sub_dept__superior__display_order', 'staff')
         for c in companies:
             tmp = []
@@ -41,5 +48,6 @@ class CustomerDeptView(View):
             elif c['belong_to'] == 1:
                 tmp.append(c['staff__sub_department__caption'])
                 tmp.append(c['staff__sub_department__superior__caption'])
+            tmp.append(c['dcms_customer_code'])
             ret.append(tmp)
         return HttpResponse(ret)
