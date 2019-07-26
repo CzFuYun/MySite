@@ -19,7 +19,8 @@ def test(request):
     # http://127.0.0.1:8000/cr/test
     print('start test')
     # models.CustomerRepository.fillKernelId()
-    models.CustomerRepository.linkNoKernelIdObjToAc()
+    # models.CustomerRepository.linkNoKernelIdObjToAc()
+    models.ProjectExecution.takePhoto()
     print('finish test')
 
 

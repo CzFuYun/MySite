@@ -541,16 +541,22 @@ class ProjectExecution(models.Model):
                 'project__customer__customer_id',
                 'project__total_net',
                 'project__existing_net',
+                'project_id',
+                'project__customer__name',
             )
+            customer_id_list = {c['project__customer__customer_id'] for c in project_customer}
             customer_project_amount = {}
             for c in project_customer:
-                customer_project_amount[c['project__customer__customer_id']] = {
+                customer_project_amount[c['project_id']] = {
                     'project__total_net': c['project__total_net'],
                     'project__existing_net': c['project__existing_net'],
+                    # 'project_id': c['project_id'],
+                    'project__customer__name': c['project__customer__name'],
+                    'project__customer__customer_id': c['project__customer__customer_id'],
                 }
             # ↓查找一般授信已用信金额
             used_net_data = dac_m.Contributor.objects.filter(
-                customer_id__in=customer_project_amount,
+                customer_id__in=customer_id_list,
                 data_date=imp_date.neighbour_date_date_str(dac_m.Contributor, photo_date_str)
             ).values(
                 'customer_id',
@@ -582,8 +588,13 @@ class ProjectExecution(models.Model):
                 tmp['photo_date'] = photo_date
                 # ↓为一般授信填充已投放净额
                 if pe.project.business.id < 15:
+                    #
+                    # if pe.project.id in (317, 329, 338):
+                    #     print()
+                    #
                     last_used_net = 0
                     previous_exe = pe.previous_exe
+                    project_id = pe.project.id
                     if previous_exe:
                         last_used_net = previous_exe.total_used
                     if not pe.project.tmp_close_date and last_used_net != customer_used_net.get(customer_id, 0) and pe.current_progress_id < 120:
@@ -599,8 +610,8 @@ class ProjectExecution(models.Model):
                     else:
                         tmp['total_used'] = customer_used_net.get(customer_id, 0)
                     # ↓若已投净额小于项目的净额
-                    if tmp['total_used'] <= customer_project_amount[customer_id]['project__total_net']:
-                        tmp['new_net_used'] = tmp['total_used'] - customer_project_amount[customer_id]['project__existing_net']
+                    if tmp['total_used'] <= customer_project_amount[project_id]['project__total_net']:
+                        tmp['new_net_used'] = tmp['total_used'] - customer_project_amount[project_id]['project__existing_net']
                     # ↓若已投净额大项目的净额，则可能有两种情况：1、存在质押贷款；2、同时有多笔业务（例如既有项目贷又有流贷）
                     else:
                         attention.append(pe.project.customer.customer)

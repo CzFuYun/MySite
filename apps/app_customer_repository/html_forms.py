@@ -55,7 +55,15 @@ class ProjectModelForm(ModelForm):
         self.fields['plan_luodi'].widget = forms.DateInput(attrs={'type': 'date'})
         self.fields['is_specially_focus'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
         self.fields['need_ignore'].widget = forms.RadioSelect(choices=utilities.yes_no_choices)
-        utilities.setRequiredFields(self)
+        utilities.setRequiredFields(self, (
+            'pretrial_doc',
+            'plan_pretrial_date',
+            'plan_chushen',
+            'plan_zhuanshen',
+            'plan_xinshen',
+            'plan_reply',
+            'plan_luodi',
+        ))
 
 
 class ProjectModelForm_set_replied(ModelForm):
