@@ -115,10 +115,7 @@ def getXlDataForOrmOperation(file_name, table_name, table_head_row=1, last_row=0
     return ret_list
 
 
-def updateOrCreateCompany(file_name):
-    print('是否更新客户信息？\n0.否\n1.是')
-    need_update_info = input('>>>')
-    need_update_info = int(need_update_info)
+def updateOrCreateCompany(file_name, need_update_info):
     all_sr_dict = {}
     all_sr_dict['district_id'] = getSimpleSerializationRule(models.District)
     all_sr_dict['customer_type_id'] = getSimpleSerializationRule(models.CustomerType)
@@ -160,9 +157,9 @@ def updateOrCreateCompany(file_name):
             break
 
 
-def createDividedCompanyAccount(file_name):
-    print('data_date?')
-    data_date = input('>>>')
+def createDividedCompanyAccount(file_name, data_date):
+    if not data_date:
+        return False
     all_sr_dict = {}
     all_sr_dict['sub_department_id'] = getSimpleSerializationRule(models.SubDepartment, 'sd_code', 'caption', 'superior')
     all_sr_dict['deposit_type_id'] = getSimpleSerializationRule(models.DepositType)
@@ -184,12 +181,13 @@ def createDividedCompanyAccount(file_name):
                     data_dict[field] = field_sr[value_before_serialize]
         data_for_bulk_create.append(models.DividedCompanyAccount(**data_dict))
     models.DividedCompanyAccount.objects.bulk_create(data_for_bulk_create)
+    return True
 
 
-def createContributorAndUpdateSeries(file_name):
+def createContributorAndUpdateSeries(file_name, data_date_str):
+    if not data_date_str:
+        return False
     from deposit_and_credit import models as m
-    print('data_date?')
-    data_date_str = input('>>>')
     data_date = datetime.strptime(data_date_str, '%Y-%m-%d').date()
     expire_data_for_bulk_create = []
     expire_data_qs = m.ExpirePrompt.objects.filter(
@@ -240,3 +238,4 @@ def createContributorAndUpdateSeries(file_name):
     m.Contributor.objects.bulk_create(contributors_for_bulk_create)
     if expire_data_for_bulk_create:
         m.ExpirePrompt.objects.bulk_create(expire_data_for_bulk_create)
+    return True

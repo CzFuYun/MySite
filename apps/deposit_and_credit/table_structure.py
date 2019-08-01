@@ -14,7 +14,7 @@ expire_table = {
     'customer__name':
         {
             'col_name': models.ExpirePrompt._meta.get_field('customer').verbose_name,
-            'width': '15%',
+            'width': '12%',
             'td_attr': {'customer_id': 'customer_id'}
         },
     'staff_id__sub_department__superior__caption':
@@ -62,7 +62,7 @@ expire_table = {
     'remark':
         {
             'col_name': models.ExpirePrompt._meta.get_field('remark').verbose_name,
-            'width': '25%',
+            'width': '18%',
             'td_attr': {'title': 'remark_update_date'}
         },
     'punishment':
@@ -76,7 +76,13 @@ expire_table = {
             'col_name': models.ExpirePrompt._meta.get_field('finish_date').verbose_name,
             'width': '4%',
             'td_attr': None
-        }
+        },
+    'approve_date':
+        {
+            'col_name': models.ExpirePrompt._meta.get_field('approve_date').verbose_name,
+            'width': '4%',
+            'td_attr': None
+        },
 }
 
 
@@ -91,7 +97,8 @@ expire_table_download = collections.OrderedDict(**{
     'current_progress__caption': '当前进度',
     'remark': '备注',
     'punishment': '扣罚金额',
-    'current_progress__status_num': '状态码'
+    'current_progress__status_num': '状态码',
+    'approve_date': '批复日'
 })
 expire_table_sr_for_download = {
     'apply_type': utilities.field_choices_to_dict(models.ExpirePrompt.apply_type_choices, False)

@@ -51,7 +51,7 @@ def selectProjectAction(request):
         content_title = '项目储备清单'
         return render(request, 'proj_rep/project_list.html', locals())
     elif action == '3':
-        return downloadProjectList(start_date, end_date)
+        return downloadProjectList(start_date, end_date, request)
     elif action == '4':
         imp_date = models_operation.DateOperation()
         if imp_date.date_dif(imp_date.last_data_date_str(models.ProjectExecution, 'photo_date')) < 0 and not request.user.is_superuser:
@@ -361,11 +361,14 @@ class ProjectDetailView(View):
         pass
 
 
-def downloadProjectList(start_date, end_date):
+def downloadProjectList(start_date, end_date, request):
     col_part1 = table_structure.downloadProjectList_col_part1
     col_part2 = table_structure.downloadProjectList_col_part2
     imp_date = models_operation.DateOperation()
-    need_ignore = utilities.makeChoice('是否下载被忽略的项目？', font_color='g')
+    if request.user.is_superuser:
+        need_ignore = utilities.makeChoice('是否下载被忽略的项目？', font_color='g')
+    else:
+        need_ignore = False
     project_qs, exe_date = models.ProjectRepository.getProjectList(start_date, end_date, need_ignore)
     projects = project_qs.filter(projectexecution__photo_date=exe_date)
     project_details = projects.values(
@@ -467,7 +470,7 @@ def trackProjectExe(request):
     elif request.method == 'GET':
         from app_permission.models import Group
         user_groups = str(Group.objects.filter(user=request.user))
-        business_q = Q(project__business__superior__caption__contains='投行') if request.user.user_id.sub_department.caption == '投资银行部' and not '公司部' in user_groups else Q(id__isnull=False)
+        business_q = Q(project__business__superior__caption__contains='投行') if request.user.user_id.sub_department.caption == 'JGBS-16' and not '公司部' in user_groups else Q(id__isnull=False)
         exe_qs = models.ProjectExecution.lastExePhoto().filter(business_q,
             (Q(project__tmp_close_date__isnull=True) & Q(project__close_date__isnull=True))
             & Q(current_progress__status_num__lt=200)

@@ -140,6 +140,7 @@ class ProjectRepository(models.Model):
     )
     add_date = models.DateField(auto_now_add=True, blank=True, null=True)
     customer = models.ForeignKey('CustomerRepository', on_delete=models.CASCADE, verbose_name='客户')
+    business = models.ForeignKey('SubBusiness', on_delete=models.CASCADE, verbose_name='业务品种')
     project_name = models.CharField(max_length=64, verbose_name='项目名称')
     staff = models.ForeignKey('root_db.Staff', to_field='staff_id', on_delete=models.CASCADE, verbose_name='客户经理')
     cp_con_num = models.CharField(max_length=32, blank=True, null=True, verbose_name='授信编号')
@@ -153,7 +154,7 @@ class ProjectRepository(models.Model):
     plan_xinshen =  models.DateField(blank=True, null=True, verbose_name='计划信审')
     plan_reply =  models.DateField(blank=True, null=True, verbose_name='计划批复')
     plan_luodi =  models.DateField(blank=True, null=True, verbose_name='计划投放')
-    business = models.ForeignKey('SubBusiness', on_delete=models.CASCADE, verbose_name='业务品种')
+    luodi = models.FloatField(default=1, verbose_name='落地金额或比例')      # 100及以下为比例，以上为具体数值
     total_net = models.IntegerField(default=0, verbose_name='总敞口')
     existing_net = models.IntegerField(default=0, verbose_name='存量敞口')
     reply_content = models.TextField(blank=True, null=True, verbose_name='批复内容')
@@ -174,7 +175,7 @@ class ProjectRepository(models.Model):
     class Meta:
         verbose_name = '项目库'
         verbose_name_plural = verbose_name
-        ordering = ['customer__department__display_order', 'customer', 'staff']
+        ordering = ['customer__department__display_order', 'staff__name', 'customer']
 
     def __str__(self):
         return str(self.pk) + '.' + self.customer.name + self.business.caption + '-' + str(self.current_progress)
@@ -273,7 +274,7 @@ class ProjectRepository(models.Model):
 
 class StoringProjectForExport(ProjectRepository):
     class Meta:
-        verbose_name = '储备项目下载'
+        verbose_name = '进行中项目'
         verbose_name_plural = verbose_name
         proxy = True
 

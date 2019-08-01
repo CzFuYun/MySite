@@ -43,7 +43,7 @@ class ProjectAdmin:
                     )
     list_editable = ('plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi')
     search_fields = ('id', 'customer__name')
-    list_filter = ('is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num')
+    list_filter = ('add_date', 'is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num')
     list_per_page = 15
     relfield_style = 'fk-ajax'
     actions = (ProjectToLoanDemand, )
@@ -63,11 +63,24 @@ class ProjectAdmin:
     get_progress.short_description = '目前进度'
 
 
-class StoringProjectForExportAdmin:
-    list_display = ()
+class StoringProjectForExportAdmin(ProjectAdmin):
+    list_per_page = 100
+    list_display = ('pk', 'customer', 'staff', 'business', 'total_net', 'existing_net', 'account_num', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'luodi', 'current_progress')
+    list_editable = ('staff', 'total_net', 'existing_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'luodi', 'account_num')
+
     def queryset(self):
-        qs = super().queryset()
+        from app_permission.models import Group
+        user_groups = str(Group.objects.filter(user=self.user))
+        business_q = Q(
+            project__business__superior__caption__contains='投行') if self.user.user_id.sub_department.caption == 'JGBS-16' and not '公司部' in user_groups else Q(
+            id__isnull=False)
+        exe_qs = ProjectExecution.lastExePhoto().filter(business_q,
+            (Q(project__tmp_close_date__isnull=True) & Q(project__close_date__isnull=True))
+            & Q(current_progress__status_num__lt=200)
+        )
+        qs = super().queryset().filter(projectexecution__in=exe_qs)
         return qs
+
 
 class ProjectExecutionAdmin:
     list_display = ('project', 'current_progress', 'total_used', 'new_net_used', 'remark', 'photo_date')
@@ -175,19 +188,28 @@ class TargetTaskAdmin:
     list_filter = ('start_date', 'end_date')
 
 
-class PretrialDocumentWaitForMeetingAdmin(XadminExtraAction):
-    list_display = ['customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file']
+class PretrialDocumentWaitForMeetingAdmin:#(XadminExtraAction):
+    # list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'guarantee', 'show_file', 'result', 'agree_net', 'order', 'remark')
     list_per_page = 20
-    list_editable = ['net_total', 'reason']
+    list_editable = ('net_total', 'reason', 'result', 'order', 'agree_net', 'remark', 'guarantee')
+    base_list_display = ('customer_name', 'department', 'accept_date', 'reason', 'net_total', 'show_file')
+
     # reversion_enable = True
 
-    def __init__(self, *args, **kwargs):
-        super(PretrialDocumentWaitForMeetingAdmin, self).__init__(*args, **kwargs)
-        self.parse_extra_action({
-            'voteAtPreMeeting': '投票',
-            # 'submitPreDoc': '提交',
-            # 'regressPreDoc': '退回',
-        })
+    # def __init__(self, *args, **kwargs):
+    #     super(PretrialDocumentWaitForMeetingAdmin, self).__init__(*args, **kwargs)
+        # self.parse_extra_action({
+        #     'voteAtPreMeeting': '投票',
+        #     # 'submitPreDoc': '提交',
+        #     # 'regressPreDoc': '退回',
+        # })
+
+    def get_list_display(self):
+        if self.user.user_id.sub_department_id == 'JGBS-12':
+            list_display = (*self.base_list_display, *('guarantee', 'result', 'agree_net', 'order', 'remark'))
+            return list_display
+        else:
+            return self.base_list_display
 
     def queryset(self):
         qs = super(PretrialDocumentWaitForMeetingAdmin, self).queryset()

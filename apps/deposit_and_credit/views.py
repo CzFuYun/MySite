@@ -347,6 +347,7 @@ def viewExpirePromptTable(request):
                 'remark_update_date',
                 # 'pre_approver__name',
                 # 'approver__name',
+                'approve_date',
             )
             return HttpResponse(json.dumps((table_col, list(table_col.keys()), list(data_list)), cls=utilities.JsonEncoderExtend))
 

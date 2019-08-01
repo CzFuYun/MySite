@@ -27,27 +27,34 @@ def feedback(request):
 
 
 def exportAccountedCompany(request):
-    # http://127.0.0.1:8000/accounted_company.export
+    # http://127.0.0.1:8000/accounted_company.export?need_update_info=0
+    print('exportAccountedCompany')
     file_name = r'E:\AAA报表定期更新\贡献度\@AccountedCompany.xlsx'
-    models_operation.updateOrCreateCompany(file_name)
+    models_operation.updateOrCreateCompany(file_name, int(request.GET.get('need_update_info')))
     print('success')
     return render(request, 'feedback.html')
 
 
 def createDividedCompanyAccount(request):
-    # http://127.0.0.1:8000/divided_company_account.create
+    # http://127.0.0.1:8000/divided_company_account.create?data_date=
+    print('createDividedCompanyAccount')
     file_name = r'E:\AAA报表定期更新\贡献度\@DividedCompanyAccount.xlsx'
-    models_operation.createDividedCompanyAccount(file_name)
-    print('success')
-    return render(request, 'feedback.html')
+    if models_operation.createDividedCompanyAccount(file_name, request.GET.get('data_date')):
+        print('success')
+        return render(request, 'feedback.html')
+    else:
+        return render(request, 'feedback.html', {'title': '请确定数据日期', 'swal_type': 'warning'})
 
 
 def exportContributorAndSeries(request):
-    # http://127.0.0.1:8000/contributor_and_series.export
+    print('exportContributorAndSeries')
+    # http://127.0.0.1:8000/contributor_and_series.export?data_date=
     file_name = r'E:\AAA报表定期更新\贡献度\@Contributor.xlsx'
-    models_operation.createContributorAndUpdateSeries(file_name)
-    print('success')
-    return render(request, 'feedback.html')
+    if models_operation.createContributorAndUpdateSeries(file_name, request.GET.get('data_date')):
+        print('success')
+        return render(request, 'feedback.html')
+    else:
+        return render(request, 'feedback.html', {'title': '请确定数据日期', 'swal_type': 'warning'})
 
 
 def updateStaffInfo(request):
