@@ -382,7 +382,7 @@ class ProjectExecution(models.Model):
     photo_date = models.DateField(blank=True, null=True, verbose_name='快照日期')
 
     class Meta:
-        verbose_name = '项目管理'
+        verbose_name = '项目日志'
         verbose_name_plural = verbose_name
         ordering = ('-photo_date', )
 
@@ -604,7 +604,7 @@ class ProjectExecution(models.Model):
                         # print('\t1.最近贡献度数据已投敞口：', customer_used_net.get(customer_id, 0))
                         choice = utilities.makeChoice(
                             (pe.project, "，请选择："),
-                            *('0.上次快照中已投敞口：' + str(last_used_net), '最近贡献度数据已投敞口：' + str(customer_used_net.get(customer_id, 0))),
+                            *('上次快照中已投敞口：' + str(last_used_net), '最近贡献度数据已投敞口：' + str(customer_used_net.get(customer_id, 0))),
                             font_color='y'
                         )
                         tmp['total_used'] = customer_used_net.get(customer_id, 0) if int(choice) else last_used_net

@@ -176,6 +176,7 @@ downloadProjectList_col_part1 = {
     'pretrial_doc__stockholder': '控股方',
     'projectexecution__photo_date': '快照日期',
     'luodi': '落地金额或比例',
+    'projectexecution__remark__create_date': '备注更新日',
 }
 
 downloadProjectList_col_part2 = {

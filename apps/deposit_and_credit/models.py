@@ -360,6 +360,11 @@ class LoanDemand(models.Model):
                 current_progress = REPLIED
         elif self.expire_prompt:
             current_progress = self.expire_prompt.current_progress
+        else:
+            if self.finish_date:
+                current_progress = REPLIED
+            else:
+                pass
         self.current_progress = current_progress
         return '未建档' if current_progress is None else current_progress
     _vf_progress.short_description = '当前进度'

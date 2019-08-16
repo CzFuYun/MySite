@@ -93,7 +93,7 @@ def viewContribution(request):
     if block == 'css':
         return HttpResponse('')
     if block == 'body':
-        data_date = models_operation.DateOperation().last_data_date_str(dac_models.Contributor)
+        data_date = models_operation.DateOperation().last_data_date_str(dac_models.ContributionTrees)
         return render_to_response('contrib/contribution_body.html', {'department': request.user.user_id.sub_department.superior_id, 'data_date': data_date})
     if block == 'js':
         return render_to_response('contrib/contribution_js.html')
