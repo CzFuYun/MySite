@@ -43,7 +43,7 @@ class ProjectAdmin:
                     )
     list_editable = ('plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi')
     search_fields = ('id', 'customer__name')
-    list_filter = ('add_date', 'is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num')
+    list_filter = ('add_date', 'is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num', 'existing_net')
     list_per_page = 15
     relfield_style = 'fk-ajax'
     actions = (ProjectToLoanDemand, )
@@ -65,8 +65,8 @@ class ProjectAdmin:
 
 class StoringProjectForExportAdmin(ProjectAdmin):
     list_per_page = 100
-    list_display = ('pk', 'customer', 'staff', 'business', 'total_net', 'existing_net', 'account_num', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'luodi', 'current_progress')
-    list_editable = ('staff', 'total_net', 'existing_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'luodi', 'account_num')
+    list_display = ('pk', 'customer', 'staff', 'business', 'total_net', 'existing_net', 'account_num', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'luodi', 'current_progress', 'need_hq')
+    list_editable = ('staff', 'total_net', 'existing_net', 'plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi', 'luodi', 'account_num', 'need_hq')
 
     def queryset(self):
         from app_permission.models import Group

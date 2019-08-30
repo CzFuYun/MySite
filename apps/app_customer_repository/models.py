@@ -171,6 +171,7 @@ class ProjectRepository(models.Model):
     is_specially_focus = models.BooleanField(default=False, verbose_name='是否重点跟进项目')
     current_progress = models.ForeignKey('Progress', default=0, on_delete=models.CASCADE, verbose_name='当前进度')
     need_ignore = models.BooleanField(default=False, verbose_name='是否忽略')      # 对于诸如平移、表外业务回表等名义上的新项目，在下载时应忽略
+    need_hq = models.BooleanField(default=False, verbose_name='是否须报总行')
 
     class Meta:
         verbose_name = '项目库'
@@ -322,7 +323,7 @@ class PretrialDocument(models.Model):
     accept_date = models.DateField(auto_now_add=True, null=True, verbose_name='受理日期')
     result = models.IntegerField(choices=result_choices, default=10, verbose_name='审议结果')
     department = models.ForeignKey('root_db.Department', null=True, on_delete=models.CASCADE, verbose_name='经营部门')
-    staff = models.ForeignKey('root_db.Staff', to_field='staff_id', blank=True, null=True, on_delete=models.CASCADE, verbose_name='客户经理')
+    staff = models.ForeignKey('root_db.Staff', to_field='staff_id', null=True, on_delete=models.CASCADE, verbose_name='客户经理')
     business = models.ForeignKey('SubBusiness', on_delete=models.CASCADE, verbose_name='业务品种')
     reason = models.IntegerField(choices=reason_choices, default=0, verbose_name='上会原因')
     remark = models.TextField(blank=True, null=True, verbose_name='备注')

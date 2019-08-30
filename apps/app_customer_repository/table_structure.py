@@ -177,6 +177,7 @@ downloadProjectList_col_part1 = {
     'projectexecution__photo_date': '快照日期',
     'luodi': '落地金额或比例',
     'projectexecution__remark__create_date': '备注更新日',
+    'need_hq': '是否须报总行',
 }
 
 downloadProjectList_col_part2 = {
