@@ -43,7 +43,7 @@ class ProjectAdmin:
                     )
     list_editable = ('plan_chushen', 'plan_zhuanshen', 'plan_xinshen', 'plan_reply', 'plan_luodi')
     search_fields = ('id', 'customer__name')
-    list_filter = ('add_date', 'is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num', 'existing_net')
+    list_filter = ('add_date', 'is_green', 'is_focus', 'is_specially_focus', 'business__superior', 'pretrial_doc__meeting__caption', 'reply_date', 'tmp_close_date', 'customer__industry', 'current_progress__status_num', 'existing_net', 'is_defuse')
     list_per_page = 15
     relfield_style = 'fk-ajax'
     actions = (ProjectToLoanDemand, )

@@ -51,10 +51,10 @@ class ContributorAdmin:
 
 
 class ExpirePromptAdmin:
-    ordering = ['staff_id__sub_department__superior__display_order', 'staff_id']
-    list_filter = ['expire_date', 'finish_date', 'current_progress']
-    list_display = ['pk', 'customer', 'staff_id', 'expire_date', 'current_progress', 'remark', 'finish_date']
-    list_editable = ['finish_date', 'staff_id', 'remark']
+    ordering = ('staff_id__sub_department__superior__display_order', 'staff_id')
+    list_filter = ('expire_date', 'finish_date', 'current_progress', 'remark', 'approve_date')
+    list_display = ('pk', 'customer', 'staff_id', 'expire_date', 'current_progress', 'remark', 'finish_date')
+    list_editable = ('finish_date', 'staff_id', 'remark', 'approve_date')
     search_fields = ('customer__name', )
     relfield_style = 'fk-ajax'
 

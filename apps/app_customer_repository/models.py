@@ -590,19 +590,12 @@ class ProjectExecution(models.Model):
                 tmp['photo_date'] = photo_date
                 # ↓为一般授信填充已投放净额
                 if pe.project.business.id < 15:
-                    #
-                    # if pe.project.id in (317, 329, 338):
-                    #     print()
-                    #
                     last_used_net = 0
                     previous_exe = pe.previous_exe
                     project_id = pe.project.id
                     if previous_exe:
                         last_used_net = previous_exe.total_used
-                    if not pe.project.tmp_close_date and last_used_net != customer_used_net.get(customer_id, 0) and pe.current_progress_id < 120:
-                        # print(pe.project, "，请选择：")
-                        # print('\t0.上次快照中已投敞口：', last_used_net)
-                        # print('\t1.最近贡献度数据已投敞口：', customer_used_net.get(customer_id, 0))
+                    if not pe.project.tmp_close_date and last_used_net != customer_used_net.get(customer_id, 0):    # and pe.current_progress_id < 120:
                         choice = utilities.makeChoice(
                             (pe.project, "，请选择："),
                             *('上次快照中已投敞口：' + str(last_used_net), '最近贡献度数据已投敞口：' + str(customer_used_net.get(customer_id, 0))),
@@ -618,8 +611,6 @@ class ProjectExecution(models.Model):
                     else:
                         attention.append(pe.project.customer.customer)
                 pe_photo_list.append(cls(**tmp))
-                # pe.project.current_progress = pe.current_progress
-                # pe.project.save()
             if pe_photo_list:
                 cls.objects.bulk_create(pe_photo_list)
                 # last_photoed = photo_date_str
